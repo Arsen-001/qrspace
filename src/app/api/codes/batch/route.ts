@@ -12,7 +12,7 @@ export async function POST(req: Request) {
   const prefix = readShort(body.prefix, 40);
   if (!Number.isInteger(count) || count < 1 || count > 100 || !prefix) return Response.json({ error: "bad" }, { status: 400 });
   const kind = readKind(body.kind);
-  const style = readStyle(body.style);
+  const style = await readStyle(body.style);
   const now = Date.now();
   const codes: CodeRecord[] = Array.from({ length: count }, (_, i) => ({
     ...kindDefaults(kind),

@@ -18,13 +18,14 @@ export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/orders/[id
   const me = await currentPerson();
   const b = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const designer = await isDesignerId(me);
+  const designStyle = designer && "design" in b ? await readStyle((b.design as Record<string, unknown> | null)?.style) : null;
   const result = await mutate((db) => {
     const o = db.orders.find((x) => x.id === id);
     if (!o || !me) return 404;
     if (designer) {
       if ((STATUSES as readonly unknown[]).includes(b.status)) o.status = b.status as OrderStatus;
       if ("design" in b) {
-        const style = readStyle((b.design as Record<string, unknown> | null)?.style);
+        const style = designStyle;
         if (!style) return 400;
         o.design = { style, note: readText((b.design as Record<string, unknown>).note).slice(0, 500), at: new Date().toISOString() };
         o.status = "review";

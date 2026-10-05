@@ -1,4 +1,4 @@
-import { accessOf, allCodes, mutate } from "@/server/db";
+import { accessOf, allCodes, mutate, noticesFor } from "@/server/db";
 import { currentPerson } from "@/server/session";
 import { daysLeft } from "@/lib/codes";
 
@@ -6,7 +6,7 @@ import { daysLeft } from "@/lib/codes";
 export async function GET() {
   const me = await currentPerson();
   if (!me) return Response.json({ error: "login" }, { status: 401 });
-  const mine = await mutate((db) => db.notifications.filter((n) => n.to === me));
+  const mine = await noticesFor(me);
   const due = (await allCodes())
     .filter((c) => ["owner", "edit"].includes(accessOf(c, me)))
     .flatMap((c) => c.tasks)

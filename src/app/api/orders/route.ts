@@ -1,6 +1,7 @@
 import { allOrders, designerIdsIn, isDesignerId, mutate, newId, notify } from "@/server/db";
 import { currentPerson } from "@/server/session";
 import { NEEDS, PACKAGES, type Need, type Order, type Pkg } from "@/lib/orders";
+import { storeImage } from "@/server/assets";
 import { readShort, readText } from "../codes/validate";
 
 /** Мои заказы; дизайнеру — все. Новые сверху. */
@@ -23,7 +24,7 @@ export async function POST(req: Request) {
   const pkg = b.pkg === "start" || b.pkg === "pro" ? (b.pkg as Pkg) : null;
   const qty = Number(b.qty);
   const deadline = typeof b.deadline === "string" && /^\d{4}-\d{2}-\d{2}$/.test(b.deadline) ? b.deadline : null;
-  const logo = typeof b.logo === "string" && /^data:image\/(png|jpeg);base64,/.test(b.logo) && b.logo.length < 600_000 ? b.logo : null;
+  const logo = typeof b.logo === "string" && /^data:image\/(png|jpeg);base64,[A-Za-z0-9+/]+={0,2}$/.test(b.logo) && b.logo.length < 600_000 ? await storeImage(b.logo) : null;
   if (!brand || !contact || !need || !pkg || !Number.isInteger(qty) || qty < 1 || qty > 1_000_000) return Response.json({ error: "bad" }, { status: 400 });
   const at = new Date().toISOString();
   const order: Order = {

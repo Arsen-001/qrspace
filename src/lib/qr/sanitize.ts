@@ -11,7 +11,8 @@ const num = (v: unknown, min: number, max: number) => (typeof v === "number" && 
 const oneOf = <T extends string>(v: unknown, list: readonly T[]) => (list.includes(v as T) ? (v as T) : null);
 const b64 = (v: unknown) => (typeof v === "string" && /^[A-Za-z0-9+/]*={0,2}$/.test(v) ? v : null);
 /** Только картинки, только base64 — никаких ссылок наружу и разметки. */
-const image = (v: unknown) => (typeof v === "string" && /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(v) ? v : null);
+const image = (v: unknown) =>
+  typeof v === "string" && (/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(v) || /^\/api\/asset\/[0-9a-f]{32}\.(png|jpg|webp)$/.test(v)) ? v : null;
 
 export function sanitizeStyle(v: unknown): SavedStyle | null {
   if (!isObj(v)) return null;

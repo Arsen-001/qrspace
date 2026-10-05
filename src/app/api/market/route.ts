@@ -21,7 +21,7 @@ export async function POST(req: Request) {
   const about = readText(body.about).slice(0, 300);
   const price = Number(body.price);
   const edition = body.edition === null ? null : Number(body.edition);
-  const style = readStyle(body.style);
+  const style = await readStyle(body.style);
   if (!name || !style || !Number.isFinite(price) || price < 1 || price > 10000) return Response.json({ error: "bad" }, { status: 400 });
   if (edition !== null && !(Number.isInteger(edition) && edition >= 1 && edition <= 100000)) return Response.json({ error: "bad" }, { status: 400 });
   const design: Design = {

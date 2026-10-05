@@ -8,6 +8,8 @@ import { randomBytes } from "node:crypto";
 export type Loaded = { data: unknown | null; version: number };
 export interface DocStore {
   load(): Promise<Loaded>;
+  /** Только номер версии — дёшево: если не поменялся, данные можно не перечитывать. */
+  version(): Promise<number>;
   /** false — документ успели поменять (версия не та). */
   save(data: unknown, version: number): Promise<boolean>;
 }
@@ -24,6 +26,11 @@ function fileStore(file: string): DocStore {
   };
   return {
     load: readFile,
+    // Номер версии у файла — время изменения и размер (читать весь файл ради этого не нужно).
+    async version() {
+      const st = await fs.stat(file).catch(() => null);
+      return st ? Math.floor(st.mtimeMs) * 1e3 + (st.size % 1e3) : 0;
+    },
     async save(data, version) {
       if ((await readFile()).version !== version) return false;
       await fs.mkdir(path.dirname(file), { recursive: true });
@@ -44,6 +51,10 @@ function pgStore(url: string): DocStore {
     return p;
   }));
   return {
+    async version() {
+      const r = await (await pool).query<{ version: number }>("select version from qr_doc where id = 1");
+      return r.rows[0]?.version ?? 0;
+    },
     async load() {
       const r = await (await pool).query<{ version: number; data: unknown }>("select version, data from qr_doc where id = 1");
       return r.rows[0] ? { data: r.rows[0].data, version: r.rows[0].version } : { data: null, version: 0 };

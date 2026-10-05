@@ -210,8 +210,16 @@ async function load(): Promise<{ db: Db; version: number }> {
   }
 }
 
+// Чтение без записи — из памяти, пока данные не поменялись (сверяем только номер версии).
+// Такие данные только читаем; меняет их одна mutate — она всегда берёт свежую копию.
+const cache = globalThis as { __qrRead?: { key: number; db: Db } };
+
 async function read(): Promise<Db> {
-  return (await load()).db;
+  const key = await store.version();
+  if (key && cache.__qrRead?.key === key) return cache.__qrRead.db;
+  const { db } = await load();
+  cache.__qrRead = { key: await store.version(), db };
+  return db;
 }
 
 // Записи по очереди: два изменения подряд не затирают друг друга.
@@ -221,7 +229,10 @@ export function mutate<T>(fn: (db: Db) => T | Promise<T>): Promise<T> {
     for (let attempt = 0; attempt < 8; attempt++) {
       const { db, version } = await load();
       const result = await fn(db);
-      if (await store.save(db, version)) return result;
+      if (await store.save(db, version)) {
+        cache.__qrRead = undefined;
+        return result;
+      }
     }
     throw new Error("store: too many conflicts");
   });
@@ -269,6 +280,10 @@ export async function settle(db: Db, now = Date.now()) {
       await transferCode(db, l.code, top.person, top.amount);
     } else l.status = "expired";
   }
+}
+
+export async function noticesFor(person: string) {
+  return (await read()).notifications.filter((n) => n.to === person);
 }
 
 export async function allOrders(): Promise<Order[]> {

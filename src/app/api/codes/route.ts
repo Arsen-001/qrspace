@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     requests: [],
     invite: newId(12),
     blocks: [],
-    style: readStyle(body.style),
+    style: await readStyle(body.style),
     visits: [],
     createdAt: new Date().toISOString(),
   };

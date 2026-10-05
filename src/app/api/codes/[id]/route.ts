@@ -29,6 +29,8 @@ export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/codes/[id]
   const { id } = await ctx.params;
   const me = await currentPerson();
   const body = (await req.json().catch(() => ({}))) as CodePatch & Record<string, unknown>;
+  // Оформление проверяем и раскладываем картинки до записи (это работа с файлами, её не повторяем).
+  const style = "style" in body ? await readStyle(body.style) : null;
   const result = await mutate((db) => {
     const c = db.codes.find((x) => x.id === id);
     if (!c) return 404;
@@ -52,9 +54,8 @@ export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/codes/[id]
       c.requests = c.requests.filter((r) => !p.some((g) => g.personId === r.personId));
     }
     if ("style" in body) {
-      const st = readStyle(body.style);
-      if (body.style !== null && !st) return 400;
-      c.style = st;
+      if (body.style !== null && !style) return 400;
+      c.style = style;
     }
     if ("compact" in body) c.compact = body.compact === true;
     if ("showOwner" in body) c.showOwner = body.showOwner === true;

@@ -129,8 +129,25 @@ export async function downloadPng(drawing: Drawing, px: number, name: string) {
   if (blob) save(blob, `${name}.png`);
 }
 
-export function downloadSvg(drawing: Drawing, name: string) {
-  save(new Blob([toSvg(drawing)], { type: "image/svg+xml" }), `${name}.svg`);
+/** В скачанном SVG картинки должны быть внутри файла — ссылки на наш сайт заменяем их содержимым. */
+async function inlineImages(drawing: Drawing): Promise<Drawing> {
+  const shapes = await Promise.all(
+    drawing.shapes.map(async (sh) => {
+      if (sh.kind !== "image" || sh.src.startsWith("data:")) return sh;
+      const blob = await (await fetch(sh.src)).blob();
+      const src = await new Promise<string>((r) => {
+        const fr = new FileReader();
+        fr.onload = () => r(fr.result as string);
+        fr.readAsDataURL(blob);
+      });
+      return { ...sh, src };
+    }),
+  );
+  return { ...drawing, shapes };
+}
+
+export async function downloadSvg(drawing: Drawing, name: string) {
+  save(new Blob([toSvg(await inlineImages(drawing))], { type: "image/svg+xml" }), `${name}.svg`);
 }
 
 /** Несколько фото — в один квадратный коллаж по раскладке; mono — в оттенки серого. */
