@@ -7,6 +7,7 @@ import path from "node:path";
 import { ymd, type AccessLevel, type CodeRecord, type CodeView, type Kind } from "@/lib/codes";
 import { PEOPLE } from "@/lib/people";
 import { SEED_SALES, type Design } from "@/lib/market";
+import type { Order } from "@/lib/orders";
 import type { Purchase } from "@/lib/pricing";
 import { DEFAULT_STYLE, type SavedStyle } from "@/lib/qr/style";
 
@@ -14,7 +15,7 @@ const DIR = path.join(process.cwd(), ".data");
 const DB = path.join(DIR, "db.json");
 export const MEDIA_DIR = path.join(DIR, "media");
 
-type Db = { codes: CodeRecord[]; sales: Record<string, number>; designs: Design[]; purchases: Purchase[] };
+type Db = { codes: CodeRecord[]; sales: Record<string, number>; designs: Design[]; purchases: Purchase[]; orders: Order[] };
 
 const ALPHABET = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
@@ -39,6 +40,7 @@ function seed(): Db {
     sales: { ...SEED_SALES },
     designs: [],
     purchases: [],
+    orders: [],
     codes: [
       {
         ...base,
@@ -157,6 +159,7 @@ async function read(): Promise<Db> {
     db.sales ??= { ...SEED_SALES };
     db.designs ??= [];
     db.purchases ??= [];
+    db.orders ??= [];
     return db;
   } catch {
     // Файла нет — заполняем демо-данными один раз, даже если пришло несколько запросов сразу.
@@ -194,6 +197,10 @@ export async function findCode(id: string): Promise<CodeRecord | null> {
 
 export async function allCodes(): Promise<CodeRecord[]> {
   return (await read()).codes;
+}
+
+export async function allOrders(): Promise<Order[]> {
+  return (await read()).orders;
 }
 
 export async function purchasesOf(person: string): Promise<Purchase[]> {

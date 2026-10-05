@@ -1,5 +1,6 @@
 // Код с памятью: общие типы для сервера и браузера и запросы браузера к нашему API.
 import type { Design } from "./market";
+import type { Need, Order, OrderStatus, Pkg } from "./orders";
 import type { Quote, Tier } from "./pricing";
 import type { SavedStyle } from "./qr/style";
 
@@ -117,6 +118,13 @@ export const api = {
   quote: (key: string, tier: Tier) => call<Quote>(`/api/purchases?key=${encodeURIComponent(key)}&tier=${tier}`),
   pay: (key: string, tier: Tier) => call<{ ok: true; price: number }>("/api/purchases", json("POST", { key, tier })),
   batch: (count: number, prefix: string, style: SavedStyle) => call<CodeView[]>("/api/codes/batch", json("POST", { count, prefix, kind: "memory", style })),
+  orders: () => call<Order[]>("/api/orders"),
+  order: (id: string) => call<Order>(`/api/orders/${id}`),
+  createOrder: (o: { brand: string; contact: string; need: Need; qty: number; pkg: Pkg; deadline: string | null; notes: string; logo: string | null }) =>
+    call<Order>("/api/orders", json("POST", o)),
+  patchOrder: (id: string, p: { status?: OrderStatus; design?: { style: SavedStyle; note: string }; accept?: boolean }) => call<Order>(`/api/orders/${id}`, json("PATCH", p)),
+  orderMessage: (id: string, text: string) => call<Order>(`/api/orders/${id}/messages`, json("POST", { text })),
+  claim: (id: string) => call<CodeView>(`/api/orders/${id}/claim`, { method: "POST" }),
   market: () => call<MarketState>("/api/market"),
   publish: (d: { name: string; about: string; price: number; edition: number | null; drop: boolean; style: SavedStyle }) =>
     call<Design>("/api/market", json("POST", d)),

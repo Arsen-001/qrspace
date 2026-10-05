@@ -28,6 +28,7 @@ export function SiteHeader({ t, lang }: { t: Dict; lang: Lang }) {
     { href: "/", label: t.navGenerator, on: path === "/" },
     { href: "/market", label: t.navMarket, on: path.startsWith("/market") },
     { href: "/codes", label: t.navCodes, on: path.startsWith("/codes") },
+    { href: "/brand", label: t.navBrand, on: path.startsWith("/brand") },
   ];
   return (
     <header className="flex flex-wrap items-center gap-x-3 gap-y-2 py-4 print:hidden">
@@ -35,13 +36,14 @@ export function SiteHeader({ t, lang }: { t: Dict; lang: Lang }) {
         <Logo />
         <span className="hidden font-heading text-lg font-extrabold sm:inline">{t.appName}</span>
       </Link>
-      <nav className="flex gap-1">
+      {/* На телефоне разделы — отдельной строкой с прокруткой, чтобы шапка не вылезала за экран. */}
+      <nav className="order-last -mx-1 flex w-full gap-1 overflow-x-auto px-1 sm:order-none sm:mx-0 sm:w-auto sm:px-0">
         {nav.map((n) => (
           <Link
             key={n.href}
             href={n.href}
             aria-current={n.on ? "page" : undefined}
-            className={`grid min-h-10 place-items-center rounded-xl px-3 text-sm font-medium ${n.on ? "bg-card text-ink shadow-sm" : "text-muted hover:text-ink"}`}
+            className={`grid min-h-10 shrink-0 place-items-center rounded-xl px-3 text-sm font-medium ${n.on ? "bg-card text-ink shadow-sm" : "text-muted hover:text-ink"}`}
           >
             {n.label}
           </Link>
