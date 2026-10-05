@@ -14,6 +14,10 @@ export async function POST(req: Request) {
   if (!(await isDesignerId(me))) return Response.json({ error: "designer" }, { status: 403 });
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const name = readShort(body.name, 40);
+  // Название на других языках — по желанию; нет — везде основное.
+  const nameHy = readShort(body.nameHy, 40) || name;
+  const nameEn = readShort(body.nameEn, 40) || name;
+  const collab = readShort(body.collab, 40);
   const about = readText(body.about).slice(0, 300);
   const price = Number(body.price);
   const edition = body.edition === null ? null : Number(body.edition);
@@ -22,7 +26,8 @@ export async function POST(req: Request) {
   if (edition !== null && !(Number.isInteger(edition) && edition >= 1 && edition <= 100000)) return Response.json({ error: "bad" }, { status: 400 });
   const design: Design = {
     id: newId(),
-    name: { hy: name, ru: name, en: name },
+    name: { hy: nameHy, ru: name, en: nameEn },
+    ...(collab && { collab }),
     about: { hy: about, ru: about, en: about },
     price: Math.round(price),
     edition,

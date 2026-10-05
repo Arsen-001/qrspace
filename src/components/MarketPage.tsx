@@ -49,6 +49,7 @@ function DesignCard({ t, lang, d, link, sold }: { t: Dict; lang: Lang; d: Design
           <span className="min-w-0 truncate font-heading font-bold">{d.name[lang]}</span>
           <span className="shrink-0 font-heading font-extrabold">${d.price}</span>
         </div>
+        {d.collab && <div className="px-1 text-xs font-semibold text-accent">QR Studio × {d.collab}</div>}
         <div className="mt-0.5 px-1 pb-1 text-xs">
           <EditionNote t={t} d={d} sold={sold ? (sold[d.id] ?? 0) : undefined} />
         </div>

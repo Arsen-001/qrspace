@@ -587,6 +587,14 @@ const ru = {
   authBadSecret: "Секрет не подходит — проверьте буквы и цифры",
   authLoginToClaim: "Войдите, чтобы зарегистрировать вещь",
   myItems: "Мои вещи — оригиналы",
+  otherLangNames: "Название на армянском и английском (необязательно)",
+  collabWith: "Коллаборация с (необязательно)",
+  certTitle: "Сертификат подлинности",
+  certOriginal: "Оригинал",
+  certDesign: "Дизайн",
+  certOwner: "Владелец",
+  certVerify: "Проверить сертификат — отсканируйте или откройте:",
+  designerLabel: "Дизайнер",
   "notice.itemPassed": "Ваша вещь «{title}» перешла новому владельцу",
 };
 
@@ -1172,6 +1180,14 @@ const en: Dict = {
   authBadSecret: "The secret doesn’t match — check the letters and digits",
   authLoginToClaim: "Sign in to register the item",
   myItems: "My items — originals",
+  otherLangNames: "Name in Armenian and English (optional)",
+  collabWith: "Collaboration with (optional)",
+  certTitle: "Certificate of authenticity",
+  certOriginal: "Original",
+  certDesign: "Design",
+  certOwner: "Owner",
+  certVerify: "Verify this certificate — scan or open:",
+  designerLabel: "Designer",
   "notice.itemPassed": "Your item “{title}” passed to a new owner",
 };
 
@@ -1755,6 +1771,14 @@ const hy: Dict = {
   authBadSecret: "Գաղտնին չի համապատասխանում — ստուգեք տառերն ու թվերը",
   authLoginToClaim: "Մուտք գործեք՝ իրը գրանցելու համար",
   myItems: "Իմ իրերը — բնօրինակներ",
+  otherLangNames: "Անունը հայերեն և անգլերեն (ըստ ցանկության)",
+  collabWith: "Համագործակցություն՝ (ըստ ցանկության)",
+  certTitle: "Իսկականության վկայական",
+  certOriginal: "Բնօրինակ",
+  certDesign: "Դիզայն",
+  certOwner: "Տեր",
+  certVerify: "Ստուգել վկայականը — սկանավորեք կամ բացեք՝",
+  designerLabel: "Դիզայներ",
   "notice.itemPassed": "Ձեր «{title}» իրն անցավ նոր տիրոջը",
 };
 

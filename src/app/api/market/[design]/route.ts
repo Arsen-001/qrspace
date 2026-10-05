@@ -31,6 +31,7 @@ export async function POST(_req: NextRequest, ctx: RouteContext<"/api/market/[de
       visits: [],
       createdAt: new Date().toISOString(),
       edition: { design: d.id, no: sold + 1, of: d.edition },
+      owners: [{ person: me, at: new Date().toISOString(), price: d.price }],
     };
     db.codes.push(code);
     // Купленный дизайн уже оплачен — скачивать его код можно без доплаты.

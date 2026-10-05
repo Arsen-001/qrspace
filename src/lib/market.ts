@@ -12,6 +12,8 @@ export type Design = {
   edition: number | null;
   /** Дроп дня — крупно наверху маркета. */
   drop?: boolean;
+  /** Коллаборация: «QR Studio × партнёр» (по договору с партнёром). */
+  collab?: string;
   /** Кто выложил (дизайнер); у встроенных — нет. */
   by?: string;
   createdAt?: string;

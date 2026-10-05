@@ -16,6 +16,9 @@ const field = "w-full rounded-xl border border-line bg-field px-3.5 py-2.5 text-
 export function PublishBox({ t, style, base }: { t: Dict; style: StyleState; base: string }) {
   const [name, setName] = useState("");
   const [about, setAbout] = useState("");
+  const [nameHy, setNameHy] = useState("");
+  const [nameEn, setNameEn] = useState("");
+  const [collab, setCollab] = useState("");
   const [price, setPrice] = useState("5");
   const [limited, setLimited] = useState<"no" | "yes">("no");
   const [count, setCount] = useState("100");
@@ -33,11 +36,14 @@ export function PublishBox({ t, style, base }: { t: Dict; style: StyleState; bas
         setState("bad");
         return;
       }
-      const d = await api.publish({ name, about, price: Number(price), edition: limited === "yes" ? Math.round(Number(count)) : null, drop, style: toSaved(style) });
+      const d = await api.publish({ name, nameHy, nameEn, about, collab, price: Number(price), edition: limited === "yes" ? Math.round(Number(count)) : null, drop, style: toSaved(style) });
       setDone(d.id);
       setState("idle");
       setName("");
       setAbout("");
+      setNameHy("");
+      setNameEn("");
+      setCollab("");
     } catch {
       setState("error");
     }
@@ -63,6 +69,14 @@ export function PublishBox({ t, style, base }: { t: Dict; style: StyleState; bas
         }}
       >
         <input value={name} maxLength={40} placeholder={t.designName} aria-label={t.designName} onChange={(e) => setName(e.target.value)} className={field} />
+        <details className="rounded-xl border border-line px-3 py-2 text-sm">
+          <summary className="cursor-pointer font-medium text-muted">{t.otherLangNames}</summary>
+          <div className="mt-2 space-y-2">
+            <input value={nameHy} maxLength={40} placeholder="Հայերեն" aria-label={`${t.designName} — Հայերեն`} onChange={(e) => setNameHy(e.target.value)} className={field} />
+            <input value={nameEn} maxLength={40} placeholder="English" aria-label={`${t.designName} — English`} onChange={(e) => setNameEn(e.target.value)} className={field} />
+          </div>
+        </details>
+        <input value={collab} maxLength={40} placeholder={t.collabWith} aria-label={t.collabWith} onChange={(e) => setCollab(e.target.value)} className={field} />
         <textarea value={about} rows={2} maxLength={300} placeholder={t.designAbout} aria-label={t.designAbout} onChange={(e) => setAbout(e.target.value)} className={`${field} resize-y`} />
         <label className="block">
           <span className="mb-1.5 block text-sm font-medium text-muted">{t.priceLabel}</span>
