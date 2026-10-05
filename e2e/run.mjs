@@ -17,8 +17,13 @@ const suites = pick.length ? pick : [...ALL, ...WITH_GOOGLE];
 mkdirSync(path.join(import.meta.dirname, "out"), { recursive: true });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const failed = [];
-for (const s of suites) {
+// С базой (DATABASE_URL — тот же, с каким запущен сервер) стираем и её.
+const reset = () => {
   rmSync(path.join(root, ".data"), { recursive: true, force: true });
+  if (process.env.DATABASE_URL) spawnSync("psql", [process.env.DATABASE_URL, "-qc", "delete from qr_doc"], { stdio: "ignore" });
+};
+for (const s of suites) {
+  reset();
   const google = WITH_GOOGLE.includes(s);
   if (google) {
     writeFileSync(path.join(root, ".env.local"), ENV);
@@ -34,6 +39,6 @@ for (const s of suites) {
   }
   if (google) rmSync(path.join(root, ".env.local"), { force: true });
 }
-rmSync(path.join(root, ".data"), { recursive: true, force: true });
+reset();
 console.log(failed.length ? `\nНе прошли: ${failed.join(", ")}` : `\nПройдено: ${suites.length} из ${suites.length}`);
 process.exit(failed.length ? 1 : 0);

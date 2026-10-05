@@ -58,6 +58,8 @@ let secret: Buffer | null = null;
 async function authSecret(): Promise<Buffer> {
   if (secret) return secret;
   if (process.env.AUTH_SECRET) return (secret = Buffer.from(process.env.AUTH_SECRET));
+  // На настоящем сайте секрет обязателен: файлы там не сохраняются, а случайный секрет «разлогинит» всех.
+  if (process.env.NODE_ENV === "production" && process.env.DATABASE_URL) throw new Error("AUTH_SECRET is required");
   const file = path.join(process.cwd(), ".data", "secret");
   try {
     secret = await fs.readFile(file);

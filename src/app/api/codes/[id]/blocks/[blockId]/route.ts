@@ -1,7 +1,6 @@
-import { promises as fs } from "node:fs";
-import path from "node:path";
 import type { NextRequest } from "next/server";
-import { accessOf, MEDIA_DIR, mutate, viewOf } from "@/server/db";
+import { accessOf, mutate, viewOf } from "@/server/db";
+import { media } from "@/server/media";
 import { currentPerson } from "@/server/session";
 import { readText } from "../../../validate";
 
@@ -39,6 +38,6 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
 export async function DELETE(_req: NextRequest, ctx: Ctx) {
   const r = await change(ctx, null);
   if (typeof r === "number") return Response.json({ error: r }, { status: r });
-  if (r.media) await fs.rm(path.join(MEDIA_DIR, r.media), { force: true });
+  if (r.media) await media.remove(r.media);
   return Response.json(r.view);
 }

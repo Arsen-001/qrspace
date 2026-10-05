@@ -1,7 +1,6 @@
-import { promises as fs } from "node:fs";
-import path from "node:path";
 import type { NextRequest } from "next/server";
-import { accessOf, findCode, MEDIA_DIR, mutate, newId, notify, viewOf } from "@/server/db";
+import { accessOf, findCode, mutate, newId, notify, viewOf } from "@/server/db";
+import { media } from "@/server/media";
 import { currentPerson } from "@/server/session";
 import { usable } from "@/server/users";
 import type { CodePatch } from "@/lib/codes";
@@ -94,6 +93,6 @@ export async function DELETE(_req: NextRequest, ctx: RouteContext<"/api/codes/[i
     return i < 0 ? null : db.codes.splice(i, 1)[0];
   });
   if (!removed) return Response.json({ error: "forbidden" }, { status: 403 });
-  await Promise.all(removed.blocks.filter((b) => b.media).map((b) => fs.rm(path.join(MEDIA_DIR, b.media!), { force: true })));
+  await Promise.all(removed.blocks.filter((b) => b.media).map((b) => media.remove(b.media!)));
   return Response.json({ ok: true });
 }

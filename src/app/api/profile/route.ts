@@ -1,6 +1,5 @@
-import { promises as fs } from "node:fs";
-import path from "node:path";
-import { MEDIA_DIR, mutate } from "@/server/db";
+import { mutate } from "@/server/db";
+import { media as files } from "@/server/media";
 import { currentPerson, endSession } from "@/server/session";
 import { readShort } from "../codes/validate";
 
@@ -64,7 +63,7 @@ export async function DELETE() {
     return files;
   });
   if (!media) return Response.json({ error: "demo" }, { status: 403 });
-  await Promise.all(media.map((m) => fs.rm(path.join(MEDIA_DIR, m), { force: true })));
+  await Promise.all(media.map((m) => files.remove(m)));
   await endSession();
   return Response.json({ ok: true });
 }
