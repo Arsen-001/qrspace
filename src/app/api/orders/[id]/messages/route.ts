@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { mutate, newId, isDesignerId } from "@/server/db";
+import { designerIdsIn, isDesignerId, mutate, newId, notify } from "@/server/db";
 import { currentPerson } from "@/server/session";
 import { readText } from "../../../codes/validate";
 
@@ -15,6 +15,8 @@ export async function POST(req: NextRequest, ctx: RouteContext<"/api/orders/[id]
     const o = db.orders.find((x) => x.id === id);
     if (!o || !me || !(designer || o.client === me)) return 404;
     o.thread.push({ id: newId(), from: me, text: t, at: new Date().toISOString() });
+    // Клиенту — от дизайнера; дизайнерам — от клиента.
+    (designer ? [o.client] : designerIdsIn(db)).forEach((to) => notify(db, to, me, "orderMsg", { who: me, brand: o.brand }, `/brand/${o.id}`));
     // Дизайнер ответил на новый заказ — значит, взял его в работу.
     if (designer && o.status === "new") o.status = "work";
     return o;

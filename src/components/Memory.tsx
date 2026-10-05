@@ -36,14 +36,17 @@ function Composer({ t, code, onChange }: { t: Dict; code: CodeView; onChange: (v
   const submit = async () => {
     setBusy(true);
     setError(null);
+    // Пока запись уходила, человек мог начать следующую — очищаем только то, что отправили.
+    const sentText = text;
+    const sentFile = file;
     try {
       const form = new FormData();
-      form.set("text", text);
-      if (file && kind === "photo") form.set("file", await shrinkPhoto(file), "photo.jpg");
-      if (file && kind === "video") form.set("file", file);
+      form.set("text", sentText);
+      if (sentFile && kind === "photo") form.set("file", await shrinkPhoto(sentFile), "photo.jpg");
+      if (sentFile && kind === "video") form.set("file", sentFile);
       onChange(await api.addBlock(code.id, form));
-      setText("");
-      setFile(null);
+      setText((t) => (t === sentText ? "" : t));
+      setFile((f) => (f === sentFile ? null : f));
     } catch {
       setError(t.uploadError);
     } finally {

@@ -13,6 +13,8 @@ export type User = {
   email: string;
   name: string;
   designer: boolean;
+  /** «Мои контакты»: кого человек добавил (по почте). Код с «Мои контакты» видят только они. */
+  contacts?: string[];
   createdAt: string;
 };
 

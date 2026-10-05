@@ -6,7 +6,7 @@ import { api, PRESETS, type CodeView } from "@/lib/codes";
 import type { Dict } from "@/lib/i18n";
 import { KindIcon } from "./KindIcon";
 import { useLang } from "@/lib/lang";
-import { useMe } from "@/lib/me";
+import { refreshPeople, useMe } from "@/lib/me";
 import { Avatar, personName } from "./Avatar";
 import { Memory } from "./Memory";
 import { Notice, Shell } from "./Shell";
@@ -170,7 +170,7 @@ export function ScanPage({ id, invite }: { id: string; invite: string | null }) 
     visited.current = true;
     api
       .get(id, { visit })
-      .then((code) => live && setState({ me, code }))
+      .then((code) => refreshPeople().then(() => live && setState({ me, code })))
       .catch((e: Error) => live && setState({ me, code: null, error: e.message !== "404" }));
     return () => {
       live = false;

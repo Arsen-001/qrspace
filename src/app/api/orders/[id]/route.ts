@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { allOrders, mutate, isDesignerId } from "@/server/db";
+import { allOrders, isDesignerId, mutate, notify } from "@/server/db";
 import { currentPerson } from "@/server/session";
 import { STATUSES, type OrderStatus } from "@/lib/orders";
 import { readStyle, readText } from "../../codes/validate";
@@ -28,6 +28,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/orders/[id
         if (!style) return 400;
         o.design = { style, note: readText((b.design as Record<string, unknown>).note).slice(0, 500), at: new Date().toISOString() };
         o.status = "review";
+        notify(db, o.client, me, "design", { brand: o.brand }, `/brand/${o.id}`);
       }
       return o;
     }

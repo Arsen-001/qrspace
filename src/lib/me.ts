@@ -42,3 +42,13 @@ export async function signIn(personId: string | null) {
   state = { ...state, ready: true, me: r.me };
   emit();
 }
+
+/** Обновить имена людей (появился новый контакт, человек в списке кода, просьба о доступе). */
+export async function refreshPeople() {
+  try {
+    const r = await api.me();
+    setDirectory(r.people);
+    state = { ...state };
+    emit();
+  } catch {}
+}

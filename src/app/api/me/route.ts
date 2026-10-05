@@ -6,7 +6,8 @@ import { providers } from "@/server/oauth";
 
 /** Кто я, адрес сайта для ссылок, имена людей, какие входы включены. */
 export async function GET(req: Request) {
-  return Response.json({ me: await currentPerson(), base: publicBase(req), people: await directory(), demo: demoEnabled(), providers: providers() });
+  const me = await currentPerson();
+  return Response.json({ me, base: publicBase(req), people: await directory(me), demo: demoEnabled(), providers: providers() });
 }
 
 /** Демо-вход (выбрать человека) — только пока DEMO_LOGIN не выключен; personId: null — выйти. */

@@ -4,7 +4,7 @@ import { randomBytes } from "node:crypto";
 import { promises as fs } from "node:fs";
 import { networkInterfaces } from "node:os";
 import path from "node:path";
-import { ymd, type AccessLevel, type CodeRecord, type CodeView, type Kind } from "@/lib/codes";
+import { ymd, type AccessLevel, type CodeRecord, type CodeView, type Kind, type Notice } from "@/lib/codes";
 import { DESIGNS, SEED_SALES, type Design } from "@/lib/market";
 import type { Listing } from "@/lib/listings";
 import type { Order } from "@/lib/orders";
@@ -17,7 +17,7 @@ const DIR = path.join(process.cwd(), ".data");
 const DB = path.join(DIR, "db.json");
 export const MEDIA_DIR = path.join(DIR, "media");
 
-export type Db = { codes: CodeRecord[]; sales: Record<string, number>; designs: Design[]; purchases: Purchase[]; orders: Order[]; listings: Listing[]; shop: ShopOrder[]; users: User[] };
+export type Db = { codes: CodeRecord[]; sales: Record<string, number>; designs: Design[]; purchases: Purchase[]; orders: Order[]; listings: Listing[]; shop: ShopOrder[]; users: User[]; notifications: Notice[] };
 
 const ALPHABET = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
@@ -53,6 +53,7 @@ function seed(): Db {
     listings,
     shop: [],
     users: demoUsers(),
+    notifications: [],
     sales: { ...SEED_SALES },
     designs: [],
     purchases: [],
@@ -181,6 +182,8 @@ async function read(): Promise<Db> {
     db.listings ??= [];
     db.shop ??= [];
     db.users ??= demoUsers();
+    db.notifications ??= [];
+    contactsOf = new Map(db.users.map((u) => [u.id, u.contacts ?? []]));
     return db;
   } catch {
     // Файла нет — заполняем демо-данными один раз, даже если пришло несколько запросов сразу.
@@ -241,6 +244,9 @@ export async function settle(db: Db, now = Date.now()) {
       l.status = "sold";
       l.buyer = top.person;
       l.final = top.amount;
+      const title = db.codes.find((c) => c.id === l.code)?.title ?? "";
+      notify(db, top.person, null, "won", { title, amount: String(top.amount) }, `/market/lot/${l.id}`);
+      notify(db, l.seller, null, "sold", { who: top.person, title, amount: String(top.amount) }, `/market/lot/${l.id}`);
       await transferCode(db, l.code, top.person, top.amount);
     } else l.status = "expired";
   }
@@ -265,13 +271,26 @@ const today = () => new Date().toISOString().slice(0, 10);
  * Кто что может: «только я» — только хозяин; «выбранные люди» — по списку (с датой «до»);
  * «все» — смотрят все, а из списка с правом «дописывать» — дописывают.
  */
+// Контакты всех людей — обновляются при каждом чтении хранилища (нужны для «Мои контакты» в accessOf).
+let contactsOf = new Map<string, string[]>();
+
 export function accessOf(code: CodeRecord, me: string | null): AccessLevel {
   if (me && code.owner === me) return "owner";
   if (code.visibility === "me") return "closed";
   const grant = me ? code.people.find((p) => p.personId === me && (!p.until || p.until >= today())) : undefined;
   if (grant) return grant.role;
+  if (code.visibility === "contacts") return me && contactsOf.get(code.owner)?.includes(me) ? "view" : "closed";
   return code.visibility === "all" ? "view" : "closed";
 }
+
+/** Уведомить человека (себя за свои же действия — не уведомляем). */
+export function notify(db: Db, to: string | null | undefined, actor: string | null, kind: string, params: Record<string, string>, link: string) {
+  if (!to || to === actor) return;
+  db.notifications.push({ id: newId(), to, kind, params, link, at: new Date().toISOString(), read: false });
+  db.notifications = db.notifications.slice(-2000);
+}
+
+export const designerIdsIn = (db: Db) => db.users.filter((u) => u.designer).map((u) => u.id);
 
 export function viewOf(code: CodeRecord, me: string | null): CodeView {
   const access = accessOf(code, me);
@@ -312,8 +331,35 @@ export async function findUser(id: string): Promise<User | null> {
 }
 
 /** Имена всех, кто может войти, — для подписей в браузере (без почт). */
-export async function directory() {
-  return usable(await read()).map(publicPerson);
+/**
+ * Имена только тех, с кем у меня есть общее: мои коды и коды, открытые мне, контакты, заказы, уведомления,
+ * а также публичное в маркете (дизайнеры, продавцы, ставки, история владельцев). Почты — никогда.
+ */
+export async function directory(me: string | null) {
+  const db = await read();
+  const ids = new Set<string>(me ? [me] : []);
+  const add = (...xs: (string | null | undefined)[]) => xs.forEach((x) => x && ids.add(x));
+  for (const d of db.designs) add(d.by);
+  for (const l of db.listings) {
+    add(l.seller, l.buyer, ...l.bids.map((b) => b.person));
+    add(...(db.codes.find((c) => c.id === l.code)?.owners ?? []).map((o) => o.person));
+  }
+  if (me) {
+    add(...(db.users.find((u) => u.id === me)?.contacts ?? []));
+    for (const c of db.codes) {
+      const level = accessOf(c, me);
+      if (level === "closed") continue;
+      if (level === "owner") {
+        add(...c.people.map((g) => g.personId), ...c.requests.map((r) => r.personId), ...c.visits.map((v) => v.personId), ...c.messages.map((m) => m.from));
+      } else if (c.showOwner) add(c.owner);
+      add(...c.blocks.map((b) => (b.author === c.owner && level !== "owner" && !c.showOwner ? null : b.author)));
+      add(...c.tasks.flatMap((t) => t.done.map((d) => (d.by === c.owner && level !== "owner" && !c.showOwner ? null : d.by))));
+    }
+    const designer = db.users.find((u) => u.id === me)?.designer;
+    for (const o of db.orders) if (designer || o.client === me) add(o.client, ...o.thread.map((m) => m.from));
+    for (const n of db.notifications) if (n.to === me) add(n.params.who);
+  }
+  return usable(db).filter((u) => ids.has(u.id) || u.provider === "demo").map(publicPerson);
 }
 
 export async function userByEmail(email: string): Promise<User | null> {

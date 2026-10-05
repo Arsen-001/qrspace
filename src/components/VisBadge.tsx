@@ -17,6 +17,13 @@ export function VisIcon({ v, className = "h-4 w-4" }: { v: Visibility; className
           <path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.2a6.5 6.5 0 0 1 3.5 5.8" />
         </>
       )}
+      {v === "contacts" && (
+        <>
+          <rect x="4" y="3" width="15" height="18" rx="2.5" />
+          <circle cx="11.5" cy="10" r="2.6" />
+          <path d="M7.5 17a4 4 0 0 1 8 0M19 7h2M19 12h2" />
+        </>
+      )}
       {v === "me" && (
         <>
           <rect x="5" y="11" width="14" height="10" rx="2" />

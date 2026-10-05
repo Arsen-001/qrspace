@@ -3,8 +3,10 @@
 import { useState, type ReactNode } from "react";
 import { api, codeLink, type CodePatch, type CodeView, type Grant, type Role, type Visibility } from "@/lib/codes";
 import { fmtDate, fmtDateTime } from "@/lib/format";
+import { refreshPeople } from "@/lib/me";
 import type { Dict, Lang } from "@/lib/i18n";
 import { Avatar, personName } from "./Avatar";
+import { ContactsBox } from "./ContactsBox";
 import { Card } from "./ui";
 import { VisIcon } from "./VisBadge";
 
@@ -42,6 +44,7 @@ export function AccessPanel({ t, lang, code, base, save }: { t: Dict; lang: Lang
       const { id } = await api.lookup(email.trim());
       if (id === code.owner || people.some((g) => g.personId === id)) return setAddError(t.alreadyAdded);
       await setPeople([...people, { personId: id, role: "view", until: null }]);
+      await refreshPeople();
       setEmail("");
     } catch {
       setAddError(t.notRegistered);
@@ -51,8 +54,8 @@ export function AccessPanel({ t, lang, code, base, save }: { t: Dict; lang: Lang
   return (
     <div className="space-y-5">
       <Card title={t.visTitle}>
-        <div role="radiogroup" aria-label={t.visTitle} className="grid gap-2 sm:grid-cols-3">
-          {(["all", "people", "me"] as Visibility[]).map((v) => (
+        <div role="radiogroup" aria-label={t.visTitle} className="grid gap-2 sm:grid-cols-2">
+          {(["all", "contacts", "people", "me"] as Visibility[]).map((v) => (
             <button
               key={v}
               type="button"
@@ -72,6 +75,8 @@ export function AccessPanel({ t, lang, code, base, save }: { t: Dict; lang: Lang
           ))}
         </div>
       </Card>
+
+      {code.visibility === "contacts" && <ContactsBox t={t} lang={lang} />}
 
       {requests.length > 0 && (
         <Card title={t.requestsTitle}>

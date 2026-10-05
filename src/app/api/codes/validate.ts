@@ -11,7 +11,7 @@ export function readText(v: unknown): string {
   return typeof v === "string" ? v.trim().slice(0, 5000) : "";
 }
 
-export const readVisibility = (v: unknown): Visibility | null => (v === "all" || v === "people" || v === "me" ? v : null);
+export const readVisibility = (v: unknown): Visibility | null => (v === "all" || v === "contacts" || v === "people" || v === "me" ? v : null);
 
 /** Список людей кода; validIds — кто вообще может войти (иначе — мусор). */
 export function readPeople(v: unknown, owner: string, validIds: Set<string>): Grant[] | null {

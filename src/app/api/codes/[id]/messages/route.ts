@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import type { NextRequest } from "next/server";
-import { mutate, newId } from "@/server/db";
+import { mutate, newId, notify } from "@/server/db";
 import { currentPerson } from "@/server/session";
 import { PRESETS } from "@/lib/codes";
 import { readShort, readText } from "../../validate";
@@ -43,6 +43,7 @@ export async function POST(req: NextRequest, ctx: RouteContext<"/api/codes/[id]/
     if (c.messages.filter((m) => now - Date.parse(m.at) < HOUR).length >= PER_CODE) return 429;
     c.messages.push({ id: newId(), from: me, preset, text, reply, at: new Date(now).toISOString(), read: false });
     c.messages = c.messages.slice(-200);
+    notify(db, c.owner, me, "message", { title: c.title, preset: preset ?? "", text: text.slice(0, 80) }, `/codes/${c.id}`);
     return 200;
   });
   if (result !== 200) return Response.json({ error: result }, { status: result });

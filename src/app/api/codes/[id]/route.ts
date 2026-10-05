@@ -1,7 +1,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import type { NextRequest } from "next/server";
-import { accessOf, findCode, MEDIA_DIR, mutate, newId, viewOf } from "@/server/db";
+import { accessOf, findCode, MEDIA_DIR, mutate, newId, notify, viewOf } from "@/server/db";
 import { currentPerson } from "@/server/session";
 import { usable } from "@/server/users";
 import type { CodePatch } from "@/lib/codes";
@@ -47,6 +47,8 @@ export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/codes/[id]
     if ("people" in body) {
       const p = readPeople(body.people, c.owner, new Set(usable(db).map((u) => u.id)));
       if (!p) return 400;
+      // Новым в списке — уведомление «вам открыли код».
+      p.filter((g) => !c.people.some((x) => x.personId === g.personId)).forEach((g) => notify(db, g.personId, me, "granted", { who: c.owner, title: c.title }, `/c/${c.id}`));
       c.people = p;
       c.requests = c.requests.filter((r) => !p.some((g) => g.personId === r.personId));
     }
@@ -65,6 +67,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/codes/[id]
       const who = body.approve;
       if (c.requests.some((r) => r.personId === who) && !c.people.some((g) => g.personId === who)) {
         c.people.push({ personId: who, role: "view", until: null });
+        notify(db, who, me, "granted", { who: c.owner, title: c.title }, `/c/${c.id}`);
         // Одобрили человека — значит код открыт выбранным людям (если был «только я»).
         if (c.visibility === "me") c.visibility = "people";
       }

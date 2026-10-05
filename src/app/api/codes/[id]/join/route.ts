@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { accessOf, mutate, viewOf } from "@/server/db";
+import { accessOf, mutate, notify, viewOf } from "@/server/db";
 import { currentPerson } from "@/server/session";
 
 /** Открыли по ссылке-приглашению: человек попадает в список с правом «смотреть». */
@@ -17,6 +17,7 @@ export async function POST(req: NextRequest, ctx: RouteContext<"/api/codes/[id]/
       c.people.push({ personId: me, role: "view", until: null });
       c.requests = c.requests.filter((r) => r.personId !== me);
       if (c.visibility === "me") c.visibility = "people";
+      notify(db, c.owner, me, "joined", { who: me, title: c.title }, `/codes/${c.id}`);
     }
     return viewOf(c, me);
   });

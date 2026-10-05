@@ -1,4 +1,4 @@
-import { allOrders, mutate, newId, isDesignerId } from "@/server/db";
+import { allOrders, designerIdsIn, isDesignerId, mutate, newId, notify } from "@/server/db";
 import { currentPerson } from "@/server/session";
 import { NEEDS, PACKAGES, type Need, type Order, type Pkg } from "@/lib/orders";
 import { readShort, readText } from "../codes/validate";
@@ -45,6 +45,7 @@ export async function POST(req: Request) {
   };
   await mutate((db) => {
     db.orders.push(order);
+    designerIdsIn(db).forEach((d) => notify(db, d, me, "orderNew", { who: me, brand }, `/brand/${order.id}`));
     db.purchases.push({ person: me, key: `code:order-${order.id}`, tier: "styled", price: PACKAGES[pkg], free: false, at });
   });
   return Response.json(order);

@@ -1,8 +1,10 @@
 import type { NextRequest } from "next/server";
-import { mutate, settle, transferCode } from "@/server/db";
+import { mutate, notify, settle, transferCode } from "@/server/db";
 import { currentPerson } from "@/server/session";
 import { minBid } from "@/lib/listings";
 import { lotOf } from "../view";
+
+const lotTitle = (db: { codes: { id: string; title: string }[] }, code: string) => db.codes.find((c) => c.id === code)?.title ?? "";
 
 export async function GET(_req: NextRequest, ctx: RouteContext<"/api/listings/[id]">) {
   const { id } = await ctx.params;
@@ -35,11 +37,16 @@ export async function POST(req: NextRequest, ctx: RouteContext<"/api/listings/[i
       l.status = "sold";
       l.buyer = me;
       l.final = l.price;
+      notify(db, l.seller, me, "sold", { who: me, title: lotTitle(db, l.code), amount: String(l.price) }, `/market/lot/${l.id}`);
       await transferCode(db, l.code, me, l.price);
     } else if (action === "bid") {
       const n = Math.round(Number(amount));
       if (mine || l.mode !== "auction" || !Number.isFinite(n) || n < minBid(l) || l.bids.at(-1)?.person === me) return 400;
+      const prev = l.bids.at(-1)?.person;
       l.bids.push({ person: me, amount: n, at: new Date().toISOString() });
+      const title = lotTitle(db, l.code);
+      notify(db, prev, me, "outbid", { title, amount: String(n) }, `/market/lot/${l.id}`);
+      notify(db, l.seller, me, "bid", { who: me, title, amount: String(n) }, `/market/lot/${l.id}`);
     } else if (action === "cancel") {
       if (!mine || l.bids.length) return 403;
       l.status = "cancelled";

@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { api, codeLink, type CodePatch, type CodeView } from "@/lib/codes";
 import type { Dict, Lang } from "@/lib/i18n";
 import { useLang } from "@/lib/lang";
-import { useMe } from "@/lib/me";
+import { refreshPeople, useMe } from "@/lib/me";
 import { tierOf } from "@/lib/pricing";
 import { DEFAULT_STYLE, fromSaved, toSaved } from "@/lib/qr/style";
 import { AccessPanel } from "./AccessPanel";
@@ -217,7 +217,7 @@ export function CodeEditor({ id }: { id: string }) {
     let live = true;
     api
       .get(id)
-      .then((code) => live && setState({ me, code }))
+      .then((code) => refreshPeople().then(() => live && setState({ me, code })))
       .catch((e: Error) => live && setState({ me, code: null, error: e.message !== "404" }));
     return () => {
       live = false;

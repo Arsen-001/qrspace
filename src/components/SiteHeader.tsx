@@ -6,6 +6,7 @@ import { LANGS, type Dict, type Lang } from "@/lib/i18n";
 import { saveLang } from "@/lib/lang";
 import { useMe } from "@/lib/me";
 import { Avatar, personName } from "./Avatar";
+import { Bell } from "./Bell";
 
 export function Logo() {
   return (
@@ -65,6 +66,7 @@ export function SiteHeader({ t, lang }: { t: Dict; lang: Lang }) {
             </button>
           ))}
         </div>
+        {ready && me && <Bell t={t} lang={lang} />}
         {ready &&
           (me ? (
             <Link href={`/login?next=${encodeURIComponent(path)}`} title={`${personName(me, lang)} · ${t.switchPerson}`} className="rounded-full">

@@ -7,7 +7,7 @@ import type { ProductId, ShopOrder } from "./shop";
 import type { Quote, Tier } from "./pricing";
 import type { SavedStyle } from "./qr/style";
 
-export type Visibility = "all" | "people" | "me";
+export type Visibility = "all" | "contacts" | "people" | "me";
 export type Role = "view" | "edit";
 /** Кем человек приходится коду: хозяин, может дописывать, может смотреть, закрыто. */
 export type AccessLevel = "owner" | "edit" | "view" | "closed";
@@ -92,6 +92,10 @@ export type CodeView = {
   messages?: Message[];
 };
 
+/** Уведомление на сайте: что случилось (kind), подробности (params; who — id человека), куда перейти. */
+export type Notice = { id: string; to: string; kind: string; params: Record<string, string>; link: string; at: string; read: boolean };
+export type Notices = { items: Notice[]; unread: number; due: number };
+
 export type CodeList = { base: string; mine: CodeView[]; shared: CodeView[] };
 export type MarketState = { sold: Record<string, number>; designs: Design[] };
 /** Лот с тем, что нужно показать: код (вид, номер, название) и продавец. */
@@ -140,6 +144,11 @@ export const api = {
   lotAction: (id: string, action: "buy" | "bid" | "cancel" | "finish", amount?: number) => call<Lot>(`/api/listings/${id}`, json("POST", { action, amount })),
   shopOrders: () => call<ShopOrder[]>("/api/shop"),
   shopOrder: (o: { product: ProductId; variant: string; code: string; qty: number; address: ShopOrder["address"] }) => call<ShopOrder>("/api/shop", json("POST", o)),
+  notices: () => call<Notices>("/api/notifications"),
+  readNotices: () => call<{ ok: true }>("/api/notifications", { method: "POST" }),
+  contacts: () => call<string[]>("/api/contacts"),
+  addContact: (email: string) => call<string[]>("/api/contacts", json("POST", { email })),
+  removeContact: (id: string) => call<string[]>(`/api/contacts?id=${encodeURIComponent(id)}`, { method: "DELETE" }),
   market: () => call<MarketState>("/api/market"),
   publish: (d: { name: string; about: string; price: number; edition: number | null; drop: boolean; style: SavedStyle }) =>
     call<Design>("/api/market", json("POST", d)),
