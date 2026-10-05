@@ -2,6 +2,7 @@
 import type { Design } from "./market";
 import type { Listing } from "./listings";
 import type { Need, Order, OrderStatus, Pkg } from "./orders";
+import type { ProductId, ShopOrder } from "./shop";
 import type { Quote, Tier } from "./pricing";
 import type { SavedStyle } from "./qr/style";
 
@@ -135,6 +136,8 @@ export const api = {
   lot: (id: string) => call<Lot>(`/api/listings/${id}`),
   sell: (code: string, mode: "fixed" | "auction", price: number, hours: number) => call<Lot>("/api/listings", json("POST", { code, mode, price, hours })),
   lotAction: (id: string, action: "buy" | "bid" | "cancel" | "finish", amount?: number) => call<Lot>(`/api/listings/${id}`, json("POST", { action, amount })),
+  shopOrders: () => call<ShopOrder[]>("/api/shop"),
+  shopOrder: (o: { product: ProductId; variant: string; code: string; qty: number; address: ShopOrder["address"] }) => call<ShopOrder>("/api/shop", json("POST", o)),
   market: () => call<MarketState>("/api/market"),
   publish: (d: { name: string; about: string; price: number; edition: number | null; drop: boolean; style: SavedStyle }) =>
     call<Design>("/api/market", json("POST", d)),

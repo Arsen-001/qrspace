@@ -28,6 +28,7 @@ export function SiteHeader({ t, lang }: { t: Dict; lang: Lang }) {
     { href: "/", label: t.navGenerator, on: path === "/" },
     { href: "/market", label: t.navMarket, on: path.startsWith("/market") },
     { href: "/codes", label: t.navCodes, on: path.startsWith("/codes") },
+    { href: "/shop", label: t.navShop, on: path.startsWith("/shop") },
     { href: "/brand", label: t.navBrand, on: path.startsWith("/brand") },
   ];
   return (

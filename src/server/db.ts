@@ -10,13 +10,14 @@ import { DESIGNS, SEED_SALES, type Design } from "@/lib/market";
 import type { Listing } from "@/lib/listings";
 import type { Order } from "@/lib/orders";
 import type { Purchase } from "@/lib/pricing";
+import type { ShopOrder } from "@/lib/shop";
 import { DEFAULT_STYLE, type SavedStyle } from "@/lib/qr/style";
 
 const DIR = path.join(process.cwd(), ".data");
 const DB = path.join(DIR, "db.json");
 export const MEDIA_DIR = path.join(DIR, "media");
 
-export type Db = { codes: CodeRecord[]; sales: Record<string, number>; designs: Design[]; purchases: Purchase[]; orders: Order[]; listings: Listing[] };
+export type Db = { codes: CodeRecord[]; sales: Record<string, number>; designs: Design[]; purchases: Purchase[]; orders: Order[]; listings: Listing[]; shop: ShopOrder[] };
 
 const ALPHABET = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
@@ -50,6 +51,7 @@ function seed(): Db {
   ];
   return {
     listings,
+    shop: [],
     sales: { ...SEED_SALES },
     designs: [],
     purchases: [],
@@ -176,6 +178,7 @@ async function read(): Promise<Db> {
     db.purchases ??= [];
     db.orders ??= [];
     db.listings ??= [];
+    db.shop ??= [];
     return db;
   } catch {
     // Файла нет — заполняем демо-данными один раз, даже если пришло несколько запросов сразу.
