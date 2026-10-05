@@ -13,7 +13,7 @@ export type Role = "view" | "edit";
 export type AccessLevel = "owner" | "edit" | "view" | "closed";
 
 /** Шаблон кода: память; машина (номер по выключателю); ключи и вещи; питомец. */
-export const KINDS = ["memory", "car", "lost", "pet"] as const;
+export const KINDS = ["memory", "car", "lost", "pet", "item"] as const;
 export type Kind = (typeof KINDS)[number];
 
 /** Готовые сообщения после скана — по шаблону. */
@@ -22,6 +22,7 @@ export const PRESETS: Record<Kind, string[]> = {
   car: ["blocking", "lights", "window", "tow", "hit"],
   lost: ["found"],
   pet: ["foundPet"],
+  item: [],
 };
 
 export type Grant = { personId: string; role: Role; until: string | null };
@@ -52,6 +53,8 @@ export type CodeRecord = {
   reward: string;
   messages: Message[];
   tasks: Task[];
+  /** Вещь бренда (защита от подделок): секрет под стираемым слоем, кто зарегистрировал. */
+  auth?: AuthRecord;
   /** Короткий номер для маленьких кодов (заглавные буквы и цифры) и включён ли «маленький код». */
   short?: string;
   compact?: boolean;
@@ -86,6 +89,7 @@ export type CodeView = {
   owners: { person: string; at: string; price: number | null }[] | null;
   short: string;
   compact: boolean;
+  auth: AuthView | null;
   edition: { design: string; no: number; of: number | null } | null;
   access: AccessLevel;
   visibility: Visibility;
@@ -104,7 +108,24 @@ export type CodeView = {
 export type Notice = { id: string; to: string; kind: string; params: Record<string, string>; link: string; at: string; read: boolean };
 export type Notices = { items: Notice[]; unread: number; due: number };
 
-export type CodeList = { base: string; mine: CodeView[]; shared: CodeView[] };
+export type AuthRecord = {
+  batch: string;
+  brand: string;
+  product: string;
+  serial: number;
+  secret: string;
+  holder: string | null;
+  claimedAt: string | null;
+  /** Владелец разрешил передать вещь: новый секрет уже у него, при регистрации вещь перейдёт. */
+  transferable: boolean;
+};
+/** Что видно о вещи бренда после скана (без секрета). */
+export type AuthView = { brand: string; product: string; serial: number; status: "free" | "mine" | "taken"; claimedAt: string | null; suspicious: boolean; transferable: boolean };
+export type Batch = { batch: string; brand: string; product: string; count: number; claimed: number; createdAt: string };
+export type BatchItem = { id: string; short: string; serial: number; secret: string; claimed: boolean };
+
+/** items — вещи брендов, зарегистрированные на меня (оригиналы). */
+export type CodeList = { base: string; mine: CodeView[]; shared: CodeView[]; items: CodeView[] };
 export type MarketState = { sold: Record<string, number>; designs: Design[] };
 /** Лот с тем, что нужно показать: код (вид, номер, название) и продавец. */
 export type Lot = Listing & { view: Pick<CodeView, "title" | "style" | "edition" | "owners"> };
@@ -164,6 +185,11 @@ export const api = {
   contacts: () => call<string[]>("/api/contacts"),
   addContact: (email: string) => call<string[]>("/api/contacts", json("POST", { email })),
   removeContact: (id: string) => call<string[]>(`/api/contacts?id=${encodeURIComponent(id)}`, { method: "DELETE" }),
+  authBatches: () => call<Batch[]>("/api/batches"),
+  authBatch: (id: string) => call<{ batch: Batch; items: BatchItem[] }>(`/api/batches/${id}`),
+  makeAuthBatch: (b: { brand: string; product: string; count: number }) => call<Batch>("/api/batches", json("POST", b)),
+  claimItem: (id: string, secret: string) => call<CodeView>(`/api/codes/${id}/claim`, json("POST", { secret })),
+  releaseItem: (id: string) => call<{ secret: string; view: CodeView }>(`/api/codes/${id}/claim`, { method: "DELETE" }),
   market: () => call<MarketState>("/api/market"),
   publish: (d: { name: string; about: string; price: number; edition: number | null; drop: boolean; style: SavedStyle }) =>
     call<Design>("/api/market", json("POST", d)),

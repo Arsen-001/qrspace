@@ -11,7 +11,9 @@ export async function GET(req: Request) {
   const newest = (a: CodeRecord, b: CodeRecord) => b.createdAt.localeCompare(a.createdAt);
   return Response.json({
     base: publicBase(req),
-    mine: codes.filter((c) => c.owner === me).sort(newest).map((c) => viewOf(c, me)),
+    // Вещи партий (защита от подделок) — не в общем списке, а в «Защите от подделок».
+    mine: codes.filter((c) => c.owner === me && c.kind !== "item").sort(newest).map((c) => viewOf(c, me)),
+    items: codes.filter((c) => c.auth?.holder === me).map((c) => viewOf(c, me)),
     shared: codes
       .filter((c) => c.owner !== me && c.people.some((p) => p.personId === me) && accessOf(c, me) !== "closed")
       .sort(newest)

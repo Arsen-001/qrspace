@@ -135,7 +135,7 @@ function NewCode({ t }: { t: Dict }) {
     >
       <div className="mb-1.5 text-sm font-medium text-muted">{t.templateLabel}</div>
       <div role="radiogroup" aria-label={t.templateLabel} className="mb-4 grid gap-2 sm:grid-cols-2">
-        {KINDS.map((k) => (
+        {KINDS.filter((k) => k !== "item").map((k) => (
           <button
             key={k}
             type="button"
@@ -235,6 +235,26 @@ export function CodesPage() {
               </ul>
             ) : (
               <Notice>{t.emptyCodes}</Notice>
+            )}
+            {list.items.length > 0 && (
+              <section>
+                <h2 className="font-heading text-xl font-bold">{t.myItems}</h2>
+                <ul className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {list.items.map((c) => (
+                    <li key={c.id}>
+                      <Link href={`/c/${c.id}`} className="flex items-center gap-3 rounded-2xl border border-line bg-card p-4 hover:border-muted">
+                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-ok-soft text-ok">✓</span>
+                        <span className="min-w-0">
+                          <span className="block truncate font-semibold">{c.auth?.brand}</span>
+                          <span className="block truncate text-xs text-muted">
+                            {c.auth?.product} · {t.editionNo} {c.auth?.serial}
+                          </span>
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </section>
             )}
             {list.shared.length > 0 && (
               <section>

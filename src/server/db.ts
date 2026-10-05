@@ -22,7 +22,10 @@ export type Db = { codes: CodeRecord[]; sales: Record<string, number>; designs: 
 const ALPHABET = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 // Без похожих (0/O, 1/I) — короткий номер иногда вводят руками.
 const SHORT = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-const newShort = (taken: Set<string>) => {
+/** Секрет под стираемым слоем бирки: 8 знаков без похожих букв. */
+export const newSecret = () => Array.from(randomBytes(8), (b) => SHORT[b % SHORT.length]).join("");
+export const takenShorts = (db: Db) => new Set(db.codes.map((c) => c.short).filter((x): x is string => !!x));
+export const newShort = (taken: Set<string>) => {
   for (;;) {
     const s = Array.from(randomBytes(6), (b) => SHORT[b % SHORT.length]).join("");
     if (!taken.has(s)) return s;
@@ -34,8 +37,9 @@ export const newId = (len = 8) => Array.from(randomBytes(len), (b) => ALPHABET[b
 
 /** С чего начинается код каждого шаблона. Машина и ключи — хозяин скрыт, память закрыта; питомец — анкета открыта. */
 export function kindDefaults(kind: Kind): Pick<CodeRecord, "kind" | "visibility" | "showOwner" | "contact" | "lost" | "reward" | "messages" | "tasks"> {
-  const contact = { enabled: kind !== "memory", phone: "", showPhone: false };
-  return { kind, visibility: kind === "pet" ? "all" : "me", showOwner: kind === "memory", contact, lost: false, reward: "", messages: [], tasks: [] };
+  const contact = { enabled: kind !== "memory" && kind !== "item", phone: "", showPhone: false };
+  // Вещь бренда: страница открыта всем (там «Оригинал» и регистрация), имя бренда — в самой вещи.
+  return { kind, visibility: kind === "pet" || kind === "item" ? "all" : "me", showOwner: kind === "memory", contact, lost: false, reward: "", messages: [], tasks: [] };
 }
 
 const style = (p: Partial<SavedStyle>): SavedStyle => ({ ...DEFAULT_STYLE, eyeIcon: null, picture: null, ...p });
@@ -310,6 +314,22 @@ export function notify(db: Db, to: string | null | undefined, actor: string | nu
 
 export const designerIdsIn = (db: Db) => db.users.filter((u) => u.designer).map((u) => u.id);
 
+/** «Оригинал»: чья вещь (я / другой / никто) и не скопирован ли код — его сканируют подозрительно часто. */
+function authView(code: CodeRecord, me: string | null) {
+  const a = code.auth!;
+  const month = Date.now() - 30 * 86_400_000;
+  const others = code.visits.filter((v) => Date.parse(v.at) > month && (!v.personId || v.personId !== a.holder)).length;
+  return {
+    brand: a.brand,
+    product: a.product,
+    serial: a.serial,
+    status: !a.holder ? ("free" as const) : a.holder === me ? ("mine" as const) : ("taken" as const),
+    claimedAt: a.claimedAt,
+    suspicious: others >= 20,
+    transferable: a.transferable,
+  };
+}
+
 export function viewOf(code: CodeRecord, me: string | null): CodeView {
   const access = accessOf(code, me);
   const owner = access === "owner";
@@ -330,6 +350,7 @@ export function viewOf(code: CodeRecord, me: string | null): CodeView {
     short: code.short ?? "",
     compact: !!code.compact,
     edition: code.edition ?? null,
+    auth: code.auth ? authView(code, me) : null,
     owners: code.edition ? (code.owners ?? []) : null,
     tasks: access === "closed" ? null : [...code.tasks].sort((a, b) => a.due.localeCompare(b.due)),
     access,

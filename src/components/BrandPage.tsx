@@ -163,6 +163,14 @@ export function BrandPage() {
     <Shell t={t} lang={lang}>
       <h1 className="max-w-3xl font-heading text-3xl font-extrabold tracking-tight text-balance sm:text-4xl">{designer ? t.ordersTitle : t.brandTitle}</h1>
       {!designer && <p className="mt-2 max-w-2xl text-sm text-muted">{t.brandHint}</p>}
+      <Link href="/brand/auth" className="mt-5 flex max-w-2xl items-center gap-3 rounded-2xl border border-line bg-card p-4 hover:border-muted">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-ok-soft text-ok">✓</span>
+        <span className="min-w-0">
+          <span className="block font-semibold">{t.authTitle}</span>
+          <span className="block text-xs text-muted">{t.authTeaser}</span>
+        </span>
+        <span className="ml-auto text-muted">→</span>
+      </Link>
       <div className="mt-6 space-y-6">
         {list && list.length > 0 && (
           <section>

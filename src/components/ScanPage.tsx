@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { api, PRESETS, type CodeView } from "@/lib/codes";
-import type { Dict } from "@/lib/i18n";
+import { fill, type Dict, type Lang } from "@/lib/i18n";
+import { fmtDate } from "@/lib/format";
 import { KindIcon } from "./KindIcon";
 import { useLang } from "@/lib/lang";
 import { refreshPeople, useMe } from "@/lib/me";
@@ -62,6 +63,93 @@ function Closed({ t, code, me, id, invite, onChange }: { t: Dict; code: CodeView
           </button>
         )}
       </div>
+    </div>
+  );
+}
+
+/** Вещь бренда: «Оригинал», чья она, регистрация секретом, передача при продаже, тревога «возможно, копия». */
+function AuthCard({ t, lang, code, me, onChange }: { t: Dict; lang: Lang; code: CodeView; me: string | null; onChange: (v: CodeView) => void }) {
+  const a = code.auth!;
+  const [secret, setSecret] = useState("");
+  const [state, setState] = useState<"idle" | "busy" | "bad" | "taken">("idle");
+  const [given, setGiven] = useState<string | null>(null);
+  const claim = async () => {
+    setState("busy");
+    try {
+      onChange(await api.claimItem(code.id, secret));
+      setState("idle");
+    } catch (e) {
+      setState((e as Error).message === "409" ? "taken" : "bad");
+    }
+  };
+  const warn = a.status === "taken" || a.suspicious;
+  return (
+    <div className="space-y-4">
+      <section className={`rounded-2xl p-5 text-white ${warn ? "bg-warn" : "bg-ok"}`}>
+        <div className="text-sm font-semibold uppercase tracking-wider opacity-90">{a.brand}</div>
+        <div className="mt-1 font-heading text-3xl font-extrabold leading-tight">{warn ? `⚠ ${t.authCheck}` : `✓ ${t.authOriginal}`}</div>
+        <div className="mt-2 text-sm opacity-95">
+          {a.product} · {t.editionNo} {a.serial}
+        </div>
+      </section>
+      {a.suspicious && <p className="rounded-2xl bg-warn-soft p-4 text-sm font-medium text-warn">{t.authSuspicious}</p>}
+      <section className="rounded-2xl border border-line bg-card p-5">
+        {a.status === "mine" ? (
+          <>
+            <p className="font-semibold">✓ {fill(t.authMine, { date: a.claimedAt ? fmtDate(a.claimedAt.slice(0, 10), lang) : "" })}</p>
+            {given ? (
+              <p className="mt-3 rounded-xl bg-field p-3 text-sm">
+                {t.authGiveSecret} <span className="select-all font-mono text-lg font-bold tracking-widest">{given}</span>
+              </p>
+            ) : (
+              <button
+                type="button"
+                onClick={async () => {
+                  const r = await api.releaseItem(code.id);
+                  setGiven(r.secret);
+                  onChange(r.view);
+                }}
+                className="mt-3 min-h-11 rounded-xl border border-line bg-field px-4 text-sm font-semibold hover:border-muted"
+              >
+                {t.authSell}
+              </button>
+            )}
+          </>
+        ) : (
+          <>
+            <p className="font-semibold">{a.status === "free" ? t.authFree : fill(t.authTaken, { date: a.claimedAt ? fmtDate(a.claimedAt.slice(0, 10), lang) : "" })}</p>
+            {a.status === "taken" && <p className="mt-1 text-sm text-muted">{a.transferable ? t.authTransferable : t.authTakenHint}</p>}
+            {(a.status === "free" || a.transferable) &&
+              (me ? (
+                <form
+                  className="mt-4 flex flex-wrap gap-2"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (secret.trim()) claim();
+                  }}
+                >
+                  <input
+                    value={secret}
+                    onChange={(e) => setSecret(e.target.value)}
+                    placeholder={t.authSecret}
+                    aria-label={t.authSecret}
+                    autoCapitalize="characters"
+                    className="min-h-12 min-w-0 flex-1 rounded-xl border border-line bg-field px-3.5 font-mono text-lg tracking-widest uppercase"
+                  />
+                  <button type="submit" disabled={state === "busy" || !secret.trim()} className={primary}>
+                    {t.authClaim}
+                  </button>
+                  {state === "bad" && <p className="w-full text-sm text-warn">{t.authBadSecret}</p>}
+                  {state === "taken" && <p className="w-full text-sm text-warn">{t.authTakenHint}</p>}
+                </form>
+              ) : (
+                <Link href={`/login?next=${encodeURIComponent(`/c/${code.id}`)}`} className={`${primary} mt-4`}>
+                  {t.authLoginToClaim}
+                </Link>
+              ))}
+          </>
+        )}
+      </section>
     </div>
   );
 }
@@ -219,8 +307,9 @@ export function ScanPage({ id, invite }: { id: string; invite: string | null }) 
               </Link>
             </div>
           )}
-          {code.lost && <LostBanner t={t} code={code} />}
-          {code.access === "closed" && code.kind === "memory" ? (
+          {code.lost && code.kind !== "item" && <LostBanner t={t} code={code} />}
+          {code.auth && <AuthCard t={t} lang={lang} code={code} me={me} onChange={setCode} />}
+          {code.kind === "item" ? null : code.access === "closed" && code.kind === "memory" ? (
             <Closed key={me ?? ""} t={t} code={code} me={me} id={id} invite={invite} onChange={setCode} />
           ) : (
             <>
