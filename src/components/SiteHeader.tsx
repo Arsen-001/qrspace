@@ -26,6 +26,7 @@ export function SiteHeader({ t, lang }: { t: Dict; lang: Lang }) {
   const { ready, me } = useMe();
   const nav = [
     { href: "/", label: t.navGenerator, on: path === "/" },
+    { href: "/market", label: t.navMarket, on: path.startsWith("/market") },
     { href: "/codes", label: t.navCodes, on: path.startsWith("/codes") },
   ];
   return (

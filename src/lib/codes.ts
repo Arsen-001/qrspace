@@ -37,6 +37,8 @@ export type CodeRecord = {
   lost: boolean;
   reward: string;
   messages: Message[];
+  /** Купленный в маркете дизайн: № в тираже (of = null — без тиража). */
+  edition?: { design: string; no: number; of: number | null };
   visibility: Visibility;
   people: Grant[];
   requests: { personId: string; at: string }[];
@@ -59,6 +61,7 @@ export type CodeView = {
   contact: { enabled: boolean; showPhone: boolean; phone: string | null };
   lost: boolean;
   reward: string;
+  edition: { design: string; no: number; of: number | null } | null;
   access: AccessLevel;
   visibility: Visibility;
   blocks: Block[] | null;
@@ -73,6 +76,7 @@ export type CodeView = {
 };
 
 export type CodeList = { base: string; mine: CodeView[]; shared: CodeView[] };
+export type MarketState = { sold: Record<string, number> };
 
 export const MAX_PHOTO_PX = 1600;
 export const MAX_VIDEO_MB = 50;
@@ -100,6 +104,8 @@ export const api = {
   login: (personId: string | null) => call<{ me: string | null }>("/api/me", json("POST", { personId })),
   list: () => call<CodeList>("/api/codes"),
   create: (title: string, kind: Kind, style: SavedStyle) => call<CodeView>("/api/codes", json("POST", { title, kind, style })),
+  market: () => call<MarketState>("/api/market"),
+  buy: (design: string) => call<CodeView>(`/api/market/${design}`, { method: "POST" }),
   message: (id: string, m: { preset: string | null; text: string; reply: string }) => call<{ ok: true }>(`/api/codes/${id}/messages`, json("POST", m)),
   get: (id: string, opts: { visit?: boolean } = {}) => call<CodeView>(`/api/codes/${id}${opts.visit ? "?visit=1" : ""}`),
   patch: (id: string, patch: CodePatch) => call<CodeView>(`/api/codes/${id}`, json("PATCH", patch)),

@@ -135,6 +135,12 @@ function Editor({ t, lang, me, base, initial }: { t: Dict; lang: Lang; me: strin
               <KindIcon kind={code.kind} className="h-6 w-6" />
             </span>
             <TitleField key={code.title} t={t} value={code.title ?? ""} save={save} />
+            {code.edition && (
+              <span className="shrink-0 rounded-full bg-ink px-2.5 py-1 text-xs font-semibold text-bg">
+                {t.editionNo} {code.edition.no}
+                {code.edition.of !== null && ` / ${code.edition.of}`}
+              </span>
+            )}
           </div>
         </div>
         <span className="text-sm text-muted" aria-live="polite">
