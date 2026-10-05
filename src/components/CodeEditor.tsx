@@ -98,7 +98,7 @@ function Editor({ t, lang, me, base, initial }: { t: Dict; lang: Lang; me: strin
       setStatus("saving");
       // Выключатели и выбор отвечают сразу, не дожидаясь сервера; ответ сервера потом поправит, если что.
       setCode((c) => {
-        const { title, visibility, people, showOwner, lost, reward, contact, compact } = p;
+        const { title, visibility, people, showOwner, lost, reward, contact, compact, publicAdd } = p;
         return {
           ...c,
           ...(title !== undefined && { title }),
@@ -106,6 +106,7 @@ function Editor({ t, lang, me, base, initial }: { t: Dict; lang: Lang; me: strin
           ...(people !== undefined && { people }),
           ...(showOwner !== undefined && { showOwner }),
           ...(compact !== undefined && { compact }),
+          ...(publicAdd !== undefined && { publicAdd }),
           ...(lost !== undefined && { lost }),
           ...(reward !== undefined && { reward }),
           ...(contact !== undefined && { contact: { ...contact, phone: contact.phone || null, schedule: contact.schedule ?? null } }),

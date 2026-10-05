@@ -105,7 +105,8 @@ function AddTask({ t, code, onChange }: { t: Dict; code: CodeView; onChange: (v:
 
 export function Tasks({ t, lang, me, code, onChange }: { t: Dict; lang: Lang; me: string | null; code: CodeView; onChange: (v: CodeView) => void }) {
   const tasks = code.tasks ?? [];
-  const canEdit = code.access === "owner" || code.access === "edit";
+  // Где «гости добавляют свои фото» (свадьба), напоминания — дело хозяина, гостям их форма не нужна.
+  const canEdit = code.access === "owner" || (code.access === "edit" && !code.publicAdd);
   if (!tasks.length && !canEdit) return null;
   return (
     <section className="mb-3 rounded-2xl border border-line bg-card p-4 sm:p-5">

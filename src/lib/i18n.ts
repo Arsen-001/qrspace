@@ -618,6 +618,10 @@ const ru = {
   installTitle: "Поставьте на телефон как приложение",
   installIos: "откройте сайт в Safari → «Поделиться» → «На экран „Домой“».",
   installAndroid: "откройте сайт в Chrome → меню ⋮ → «Установить приложение».",
+  starterLabel: "Начать с шаблона (необязательно)",
+  publicAddLabel: "Гости могут добавлять свои фото и записи",
+  publicAddHint: "Для свадьбы, праздника, общего альбома: каждый, кто видит код и вошёл, может дописать. Удалить чужое можете только вы.",
+  signInToAdd: "Войдите, чтобы добавить свои фото",
   "notice.itemPassed": "Ваша вещь «{title}» перешла новому владельцу",
 };
 
@@ -1234,6 +1238,10 @@ const en: Dict = {
   installTitle: "Put it on your phone like an app",
   installIos: "open the site in Safari → Share → Add to Home Screen.",
   installAndroid: "open the site in Chrome → menu ⋮ → Install app.",
+  starterLabel: "Start from a template (optional)",
+  publicAddLabel: "Guests can add their own photos and entries",
+  publicAddHint: "For a wedding, a party, a shared album: anyone who sees the code and signs in can add. Only you can delete others’ entries.",
+  signInToAdd: "Sign in to add your photos",
   "notice.itemPassed": "Your item “{title}” passed to a new owner",
 };
 
@@ -1848,6 +1856,10 @@ const hy: Dict = {
   installTitle: "Տեղադրեք հեռախոսում որպես հավելված",
   installIos: "բացեք կայքը Safari-ում → «Կիսվել» → «Հիմնական էկրանին»։",
   installAndroid: "բացեք կայքը Chrome-ում → մենյու ⋮ → «Տեղադրել հավելվածը»։",
+  starterLabel: "Սկսել ձևանմուշից (ըստ ցանկության)",
+  publicAddLabel: "Հյուրերը կարող են ավելացնել իրենց լուսանկարներն ու գրառումները",
+  publicAddHint: "Հարսանիքի, տոնի, ընդհանուր ալբոմի համար. ամեն ոք, ով տեսնում է կոդը և մտել է, կարող է լրացնել։ Ուրիշի գրառումը ջնջել կարող եք միայն դուք։",
+  signInToAdd: "Մուտք գործեք՝ ձեր լուսանկարներն ավելացնելու համար",
   "notice.itemPassed": "Ձեր «{title}» իրն անցավ նոր տիրոջը",
 };
 

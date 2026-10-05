@@ -8,6 +8,7 @@ import type { Dict, Lang } from "@/lib/i18n";
 import { useLang } from "@/lib/lang";
 import { useMe } from "@/lib/me";
 import { DEFAULT_STYLE, toSaved } from "@/lib/qr/style";
+import { STARTERS } from "@/lib/starters";
 import { personName } from "./Avatar";
 import { KindIcon } from "./KindIcon";
 import { QrThumb } from "./QrThumb";
@@ -105,6 +106,8 @@ function NewCode({ t }: { t: Dict }) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [kind, setKind] = useState<Kind>("memory");
+  const [starter, setStarter] = useState<string | null>(null);
+  const { lang } = useLang();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
   if (!open) {
@@ -118,7 +121,7 @@ function NewCode({ t }: { t: Dict }) {
     if (!title.trim()) return;
     setBusy(true);
     try {
-      const code = await api.create(title, kind, toSaved(DEFAULT_STYLE));
+      const code = await api.create(title, kind, toSaved(DEFAULT_STYLE), starter ? { id: starter, lang } : undefined);
       router.push(`/codes/${code.id}`);
     } catch {
       setError(true);
@@ -141,7 +144,10 @@ function NewCode({ t }: { t: Dict }) {
             type="button"
             role="radio"
             aria-checked={kind === k}
-            onClick={() => setKind(k)}
+            onClick={() => {
+              setKind(k);
+              setStarter(null);
+            }}
             className={`flex min-w-0 items-start gap-3 rounded-xl border p-3 text-left transition-colors ${kind === k ? "border-accent bg-accent text-on-accent" : "border-line bg-field hover:border-muted"}`}
           >
             <KindIcon kind={k} className="mt-0.5 h-5 w-5" />
@@ -152,6 +158,32 @@ function NewCode({ t }: { t: Dict }) {
           </button>
         ))}
       </div>
+      {STARTERS.some((s) => s.kind === kind) && (
+        <div className="mb-4">
+          <div className="mb-1.5 text-sm font-medium text-muted">{t.starterLabel}</div>
+          <div role="radiogroup" aria-label={t.starterLabel} className="flex flex-wrap gap-2">
+            {STARTERS.filter((s) => s.kind === kind).map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                role="radio"
+                aria-checked={starter === s.id}
+                title={s.hint[lang]}
+                onClick={() => {
+                  const next = starter === s.id ? null : s.id;
+                  setStarter(next);
+                  // Пустое название — подставим название шаблона.
+                  if (next && !title.trim()) setTitle(s.name[lang]);
+                }}
+                className={`min-h-10 rounded-xl border px-3 text-left text-sm transition-colors ${starter === s.id ? "border-accent bg-accent text-on-accent" : "border-line bg-field hover:border-muted"}`}
+              >
+                <span className="block font-semibold">{s.name[lang]}</span>
+                <span className={`block text-xs ${starter === s.id ? "opacity-85" : "text-muted"}`}>{s.hint[lang]}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       <label htmlFor="new-code" className="mb-1.5 block text-sm font-medium text-muted">
         {t.newCodeTitle}
       </label>

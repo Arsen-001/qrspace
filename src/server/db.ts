@@ -313,8 +313,10 @@ export function accessOf(code: CodeRecord, me: string | null): AccessLevel {
   if (code.visibility === "me") return "closed";
   const grant = me ? code.people.find((p) => p.personId === me && (!p.until || p.until >= today())) : undefined;
   if (grant) return grant.role;
-  if (code.visibility === "contacts") return me && contactsOf.get(code.owner)?.includes(me) ? "view" : "closed";
-  return code.visibility === "all" ? "view" : "closed";
+  const sees = code.visibility === "contacts" ? !!me && !!contactsOf.get(code.owner)?.includes(me) : code.visibility === "all";
+  if (!sees) return "closed";
+  // «Гости добавляют свои фото» — вошедшие могут дописывать (менять — только своё).
+  return code.publicAdd && me ? "edit" : "view";
 }
 
 /** Уведомить человека (себя за свои же действия — не уведомляем). */
@@ -359,6 +361,7 @@ export function viewOf(code: CodeRecord, me: string | null): CodeView {
     contact: { enabled: code.contact.enabled, showPhone: owner ? code.contact.showPhone : phoneOn, phone, schedule: owner ? (code.contact.schedule ?? null) : null },
     lost: code.lost,
     reward: code.lost || owner ? code.reward : "",
+    publicAdd: !!code.publicAdd,
     short: code.short ?? "",
     compact: !!code.compact,
     edition: code.edition ?? null,

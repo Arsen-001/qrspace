@@ -55,6 +55,8 @@ export type CodeRecord = {
   tasks: Task[];
   /** Вещь бренда (защита от подделок): секрет под стираемым слоем, кто зарегистрировал. */
   auth?: AuthRecord;
+  /** Все, кто видит и вошёл, могут добавлять записи (свадьба, праздник). */
+  publicAdd?: boolean;
   /** Короткий номер для маленьких кодов (заглавные буквы и цифры) и включён ли «маленький код». */
   short?: string;
   compact?: boolean;
@@ -90,6 +92,7 @@ export type CodeView = {
   short: string;
   compact: boolean;
   auth: AuthView | null;
+  publicAdd: boolean;
   edition: { design: string; no: number; of: number | null } | null;
   access: AccessLevel;
   visibility: Visibility;
@@ -150,7 +153,7 @@ async function call<T>(url: string, init?: RequestInit): Promise<T> {
 }
 const json = (method: string, body: unknown): RequestInit => ({ method, headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
 
-export type CodePatch = Partial<Pick<CodeRecord, "title" | "visibility" | "people" | "style" | "showOwner" | "contact" | "lost" | "reward" | "compact">> & {
+export type CodePatch = Partial<Pick<CodeRecord, "title" | "visibility" | "people" | "style" | "showOwner" | "contact" | "lost" | "reward" | "compact" | "publicAdd">> & {
   readMessages?: boolean;
   removeMessage?: string;
   approve?: string;
@@ -163,7 +166,7 @@ export const api = {
   lookup: (email: string) => call<{ id: string }>(`/api/people/lookup?email=${encodeURIComponent(email)}`),
   login: (personId: string | null) => call<{ me: string | null }>("/api/me", json("POST", { personId })),
   list: () => call<CodeList>("/api/codes"),
-  create: (title: string, kind: Kind, style: SavedStyle) => call<CodeView>("/api/codes", json("POST", { title, kind, style })),
+  create: (title: string, kind: Kind, style: SavedStyle, starter?: { id: string; lang: string }) => call<CodeView>("/api/codes", json("POST", { title, kind, style, starter })),
   quote: (key: string, tier: Tier) => call<Quote>(`/api/purchases?key=${encodeURIComponent(key)}&tier=${tier}`),
   pay: (key: string, tier: Tier) => call<{ ok: true; price: number }>("/api/purchases", json("POST", { key, tier })),
   batch: (count: number, prefix: string, style: SavedStyle) => call<CodeView[]>("/api/codes/batch", json("POST", { count, prefix, kind: "memory", style })),

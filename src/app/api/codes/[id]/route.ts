@@ -58,6 +58,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/codes/[id]
       c.style = style;
     }
     if ("compact" in body) c.compact = body.compact === true;
+    if ("publicAdd" in body) c.publicAdd = body.publicAdd === true;
     if ("showOwner" in body) c.showOwner = body.showOwner === true;
     if ("contact" in body) {
       const ct = readContact(body.contact);

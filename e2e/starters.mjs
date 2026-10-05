@@ -1,0 +1,51 @@
+import { chromium } from "playwright";
+// Готовые шаблоны: свадьба (гости добавляют свои записи), сад (напоминания), медкарта питомца (на армянском).
+const out = new URL("./out/", import.meta.url).pathname;
+const B = "http://localhost:3720";
+const browser = await chromium.launch();
+const errors = [];
+const ok = (c, m) => { console.log(c ? "  ✓" : "  ✗", m); if (!c) errors.push(m); };
+const shot = async (p, name) => { await p.waitForTimeout(300); await p.screenshot({ path: out + name + ".png", fullPage: true }); const o = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth); if (o) errors.push(`${name} overflow ${o}`); };
+const demo = async (who, next, w = 390, locale = "ru-RU") => { const ctx = await browser.newContext({ viewport: { width: w, height: 900 }, locale }); const p = await ctx.newPage(); p.on("pageerror", (e) => errors.push(e.message)); await p.goto(`${B}/login?next=${encodeURIComponent(next)}`); await p.getByRole("button", { name: new RegExp(who) }).click(); await p.waitForURL((u) => !u.pathname.startsWith("/login")); return p; };
+const create = async (p, kindRe, starterRe) => {
+  await p.getByRole("button", { name: /Новый код|Նոր կոդ/ }).click();
+  await p.getByRole("radio", { name: kindRe }).first().click();
+  await p.getByRole("radio", { name: starterRe }).click();
+  await shot(p, `s-new-${starterRe.source.slice(0, 6)}`);
+  await p.getByRole("button", { name: /^(Создать|Ստեղծել)$/ }).click();
+  await p.waitForURL(/\/codes\/\w+/);
+};
+const a = await demo("Арман", "/codes", 1280);
+await create(a, /Память/, /Свадьба/);
+await a.waitForSelector("text=Добавляйте свои фото и видео");
+ok(await a.locator("input[value='Свадьба / праздник']").count() === 1, "title filled from template");
+await a.getByRole("tab", { name: /Кто видит/ }).click();
+ok(await a.getByRole("switch", { name: /Гости могут добавлять/ }).isChecked(), "wedding: guests can add — on");
+const scan = a.url().replace("/codes/", "/c/");
+const guest = await (await browser.newContext({ viewport: { width: 390, height: 900 }, locale: "ru-RU" })).newPage();
+await guest.goto(scan, { waitUntil: "networkidle" });
+await guest.waitForSelector("text=Войдите, чтобы добавить свои фото");
+ok(true, "guest sees sign-in to add");
+const l = await demo("Лилит", scan.replace(B, ""));
+await l.getByPlaceholder("Что важно запомнить…").fill("Поздравляем! Вот наше видео с танца");
+await l.getByRole("button", { name: "Сохранить" }).click();
+await l.waitForSelector("text=Поздравляем!");
+const entry = (text) => l.getByRole("listitem").filter({ hasText: text }).getByRole("button", { name: "Удалить" });
+ok((await entry("Добро пожаловать").count()) === 0, "guest can't delete the owner's entry");
+ok((await entry("Поздравляем").count()) === 1, "guest can delete own entry");
+ok((await l.locator("text=Напоминания").count()) === 0, "guests don't see the reminders form");
+await shot(l, "s-wedding-guest");
+// сад: напоминания
+await a.goto(B + "/codes", { waitUntil: "networkidle" });
+await create(a, /Память/, /Сад/);
+await a.waitForSelector("text=Подкормить");
+ok(await a.locator("text=Каждую неделю").count() >= 1, "garden: weekly watering reminder");
+// медкарта питомца на армянском
+const h = await demo("Արման", "/codes", 390, "hy-AM");
+await create(h, /Ընտանի կենդանի/, /բժշկական քարտ/);
+await h.getByRole("tab", { name: /Հիշողություն/ }).click();
+await h.waitForSelector("text=Պատվաստում");
+ok(await h.locator("text=Չիպ").count() >= 1, "pet medical card in Armenian with chip and vaccine reminder");
+await shot(h, "s-petmed-hy");
+console.log("errors:", errors.length ? errors : "none");
+await browser.close();

@@ -331,6 +331,11 @@ export function ScanPage({ id, invite }: { id: string; invite: string | null }) 
               {code.access !== "closed" && (code.kind === "memory" || code.access !== "view" || !!code.blocks?.length) && (
                 <Memory t={t} lang={lang} code={code} me={me} onChange={setCode} />
               )}
+              {code.publicAdd && !me && (
+                <Link href={`/login?next=${encodeURIComponent(`/c/${id}`)}`} className={`${primary} mt-4 w-full`}>
+                  {t.signInToAdd}
+                </Link>
+              )}
             </>
           )}
           {code.contact.enabled && code.access !== "owner" && <ContactBox t={t} code={code} />}

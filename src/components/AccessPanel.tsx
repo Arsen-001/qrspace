@@ -7,7 +7,7 @@ import { refreshPeople } from "@/lib/me";
 import type { Dict, Lang } from "@/lib/i18n";
 import { Avatar, personName } from "./Avatar";
 import { ContactsBox } from "./ContactsBox";
-import { Card } from "./ui";
+import { Card, Switch } from "./ui";
 import { VisIcon } from "./VisBadge";
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -76,6 +76,11 @@ export function AccessPanel({ t, lang, code, base, save }: { t: Dict; lang: Lang
         </div>
       </Card>
 
+      {(code.visibility === "all" || code.visibility === "contacts") && (
+        <section className="rounded-2xl border border-line bg-card p-5">
+          <Switch label={t.publicAddLabel} hint={t.publicAddHint} checked={code.publicAdd} onChange={(publicAdd) => save({ publicAdd })} />
+        </section>
+      )}
       {code.visibility === "contacts" && <ContactsBox t={t} lang={lang} />}
 
       {requests.length > 0 && (
