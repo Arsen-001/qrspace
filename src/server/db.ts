@@ -282,6 +282,10 @@ export async function settle(db: Db, now = Date.now()) {
   }
 }
 
+export async function shopOrders() {
+  return (await read()).shop;
+}
+
 export async function noticesFor(person: string) {
   return (await read()).notifications.filter((n) => n.to === person);
 }

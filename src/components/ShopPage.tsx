@@ -4,15 +4,68 @@ import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import { api, linkOf, type CodeView } from "@/lib/codes";
 import { fmtDateTime } from "@/lib/format";
-import type { Dict } from "@/lib/i18n";
+import type { Dict, Lang } from "@/lib/i18n";
 import { useLang } from "@/lib/lang";
 import { useMe } from "@/lib/me";
+import { isDesigner } from "@/lib/people";
 import { PRODUCT_IDS, PRODUCTS, priceOf, type ProductId, type ShopOrder } from "@/lib/shop";
 import type { SavedStyle } from "@/lib/qr/style";
+import { personName } from "./Avatar";
 import { sampleLink } from "./MarketPage";
 import { QrThumb } from "./QrThumb";
 import { Notice, Shell } from "./Shell";
 import { Segmented } from "./ui";
+
+/** Сотруднику: все заказы товаров — печать и отправка; покупатель получает уведомление о каждом шаге. */
+function StaffOrders({ t, lang }: { t: Dict; lang: Lang }) {
+  const [orders, setOrders] = useState<ShopOrder[] | null>(null);
+  useEffect(() => {
+    let live = true;
+    api.shopOrders(true).then((o) => live && setOrders(o), () => {});
+    return () => {
+      live = false;
+    };
+  }, []);
+  if (!orders) return null;
+  return (
+    <section className="mt-6">
+      <h2 className="font-heading text-xl font-bold">{t.staffOrders}</h2>
+      {orders.length === 0 ? (
+        <p className="mt-2 text-sm text-muted">{t.noOrders}</p>
+      ) : (
+        <ul className="mt-3 divide-y divide-line rounded-2xl border border-line bg-card">
+          {orders.map((o) => (
+            <li key={o.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 p-4 text-sm">
+              <span className="min-w-0 flex-1 basis-56">
+                <span className="font-semibold">
+                  {t[`product.${o.product}`]} · {t[`variant.${o.product}.${o.variant}` as keyof Dict] ?? o.variant} × {o.qty}
+                </span>
+                <span className="block text-xs text-muted">
+                  {personName(o.person, lang)} · {o.address.name}, {o.address.city}, {o.address.street} · {o.address.phone} · {fmtDateTime(o.createdAt, lang)}
+                </span>
+              </span>
+              <select
+                aria-label={t.orderStatus}
+                value={o.status}
+                onChange={async (e) => {
+                  const updated = await api.shopStatus(o.id, e.target.value as ShopOrder["status"]);
+                  setOrders((list) => list && list.map((x) => (x.id === o.id ? updated : x)));
+                }}
+                className="min-h-10 rounded-xl border border-line bg-field px-3 text-sm"
+              >
+                {(["paid", "printing", "shipped"] as const).map((s) => (
+                  <option key={s} value={s}>
+                    {t[`shopStatus.${s}`]}
+                  </option>
+                ))}
+              </select>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
 
 const field = "w-full rounded-xl border border-line bg-field px-3.5 py-2.5 text-base outline-none transition-colors focus:border-accent";
 
@@ -126,6 +179,8 @@ export function ShopPage() {
     <Shell t={t} lang={lang}>
       <h1 className="font-heading text-3xl font-extrabold tracking-tight sm:text-4xl">{t.shopTitle}</h1>
       <p className="mt-2 max-w-2xl text-sm text-muted">{t.shopHint}</p>
+      {/* Сотруднику заказы важнее витрины — сверху. */}
+      {isDesigner(me) && <StaffOrders t={t} lang={lang} />}
       {mine && mine.codes.length > 0 && (
         <label className="mt-5 flex max-w-md flex-col gap-1.5">
           <span className="text-sm font-semibold">{t.whichCode}</span>

@@ -9,7 +9,8 @@ import { personName } from "./Avatar";
 
 function text(t: Dict, lang: Lang, n: Notice) {
   const key = `notice.${n.kind}` as keyof Dict;
-  const base = fill(t[key] ?? n.kind, { ...n.params, who: n.params.who ? personName(n.params.who, lang) : "" });
+  const status = n.params.status ? (t[`shopStatus.${n.params.status}` as keyof Dict] ?? n.params.status) : "";
+  const base = fill(t[key] ?? n.kind, { ...n.params, status, who: n.params.who ? personName(n.params.who, lang) : "" });
   const extra = n.kind === "message" ? (n.params.preset ? t[`preset.${n.params.preset}` as keyof Dict] : n.params.text) : "";
   return { base, extra };
 }

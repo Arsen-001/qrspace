@@ -64,7 +64,6 @@ await shot(a, "b-390-order-done");
 await a.getByRole("link", { name: "Настроить" }).click();
 await a.getByRole("tab", { name: /Вид кода/ }).click();
 await a.waitForFunction(() => /Код читается/.test(document.body.innerText), null, { timeout: 30000 });
-const ctxDl = a.context();
 const [d] = await Promise.all([a.waitForEvent("download", { timeout: 15000 }).catch(() => null), a.getByRole("button", { name: /Скачать PNG/ }).click()]);
 ok(!!d, "brand code downloads without extra payment");
 console.log("errors:", errors.length ? errors : "none");

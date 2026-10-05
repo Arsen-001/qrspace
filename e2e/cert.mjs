@@ -28,7 +28,7 @@ ok(await a.locator("text=№ 1").count() >= 1, "certificate shows edition number
 await shot(a, "c-cert");
 const h = await demo("Արման", "/market", 390, "hy-AM");
 await h.waitForSelector("text=Սրճարան", { timeout: 15000 }).catch(() => {}); ok(await h.locator("text=Սրճարան").count() >= 1, "Armenian design name shown in hy");
-const e = await demo("Arman", "/market", 390, "en-GB");
+await demo("Arman", "/market", 390, "en-GB");
 ok(true, "");
 console.log("errors:", errors.length ? errors : "none");
 await browser.close();

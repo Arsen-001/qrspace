@@ -636,6 +636,8 @@ const ru = {
   verifyText: "В коде не ссылка, а текст — он ниже.",
   verifyOpen: "Открыть код",
   verifyAgain: "Проверить другой",
+  staffOrders: "Все заказы товаров (для сотрудников)",
+  "notice.shopStatus": "Ваш заказ: {status}",
   "notice.itemPassed": "Ваша вещь «{title}» перешла новому владельцу",
 };
 
@@ -1270,6 +1272,8 @@ const en: Dict = {
   verifyText: "The code holds text, not a link — it’s below.",
   verifyOpen: "Open the code",
   verifyAgain: "Check another",
+  staffOrders: "All product orders (staff)",
+  "notice.shopStatus": "Your order: {status}",
   "notice.itemPassed": "Your item “{title}” passed to a new owner",
 };
 
@@ -1902,6 +1906,8 @@ const hy: Dict = {
   verifyText: "Կոդում հղում չէ, այլ տեքստ — այն ստորև է։",
   verifyOpen: "Բացել կոդը",
   verifyAgain: "Ստուգել ուրիշը",
+  staffOrders: "Ապրանքների բոլոր պատվերները (աշխատակիցների համար)",
+  "notice.shopStatus": "Ձեր պատվերը՝ {status}",
   "notice.itemPassed": "Ձեր «{title}» իրն անցավ նոր տիրոջը",
 };
 

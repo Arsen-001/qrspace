@@ -1,12 +1,14 @@
-import { mutate, newId } from "@/server/db";
+import { isDesignerId, mutate, newId, shopOrders } from "@/server/db";
 import { currentPerson } from "@/server/session";
 import { PRODUCT_IDS, PRODUCTS, priceOf, type ProductId, type ShopOrder } from "@/lib/shop";
 import { readShort } from "../codes/validate";
 
-export async function GET() {
+/** Мои заказы; сотруднику (дизайнеру) с ?all=1 — все, чтобы вести печать и отправку. */
+export async function GET(req: Request) {
   const me = await currentPerson();
   if (!me) return Response.json({ error: "login" }, { status: 401 });
-  return Response.json(await mutate((db) => db.shop.filter((o) => o.person === me).reverse()));
+  const all = new URL(req.url).searchParams.has("all") && (await isDesignerId(me));
+  return Response.json([...(await shopOrders())].filter((o) => all || o.person === me).reverse());
 }
 
 /** Заказ товара с моим кодом (оплата — демо; печать по требованию подключим позже). */
