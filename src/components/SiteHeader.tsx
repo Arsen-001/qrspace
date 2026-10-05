@@ -30,7 +30,7 @@ export function SiteHeader({ t, lang }: { t: Dict; lang: Lang }) {
     { href: "/codes", label: t.navCodes, on: path.startsWith("/codes") },
   ];
   return (
-    <header className="flex flex-wrap items-center gap-x-3 gap-y-2 py-4">
+    <header className="flex flex-wrap items-center gap-x-3 gap-y-2 py-4 print:hidden">
       <Link href="/" className="flex items-center gap-2.5" aria-label={t.appName}>
         <Logo />
         <span className="hidden font-heading text-lg font-extrabold sm:inline">{t.appName}</span>

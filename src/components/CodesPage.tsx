@@ -203,7 +203,14 @@ export function CodesPage() {
           <h1 className="font-heading text-3xl font-extrabold tracking-tight sm:text-4xl">{t.navCodes}</h1>
           <p className="mt-2 text-sm text-muted">{t.codesHint}</p>
         </div>
-        {me && <NewCode t={t} />}
+        {me && (
+          <div className="flex flex-wrap items-start gap-2">
+            <Link href="/codes/print" className="grid min-h-11 place-items-center rounded-xl border border-line bg-card px-4 text-sm font-semibold hover:border-muted">
+              🖨 {t.printTitle}
+            </Link>
+            <NewCode t={t} />
+          </div>
+        )}
       </div>
 
       <div className="mt-6 space-y-8">

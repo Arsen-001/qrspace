@@ -6,10 +6,10 @@ import { SiteHeader } from "./SiteHeader";
 
 export function Shell({ t, lang, narrow, children }: { t: Dict; lang: Lang; narrow?: boolean; children: ReactNode }) {
   return (
-    <div className={`mx-auto w-full px-4 pb-16 sm:px-6 ${narrow ? "max-w-2xl" : "max-w-6xl"}`}>
+    <div className={`mx-auto w-full px-4 pb-16 sm:px-6 print:max-w-none print:p-0 ${narrow ? "max-w-2xl" : "max-w-6xl"}`}>
       <SiteHeader t={t} lang={lang} />
-      <main className="pt-4 sm:pt-6">{children}</main>
-      <p className="mt-12 text-center text-xs text-muted">{t.trademark}</p>
+      <main className="pt-4 sm:pt-6 print:pt-0">{children}</main>
+      <p className="mt-12 text-center text-xs text-muted print:hidden">{t.trademark}</p>
     </div>
   );
 }

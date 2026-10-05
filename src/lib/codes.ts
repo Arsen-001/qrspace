@@ -116,6 +116,7 @@ export const api = {
   create: (title: string, kind: Kind, style: SavedStyle) => call<CodeView>("/api/codes", json("POST", { title, kind, style })),
   quote: (key: string, tier: Tier) => call<Quote>(`/api/purchases?key=${encodeURIComponent(key)}&tier=${tier}`),
   pay: (key: string, tier: Tier) => call<{ ok: true; price: number }>("/api/purchases", json("POST", { key, tier })),
+  batch: (count: number, prefix: string, style: SavedStyle) => call<CodeView[]>("/api/codes/batch", json("POST", { count, prefix, kind: "memory", style })),
   market: () => call<MarketState>("/api/market"),
   publish: (d: { name: string; about: string; price: number; edition: number | null; drop: boolean; style: SavedStyle }) =>
     call<Design>("/api/market", json("POST", d)),

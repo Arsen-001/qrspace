@@ -63,3 +63,15 @@ body {
 button:not(:disabled) {
   cursor: pointer;
 }
+
+/* Печать листов наклеек: A4, без полей браузера, только сами наклейки. */
+@page {
+  size: A4;
+  margin: 0;
+}
+
+@media print {
+  body {
+    background: #fff;
+  }
+}
