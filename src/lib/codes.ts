@@ -21,6 +21,11 @@ export const PRESETS: Record<Kind, string[]> = {
 
 export type Grant = { personId: string; role: Role; until: string | null };
 export type Message = { id: string; from: string | null; preset: string | null; text: string; reply: string; at: string; read: boolean };
+/** Напоминание: что сделать и когда; every — повтор (после «Сделано» срок переносится). */
+export const REPEATS = ["none", "week", "month", "quarter", "year"] as const;
+export type Repeat = (typeof REPEATS)[number];
+export type Task = { id: string; text: string; due: string; every: Repeat; done: { by: string; at: string }[] };
+
 export type Contact = { enabled: boolean; phone: string; showPhone: boolean };
 export type Block = { id: string; kind: "text" | "photo" | "video"; text: string; media: string | null; author: string; at: string };
 export type Visit = { personId: string | null; at: string; allowed: boolean };
@@ -38,6 +43,7 @@ export type CodeRecord = {
   lost: boolean;
   reward: string;
   messages: Message[];
+  tasks: Task[];
   /** Купленный в маркете дизайн: № в тираже (of = null — без тиража). */
   edition?: { design: string; no: number; of: number | null };
   visibility: Visibility;
@@ -62,6 +68,8 @@ export type CodeView = {
   contact: { enabled: boolean; showPhone: boolean; phone: string | null };
   lost: boolean;
   reward: string;
+  /** Напоминания — тем, кому открыт код. */
+  tasks: Task[] | null;
   edition: { design: string; no: number; of: number | null } | null;
   access: AccessLevel;
   visibility: Visibility;
@@ -110,6 +118,9 @@ export const api = {
     call<Design>("/api/market", json("POST", d)),
   unpublish: (design: string) => call<{ ok: true }>(`/api/market/${design}`, { method: "DELETE" }),
   buy: (design: string) => call<CodeView>(`/api/market/${design}`, { method: "POST" }),
+  addTask: (id: string, task: { text: string; due: string; every: Repeat }) => call<CodeView>(`/api/codes/${id}/tasks`, json("POST", task)),
+  doneTask: (id: string, taskId: string) => call<CodeView>(`/api/codes/${id}/tasks/${taskId}`, json("PATCH", { done: true })),
+  removeTask: (id: string, taskId: string) => call<CodeView>(`/api/codes/${id}/tasks/${taskId}`, { method: "DELETE" }),
   message: (id: string, m: { preset: string | null; text: string; reply: string }) => call<{ ok: true }>(`/api/codes/${id}/messages`, json("POST", m)),
   get: (id: string, opts: { visit?: boolean } = {}) => call<CodeView>(`/api/codes/${id}${opts.visit ? "?visit=1" : ""}`),
   patch: (id: string, patch: CodePatch) => call<CodeView>(`/api/codes/${id}`, json("PATCH", patch)),
@@ -120,3 +131,25 @@ export const api = {
   request: (id: string) => call<CodeView>(`/api/codes/${id}/request`, { method: "POST" }),
   join: (id: string, invite: string) => call<CodeView>(`/api/codes/${id}/join`, json("POST", { invite })),
 };
+
+const pad = (n: number) => String(n).padStart(2, "0");
+export const ymd = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+export const todayYmd = () => ymd(new Date());
+
+/** Следующий срок после «Сделано»: от сегодняшнего дня (сделали позже — следующий раз тоже сдвигается). */
+export function nextDue(every: Repeat, from = new Date()): string | null {
+  if (every === "none") return null;
+  const d = new Date(from.getFullYear(), from.getMonth(), from.getDate());
+  if (every === "week") d.setDate(d.getDate() + 7);
+  if (every === "month") d.setMonth(d.getMonth() + 1);
+  if (every === "quarter") d.setMonth(d.getMonth() + 3);
+  if (every === "year") d.setFullYear(d.getFullYear() + 1);
+  return ymd(d);
+}
+
+/** Сколько дней до срока (отрицательное — просрочено). */
+export function daysLeft(due: string): number {
+  const [y, m, d] = due.split("-").map(Number);
+  const [ty, tm, td] = todayYmd().split("-").map(Number);
+  return Math.round((Date.UTC(y, m - 1, d) - Date.UTC(ty, tm - 1, td)) / 86_400_000);
+}

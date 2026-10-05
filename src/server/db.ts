@@ -4,7 +4,7 @@ import { randomBytes } from "node:crypto";
 import { promises as fs } from "node:fs";
 import { networkInterfaces } from "node:os";
 import path from "node:path";
-import type { AccessLevel, CodeRecord, CodeView, Kind } from "@/lib/codes";
+import { ymd, type AccessLevel, type CodeRecord, type CodeView, type Kind } from "@/lib/codes";
 import { PEOPLE } from "@/lib/people";
 import { SEED_SALES, type Design } from "@/lib/market";
 import { DEFAULT_STYLE, type SavedStyle } from "@/lib/qr/style";
@@ -21,9 +21,9 @@ const ALPHABET = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 export const newId = (len = 8) => Array.from(randomBytes(len), (b) => ALPHABET[b % ALPHABET.length]).join("");
 
 /** С чего начинается код каждого шаблона. Машина и ключи — хозяин скрыт, память закрыта; питомец — анкета открыта. */
-export function kindDefaults(kind: Kind): Pick<CodeRecord, "kind" | "visibility" | "showOwner" | "contact" | "lost" | "reward" | "messages"> {
+export function kindDefaults(kind: Kind): Pick<CodeRecord, "kind" | "visibility" | "showOwner" | "contact" | "lost" | "reward" | "messages" | "tasks"> {
   const contact = { enabled: kind !== "memory", phone: "", showPhone: false };
-  return { kind, visibility: kind === "pet" ? "all" : "me", showOwner: kind === "memory", contact, lost: false, reward: "", messages: [] };
+  return { kind, visibility: kind === "pet" ? "all" : "me", showOwner: kind === "memory", contact, lost: false, reward: "", messages: [], tasks: [] };
 }
 
 const style = (p: Partial<SavedStyle>): SavedStyle => ({ ...DEFAULT_STYLE, eyeIcon: null, picture: null, ...p });
@@ -31,6 +31,7 @@ const style = (p: Partial<SavedStyle>): SavedStyle => ({ ...DEFAULT_STYLE, eyeIc
 function seed(): Db {
   const now = Date.now();
   const at = (minAgo: number) => new Date(now - minAgo * 60_000).toISOString();
+  const dayOffset = (days: number) => ymd(new Date(now + days * 86_400_000));
   const text = (t: string, author: string, minAgo: number) => ({ id: newId(), kind: "text" as const, text: t, media: null, author, at: at(minAgo) });
   const base = { requests: [], visits: [], ...kindDefaults("memory") };
   return {
@@ -52,6 +53,10 @@ function seed(): Db {
         blocks: [
           text("1. Открыть кран подачи газа (жёлтая ручка — вдоль трубы).\n2. Нажать и держать кнопку розжига 10 секунд.\n3. Давление на стрелке — от 1,2 до 1,8. Если меньше — подкачать синим краном снизу.", "arman", 4000),
           text("Осенью давление было 1,0 — подкачал до 1,5. Всё работает.", "ani", 900),
+        ],
+        tasks: [
+          { id: newId(), text: "Проверить давление (1,2–1,8) и подкачать", due: dayOffset(-3), every: "year", done: [] },
+          { id: newId(), text: "Почистить фильтр", due: dayOffset(12), every: "quarter", done: [{ by: "ani", at: at(60 * 24 * 80) }] },
         ],
         style: style({ fg: "#7a1f2b", bg: "#fff8f0", eyeColor: "#7a1f2b", eyeBallColor: "#7a1f2b", dot: "rounded", eye: "rounded", effect: "raised" }),
         createdAt: at(5000),
@@ -89,6 +94,7 @@ function seed(): Db {
         people: [{ personId: "arman", role: "edit", until: null }],
         invite: newId(12),
         blocks: [text("Фикус — раз в неделю, стакан воды.\nОрхидея — раз в 10 дней, в миску на 15 минут.\nЛетом — чаще.", "ani", 1500)],
+        tasks: [{ id: newId(), text: "Полить фикус", due: dayOffset(1), every: "week", done: [{ by: "arman", at: at(60 * 24 * 6) }] }],
         style: style({ texture: "paper", fg: "#2b2620", bg: "#f3efe6", eyeColor: "#14532d", eyeBallColor: "#14532d", dot: "leaf", eye: "leaf" }),
         createdAt: at(1500),
       },
@@ -221,6 +227,7 @@ export function viewOf(code: CodeRecord, me: string | null): CodeView {
     lost: code.lost,
     reward: code.lost || owner ? code.reward : "",
     edition: code.edition ?? null,
+    tasks: access === "closed" ? null : [...code.tasks].sort((a, b) => a.due.localeCompare(b.due)),
     access,
     visibility: code.visibility,
     // Хозяин скрыт — его имя не должно проступить и в подписях к записям.

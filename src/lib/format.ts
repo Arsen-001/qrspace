@@ -20,3 +20,6 @@ export function fmtDate(ymd: string, lang: Lang) {
   if (lang === "hy") return hyDate(d, true);
   return new Intl.DateTimeFormat(LOCALE[lang], { day: "numeric", month: "short", year: "numeric" }).format(d);
 }
+
+/** «через 5 дней», «сегодня», «3 дня назад». */
+export const fmtDays = (days: number, lang: Lang) => new Intl.RelativeTimeFormat(LOCALE[lang], { numeric: "auto" }).format(days, "day");

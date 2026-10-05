@@ -6,6 +6,7 @@ import { fmtDateTime } from "@/lib/format";
 import type { Dict, Lang } from "@/lib/i18n";
 import { prepareImage } from "@/lib/qr/raster";
 import { Avatar, personName } from "./Avatar";
+import { Tasks } from "./Tasks";
 import { Segmented } from "./ui";
 
 type Kind = Block["kind"];
@@ -191,6 +192,7 @@ export function Memory({ t, lang, code, me, onChange }: { t: Dict; lang: Lang; c
   const canAdd = code.access === "owner" || code.access === "edit";
   return (
     <div className="space-y-3">
+      <Tasks t={t} lang={lang} me={me} code={code} onChange={onChange} />
       {blocks.length === 0 && !canAdd && <p className="rounded-2xl border border-line bg-card p-6 text-center text-sm text-muted">{t.memoryEmpty}</p>}
       {blocks.length > 0 && (
         <ul className="space-y-3">

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { api, codeLink, KINDS, type CodeList, type CodeView, type Kind } from "@/lib/codes";
+import { api, codeLink, daysLeft, KINDS, type CodeList, type CodeView, type Kind, type Task } from "@/lib/codes";
 import type { Dict, Lang } from "@/lib/i18n";
 import { useLang } from "@/lib/lang";
 import { useMe } from "@/lib/me";
@@ -11,6 +11,7 @@ import { DEFAULT_STYLE, toSaved } from "@/lib/qr/style";
 import { personName } from "./Avatar";
 import { KindIcon } from "./KindIcon";
 import { QrThumb } from "./QrThumb";
+import { DueNote } from "./Tasks";
 import { Notice, Shell } from "./Shell";
 import { VisBadge } from "./VisBadge";
 
@@ -51,6 +52,51 @@ function CodeCard({ t, lang, base, code, shared }: { t: Dict; lang: Lang; base: 
         </div>
       </Link>
     </li>
+  );
+}
+
+/** «Что сделать»: просроченные и ближайшие 2 недели — по всем моим кодам и тем, где мне можно дописывать. */
+function Upcoming({ t, lang, codes, onDone }: { t: Dict; lang: Lang; codes: CodeView[]; onDone: () => void }) {
+  const items = codes
+    .filter((c) => c.access === "owner" || c.access === "edit")
+    .flatMap((c) => (c.tasks ?? []).map((task) => ({ c, task })))
+    .filter(({ task }) => daysLeft(task.due) <= 14)
+    .sort((a, b) => a.task.due.localeCompare(b.task.due));
+  const [busy, setBusy] = useState<string | null>(null);
+  if (!items.length) return null;
+  const done = async (c: CodeView, task: Task) => {
+    setBusy(task.id);
+    try {
+      await api.doneTask(c.id, task.id);
+      onDone();
+    } finally {
+      setBusy(null);
+    }
+  };
+  return (
+    <section className="rounded-2xl border border-line bg-card p-4 sm:p-5">
+      <h2 className="font-heading text-lg font-bold">{t.upcomingTitle}</h2>
+      <p className="mt-0.5 text-xs text-muted">{t.upcomingHint}</p>
+      <ul className="mt-1 divide-y divide-line">
+        {items.map(({ c, task }) => (
+          <li key={task.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 py-3">
+            <div className="min-w-0 flex-1 basis-56">
+              <div className="font-medium">{task.text}</div>
+              <div className="mt-0.5 text-xs">
+                <DueNote t={t} lang={lang} due={task.due} />
+                <span className="text-muted"> · </span>
+                <Link href={c.access === "owner" ? `/codes/${c.id}` : `/c/${c.id}`} className="text-muted underline underline-offset-2 hover:text-ink">
+                  {c.title}
+                </Link>
+              </div>
+            </div>
+            <button type="button" disabled={busy === task.id} onClick={() => done(c, task)} className="min-h-10 rounded-xl bg-ok px-4 text-sm font-semibold text-white disabled:opacity-50">
+              ✓ {t.markDone}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -136,6 +182,7 @@ export function CodesPage() {
   const [data, setData] = useState<{ me: string; list: CodeList } | null>(null);
   const [error, setError] = useState(false);
 
+  const [reload, setReload] = useState(0);
   useEffect(() => {
     if (!me) return;
     let live = true;
@@ -146,7 +193,7 @@ export function CodesPage() {
     return () => {
       live = false;
     };
-  }, [me]);
+  }, [me, reload]);
   const list = data?.me === me ? data.list : null;
 
   return (
@@ -172,6 +219,7 @@ export function CodesPage() {
           <Notice>{t.loading}</Notice>
         ) : (
           <>
+            <Upcoming t={t} lang={lang} codes={[...list.mine, ...list.shared]} onDone={() => setReload((n) => n + 1)} />
             {list.mine.length ? (
               <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {list.mine.map((c) => (
