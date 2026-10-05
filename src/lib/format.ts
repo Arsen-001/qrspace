@@ -23,3 +23,12 @@ export function fmtDate(ymd: string, lang: Lang) {
 
 /** «через 5 дней», «сегодня», «3 дня назад». */
 export const fmtDays = (days: number, lang: Lang) => new Intl.RelativeTimeFormat(LOCALE[lang], { numeric: "auto" }).format(days, "day");
+
+/** До конца аукциона: «через 3 часа», «через 2 дня». */
+export function fmtUntil(iso: string, lang: Lang) {
+  const ms = Date.parse(iso) - Date.now();
+  const f = new Intl.RelativeTimeFormat(LOCALE[lang], { numeric: "auto" });
+  if (ms < 3_600_000) return f.format(Math.max(1, Math.round(ms / 60_000)), "minute");
+  if (ms < 36 * 3_600_000) return f.format(Math.round(ms / 3_600_000), "hour");
+  return f.format(Math.round(ms / 86_400_000), "day");
+}

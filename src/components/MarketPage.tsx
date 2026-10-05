@@ -7,6 +7,7 @@ import type { Dict, Lang } from "@/lib/i18n";
 import { useLang } from "@/lib/lang";
 import { catalog, type Design } from "@/lib/market";
 import { useMe } from "@/lib/me";
+import { LotCards, useLots } from "./Lots";
 import { QrThumb } from "./QrThumb";
 import { Shell } from "./Shell";
 
@@ -63,6 +64,7 @@ export function MarketPage() {
   const sold = market?.sold;
   const link = sampleLink(base);
   const { drop, rest } = catalog(market?.designs ?? []);
+  const lots = useLots()?.filter((l) => l.status === "open");
 
   return (
     <Shell t={t} lang={lang}>
@@ -83,6 +85,14 @@ export function MarketPage() {
         </div>
         <QrThumb link={link} style={drop.style} className="w-full max-w-[280px] justify-self-center shadow-2xl" />
       </Link>
+
+      {lots && lots.length > 0 && (
+        <section className="mt-10">
+          <h2 className="font-heading text-xl font-bold">{t.resaleTitle}</h2>
+          <p className="mb-3 mt-1 text-sm text-muted">{t.resaleHint}</p>
+          <LotCards t={t} lang={lang} lots={lots} link={link} />
+        </section>
+      )}
 
       <h2 className="mt-10 font-heading text-xl font-bold">{t.allDesigns}</h2>
       <ul className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">

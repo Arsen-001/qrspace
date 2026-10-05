@@ -6,7 +6,8 @@ import { networkInterfaces } from "node:os";
 import path from "node:path";
 import { ymd, type AccessLevel, type CodeRecord, type CodeView, type Kind } from "@/lib/codes";
 import { PEOPLE } from "@/lib/people";
-import { SEED_SALES, type Design } from "@/lib/market";
+import { DESIGNS, SEED_SALES, type Design } from "@/lib/market";
+import type { Listing } from "@/lib/listings";
 import type { Order } from "@/lib/orders";
 import type { Purchase } from "@/lib/pricing";
 import { DEFAULT_STYLE, type SavedStyle } from "@/lib/qr/style";
@@ -15,7 +16,7 @@ const DIR = path.join(process.cwd(), ".data");
 const DB = path.join(DIR, "db.json");
 export const MEDIA_DIR = path.join(DIR, "media");
 
-type Db = { codes: CodeRecord[]; sales: Record<string, number>; designs: Design[]; purchases: Purchase[]; orders: Order[] };
+export type Db = { codes: CodeRecord[]; sales: Record<string, number>; designs: Design[]; purchases: Purchase[]; orders: Order[]; listings: Listing[] };
 
 const ALPHABET = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
@@ -36,12 +37,26 @@ function seed(): Db {
   const dayOffset = (days: number) => ymd(new Date(now + days * 86_400_000));
   const text = (t: string, author: string, minAgo: number) => ({ id: newId(), kind: "text" as const, text: t, media: null, author, at: at(minAgo) });
   const base = { requests: [], visits: [], ...kindDefaults("memory") };
+  const parchment = { ...base, id: newId(), owner: "ani", title: "Пергамент", people: [], invite: newId(12), blocks: [], createdAt: at(9000),
+    style: DESIGNS.find((d) => d.id === "parchment")!.style, edition: { design: "parchment", no: 12, of: 100 }, owners: [{ person: "ani", at: at(9000), price: 12 }] };
+  const nebula = { ...base, id: newId(), owner: "david", title: "Туманность", people: [], invite: newId(12), blocks: [], createdAt: at(7000),
+    style: DESIGNS.find((d) => d.id === "nebula")!.style, edition: { design: "nebula", no: 3, of: 30 }, owners: [{ person: "david", at: at(7000), price: 15 }] };
+  const listings: Listing[] = [
+    { id: newId(), code: parchment.id, seller: "ani", mode: "fixed", price: 40, endsAt: null, bids: [], status: "open", buyer: null, final: null, createdAt: at(300) },
+    {
+      id: newId(), code: nebula.id, seller: "david", mode: "auction", price: 20, endsAt: new Date(now + 2 * 86_400_000).toISOString(),
+      bids: [{ person: "lilit", amount: 20, at: at(200) }, { person: "ani", amount: 25, at: at(90) }], status: "open", buyer: null, final: null, createdAt: at(400),
+    },
+  ];
   return {
+    listings,
     sales: { ...SEED_SALES },
     designs: [],
     purchases: [],
     orders: [],
     codes: [
+      parchment,
+      nebula,
       {
         ...base,
         id: newId(),
@@ -160,6 +175,7 @@ async function read(): Promise<Db> {
     db.designs ??= [];
     db.purchases ??= [];
     db.orders ??= [];
+    db.listings ??= [];
     return db;
   } catch {
     // Файла нет — заполняем демо-данными один раз, даже если пришло несколько запросов сразу.
@@ -197,6 +213,32 @@ export async function findCode(id: string): Promise<CodeRecord | null> {
 
 export async function allCodes(): Promise<CodeRecord[]> {
   return (await read()).codes;
+}
+
+/** Код переходит новому владельцу чистым: память и настройки продавца не уходят вместе с кодом. */
+export async function transferCode(db: Db, codeId: string, buyer: string, price: number) {
+  const c = db.codes.find((x) => x.id === codeId);
+  if (!c) return;
+  const media = c.blocks.map((b) => b.media).filter((m): m is string => !!m);
+  const at = new Date().toISOString();
+  c.owners = [...(c.owners ?? [{ person: c.owner, at: c.createdAt, price: null }]), { person: buyer, at, price }];
+  Object.assign(c, { ...kindDefaults("memory"), owner: buyer, people: [], requests: [], blocks: [], visits: [], invite: newId(12) });
+  db.purchases.push({ person: buyer, key: `code:${c.id}`, tier: "styled", price, free: false, at });
+  await Promise.all(media.map((m) => fs.rm(path.join(MEDIA_DIR, m), { force: true })));
+}
+
+/** Аукцион с истёкшим сроком закрываем при первом обращении: есть ставки — код победителю. */
+export async function settle(db: Db, now = Date.now()) {
+  for (const l of db.listings) {
+    if (l.status !== "open" || l.mode !== "auction" || !l.endsAt || Date.parse(l.endsAt) > now) continue;
+    const top = l.bids.at(-1);
+    if (top) {
+      l.status = "sold";
+      l.buyer = top.person;
+      l.final = top.amount;
+      await transferCode(db, l.code, top.person, top.amount);
+    } else l.status = "expired";
+  }
 }
 
 export async function allOrders(): Promise<Order[]> {
@@ -241,6 +283,7 @@ export function viewOf(code: CodeRecord, me: string | null): CodeView {
     lost: code.lost,
     reward: code.lost || owner ? code.reward : "",
     edition: code.edition ?? null,
+    owners: code.edition ? (code.owners ?? []) : null,
     tasks: access === "closed" ? null : [...code.tasks].sort((a, b) => a.due.localeCompare(b.due)),
     access,
     visibility: code.visibility,

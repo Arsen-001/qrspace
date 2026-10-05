@@ -1,5 +1,6 @@
 // Код с памятью: общие типы для сервера и браузера и запросы браузера к нашему API.
 import type { Design } from "./market";
+import type { Listing } from "./listings";
 import type { Need, Order, OrderStatus, Pkg } from "./orders";
 import type { Quote, Tier } from "./pricing";
 import type { SavedStyle } from "./qr/style";
@@ -48,6 +49,8 @@ export type CodeRecord = {
   tasks: Task[];
   /** Купленный в маркете дизайн: № в тираже (of = null — без тиража). */
   edition?: { design: string; no: number; of: number | null };
+  /** История владельцев коллекционного кода (кто, когда, за сколько). */
+  owners?: { person: string; at: string; price: number | null }[];
   visibility: Visibility;
   people: Grant[];
   requests: { personId: string; at: string }[];
@@ -72,6 +75,7 @@ export type CodeView = {
   reward: string;
   /** Напоминания — тем, кому открыт код. */
   tasks: Task[] | null;
+  owners: { person: string; at: string; price: number | null }[] | null;
   edition: { design: string; no: number; of: number | null } | null;
   access: AccessLevel;
   visibility: Visibility;
@@ -88,6 +92,8 @@ export type CodeView = {
 
 export type CodeList = { base: string; mine: CodeView[]; shared: CodeView[] };
 export type MarketState = { sold: Record<string, number>; designs: Design[] };
+/** Лот с тем, что нужно показать: код (вид, номер, название) и продавец. */
+export type Lot = Listing & { view: Pick<CodeView, "title" | "style" | "edition" | "owners"> };
 
 export const MAX_PHOTO_PX = 1600;
 export const MAX_VIDEO_MB = 50;
@@ -125,6 +131,10 @@ export const api = {
   patchOrder: (id: string, p: { status?: OrderStatus; design?: { style: SavedStyle; note: string }; accept?: boolean }) => call<Order>(`/api/orders/${id}`, json("PATCH", p)),
   orderMessage: (id: string, text: string) => call<Order>(`/api/orders/${id}/messages`, json("POST", { text })),
   claim: (id: string) => call<CodeView>(`/api/orders/${id}/claim`, { method: "POST" }),
+  lots: () => call<Lot[]>("/api/listings"),
+  lot: (id: string) => call<Lot>(`/api/listings/${id}`),
+  sell: (code: string, mode: "fixed" | "auction", price: number, hours: number) => call<Lot>("/api/listings", json("POST", { code, mode, price, hours })),
+  lotAction: (id: string, action: "buy" | "bid" | "cancel" | "finish", amount?: number) => call<Lot>(`/api/listings/${id}`, json("POST", { action, amount })),
   market: () => call<MarketState>("/api/market"),
   publish: (d: { name: string; about: string; price: number; edition: number | null; drop: boolean; style: SavedStyle }) =>
     call<Design>("/api/market", json("POST", d)),

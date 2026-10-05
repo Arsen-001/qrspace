@@ -12,6 +12,7 @@ import { DEFAULT_STYLE, fromSaved, toSaved } from "@/lib/qr/style";
 import { AccessPanel } from "./AccessPanel";
 import { ContactPanel } from "./ContactPanel";
 import { KindIcon } from "./KindIcon";
+import { SellBox } from "./Lots";
 import { CodeDesigner } from "./CodeDesigner";
 import { Memory } from "./Memory";
 import { QrThumb } from "./QrThumb";
@@ -180,7 +181,8 @@ function Editor({ t, lang, me, base, initial }: { t: Dict; lang: Lang; me: strin
                 <AccessPanel t={t} lang={lang} code={code} base={base} save={save} />
               )}
             </div>
-            <aside className="order-first rounded-2xl border border-line bg-card p-4 lg:sticky lg:top-4 lg:order-none">
+            <div className="order-first space-y-4 lg:sticky lg:top-4 lg:order-none">
+            <aside className="rounded-2xl border border-line bg-card p-4">
               <div className="flex gap-4 lg:block">
                 <QrThumb link={link} style={code.style} className="h-28 w-28 shrink-0 border border-line lg:h-auto lg:w-full" />
                 <div className="min-w-0 lg:mt-3">
@@ -192,6 +194,8 @@ function Editor({ t, lang, me, base, initial }: { t: Dict; lang: Lang; me: strin
                 </div>
               </div>
             </aside>
+            {code.edition && <SellBox t={t} code={code} />}
+            </div>
           </div>
         )}
       </div>
