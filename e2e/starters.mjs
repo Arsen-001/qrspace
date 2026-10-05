@@ -32,6 +32,7 @@ await l.getByRole("button", { name: "Сохранить" }).click();
 await l.waitForSelector("text=Поздравляем!");
 const entry = (text) => l.getByRole("listitem").filter({ hasText: text }).getByRole("button", { name: "Удалить" });
 ok((await entry("Добро пожаловать").count()) === 0, "guest can't delete the owner's entry");
+await entry("Поздравляем").first().waitFor({ timeout: 10000 }).catch(() => {});
 ok((await entry("Поздравляем").count()) === 1, "guest can delete own entry");
 ok((await l.locator("text=Напоминания").count()) === 0, "guests don't see the reminders form");
 await shot(l, "s-wedding-guest");
