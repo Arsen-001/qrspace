@@ -1,0 +1,208 @@
+"use client";
+// Настройки кода с памятью (только хозяин): память, кто видит, вид кода.
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { api, codeLink, type CodePatch, type CodeView } from "@/lib/codes";
+import type { Dict, Lang } from "@/lib/i18n";
+import { useLang } from "@/lib/lang";
+import { useMe } from "@/lib/me";
+import { DEFAULT_STYLE, fromSaved, toSaved } from "@/lib/qr/style";
+import { AccessPanel } from "./AccessPanel";
+import { CodeDesigner } from "./CodeDesigner";
+import { Memory } from "./Memory";
+import { QrThumb } from "./QrThumb";
+import { Notice, Shell } from "./Shell";
+import type { StyleState } from "./StylePanel";
+
+type Tab = "memory" | "access" | "look";
+type Status = "idle" | "saving" | "saved" | "error";
+
+/** Вид кода: тот же конструктор, что в генераторе; изменения сохраняются сами через секунду. */
+function LookTab({ t, code, link, save }: { t: Dict; code: CodeView; link: string; save: (p: CodePatch) => Promise<void> }) {
+  const [style, setStyle] = useState<StyleState>(() => (code.style ? fromSaved(code.style) : DEFAULT_STYLE));
+  const first = useRef(style);
+  useEffect(() => {
+    if (style === first.current) return;
+    const id = setTimeout(() => save({ style: toSaved(style) }), 800);
+    return () => clearTimeout(id);
+  }, [style, save]);
+  return <CodeDesigner t={t} payload={link} style={style} setStyle={setStyle} fileName={`qr-${code.id}`} side={<p className="px-1 text-sm text-muted">{t.changeAnytime}</p>} />;
+}
+
+function TitleField({ t, value, save }: { t: Dict; value: string; save: (p: CodePatch) => Promise<void> }) {
+  const [title, setTitle] = useState(value);
+  const commit = () => {
+    const v = title.trim();
+    if (v && v !== value) save({ title: v });
+    else setTitle(value);
+  };
+  return (
+    <input
+      aria-label={t.titleLabel}
+      value={title}
+      maxLength={80}
+      onChange={(e) => setTitle(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+      className="w-full min-w-0 rounded-xl border border-transparent bg-transparent px-2 py-1 font-heading text-2xl font-extrabold tracking-tight outline-none hover:border-line focus:border-accent focus:bg-field sm:text-3xl"
+    />
+  );
+}
+
+function DeleteCode({ t, id }: { t: Dict; id: string }) {
+  const router = useRouter();
+  const [sure, setSure] = useState(false);
+  return sure ? (
+    <div className="flex flex-wrap gap-2">
+      <button
+        type="button"
+        onClick={() => api.remove(id).then(() => router.push("/codes"))}
+        className="min-h-11 rounded-xl bg-warn px-4 text-sm font-semibold text-white"
+      >
+        {t.deleteSure}
+      </button>
+      <button type="button" onClick={() => setSure(false)} className="min-h-11 rounded-xl px-3 text-sm font-medium text-muted hover:text-ink">
+        {t.cancel}
+      </button>
+    </div>
+  ) : (
+    <button type="button" onClick={() => setSure(true)} className="min-h-11 rounded-xl px-3 text-sm font-medium text-muted hover:text-warn">
+      {t.deleteCode}
+    </button>
+  );
+}
+
+function Editor({ t, lang, me, base, initial }: { t: Dict; lang: Lang; me: string; base: string; initial: CodeView }) {
+  const [code, setCode] = useState(initial);
+  const [tab, setTab] = useState<Tab>("memory");
+  const [status, setStatus] = useState<Status>("idle");
+  const link = codeLink(base, code.id);
+
+  // Одна функция сохранения на всю страницу — чтобы автосохранение вида не перезапускалось.
+  const id = initial.id;
+  const save = useCallback(
+    async (p: CodePatch) => {
+      setStatus("saving");
+      try {
+        setCode(await api.patch(id, p));
+        setStatus("saved");
+      } catch {
+        setStatus("error");
+      }
+    },
+    [id],
+  );
+
+  const requests = code.requests?.length ?? 0;
+  const tabs: { id: Tab; label: string; badge?: number }[] = [
+    { id: "memory", label: t.tabMemory },
+    { id: "access", label: t.tabAccess, badge: requests },
+    { id: "look", label: t.tabLook },
+  ];
+
+  return (
+    <>
+      <Link href="/codes" className="inline-flex min-h-10 items-center gap-1 text-sm font-medium text-muted hover:text-ink">
+        ← {t.backToCodes}
+      </Link>
+      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+        <div className="min-w-0 flex-1 basis-64 -ml-2">
+          <TitleField key={code.title} t={t} value={code.title} save={save} />
+        </div>
+        <span className="text-sm text-muted" aria-live="polite">
+          {status === "saving" ? t.saving : status === "saved" ? t.saved : status === "error" ? <span className="text-warn">{t.saveError}</span> : null}
+        </span>
+      </div>
+
+      <div role="tablist" className="mt-4 flex gap-1 overflow-x-auto border-b border-line">
+        {tabs.map((x) => (
+          <button
+            key={x.id}
+            type="button"
+            role="tab"
+            aria-selected={tab === x.id}
+            onClick={() => setTab(x.id)}
+            className={`-mb-px flex min-h-11 shrink-0 items-center gap-2 border-b-2 px-3 text-sm font-semibold ${tab === x.id ? "border-accent text-ink" : "border-transparent text-muted hover:text-ink"}`}
+          >
+            {x.label}
+            {!!x.badge && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-warn px-1 text-[11px] text-white">{x.badge}</span>}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-5">
+        {tab === "look" ? (
+          <LookTab t={t} code={code} link={link} save={save} />
+        ) : (
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
+            <div className="min-w-0">
+              {tab === "memory" ? <Memory t={t} lang={lang} code={code} me={me} onChange={setCode} /> : <AccessPanel t={t} lang={lang} code={code} base={base} save={save} />}
+            </div>
+            <aside className="order-first rounded-2xl border border-line bg-card p-4 lg:sticky lg:top-4 lg:order-none">
+              <div className="flex gap-4 lg:block">
+                <QrThumb link={link} style={code.style} className="h-28 w-28 shrink-0 border border-line lg:h-auto lg:w-full" />
+                <div className="min-w-0 lg:mt-3">
+                  <div className="break-all font-mono text-xs text-muted">{link}</div>
+                  <a href={`/c/${code.id}`} target="_blank" rel="noreferrer" className="mt-2 inline-grid min-h-10 place-items-center rounded-xl border border-line bg-field px-3 text-sm font-medium hover:border-muted">
+                    {t.openAsScan} ↗
+                  </a>
+                  <p className="mt-2 text-xs text-muted">{t.changeAnytime}</p>
+                </div>
+              </div>
+            </aside>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-10 border-t border-line pt-5">
+        <DeleteCode t={t} id={code.id} />
+      </div>
+    </>
+  );
+}
+
+export function CodeEditor({ id }: { id: string }) {
+  const { lang, t } = useLang((t) => `${t.navCodes} — ${t.appName}`);
+  const { ready, me, base } = useMe();
+  const [state, setState] = useState<{ me: string; code: CodeView | null; error?: boolean } | null>(null);
+
+  useEffect(() => {
+    if (!me) return;
+    let live = true;
+    api
+      .get(id)
+      .then((code) => live && setState({ me, code }))
+      .catch((e: Error) => live && setState({ me, code: null, error: e.message !== "404" }));
+    return () => {
+      live = false;
+    };
+  }, [id, me]);
+  const loaded = state?.me === me ? state : null;
+
+  return (
+    <Shell t={t} lang={lang}>
+      {!ready ? null : !me ? (
+        <div className="rounded-2xl border border-line bg-card p-6 text-center">
+          <Link href={`/login?next=/codes/${id}`} className="inline-grid min-h-11 place-items-center rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent">
+            {t.login}
+          </Link>
+        </div>
+      ) : !loaded ? (
+        <Notice>{t.loading}</Notice>
+      ) : loaded.error ? (
+        <Notice>{t.loadError}</Notice>
+      ) : !loaded.code ? (
+        <Notice>{t.notFound}</Notice>
+      ) : loaded.code.access !== "owner" ? (
+        <div className="rounded-2xl border border-line bg-card p-6 text-center">
+          <Link href={`/c/${id}`} className="inline-grid min-h-11 place-items-center rounded-xl border border-line bg-field px-5 text-sm font-semibold">
+            {loaded.code.title} →
+          </Link>
+        </div>
+      ) : (
+        <Editor key={loaded.code.id + me} t={t} lang={lang} me={me} base={base} initial={loaded.code} />
+      )}
+    </Shell>
+  );
+}

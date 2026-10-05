@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+public/zxing_reader.wasm
+
+# демо-хранилище кодов, фото и видео
+/.data/

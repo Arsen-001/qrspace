@@ -1,26 +1,65 @@
 @import "tailwindcss";
 
+/* Цвета сайта — только здесь; светлая и тёмная тема. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --bg: #f6f5f2;
+  --card: #ffffff;
+  --field: #fbfaf8;
+  --line: #e4e1da;
+  --ink: #17161a;
+  --muted: #6b6872;
+  --accent: #2e3fd6;
+  --on-accent: #ffffff;
+  --ok: #16a34a;
+  --ok-soft: #e9f7ee;
+  --warn: #c2410c;
+  --warn-soft: #fdf0e8;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg: #111114;
+    --card: #19191e;
+    --field: #202027;
+    --line: #2e2e37;
+    --ink: #f1f0f4;
+    --muted: #a09eaa;
+    --accent: #7c8bff;
+    --on-accent: #0d0f24;
+    --ok: #22c55e;
+    --ok-soft: #13261a;
+    --warn: #fb923c;
+    --warn-soft: #2a1a10;
   }
 }
 
+@theme inline {
+  --color-bg: var(--bg);
+  --color-card: var(--card);
+  --color-field: var(--field);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --font-sans: var(--font-body), var(--font-armenian), system-ui, sans-serif;
+  --font-heading: var(--font-head), var(--font-armenian), system-ui, sans-serif;
+}
+
+html {
+  color-scheme: light dark;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+button:not(:disabled) {
+  cursor: pointer;
 }

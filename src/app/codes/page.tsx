@@ -1,0 +1,5 @@
+import { CodesPage } from "@/components/CodesPage";
+
+export default function Page() {
+  return <CodesPage />;
+}

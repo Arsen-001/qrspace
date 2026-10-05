@@ -1,0 +1,80 @@
+import { promises as fs } from "node:fs";
+import path from "node:path";
+import type { NextRequest } from "next/server";
+import { accessOf, findCode, MEDIA_DIR, mutate, newId, viewOf } from "@/server/db";
+import { currentPerson } from "@/server/session";
+import type { CodePatch } from "@/lib/codes";
+import { readPeople, readStyle, readTitle, readVisibility } from "../validate";
+
+/** Код глазами текущего человека; ?visit=1 — это скан, пишем в историю (кроме хозяина). */
+export async function GET(req: NextRequest, ctx: RouteContext<"/api/codes/[id]">) {
+  const { id } = await ctx.params;
+  const me = await currentPerson();
+  const code = await findCode(id);
+  if (!code) return Response.json({ error: "not-found" }, { status: 404 });
+  if (req.nextUrl.searchParams.has("visit") && code.owner !== me) {
+    const allowed = accessOf(code, me) !== "closed";
+    await mutate((db) => {
+      const c = db.codes.find((x) => x.id === id);
+      if (!c) return;
+      c.visits.push({ personId: me, at: new Date().toISOString(), allowed });
+      c.visits = c.visits.slice(-500);
+    });
+  }
+  return Response.json(viewOf(code, me));
+}
+
+/** Настройки кода — только хозяин. */
+export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/codes/[id]">) {
+  const { id } = await ctx.params;
+  const me = await currentPerson();
+  const body = (await req.json().catch(() => ({}))) as CodePatch & Record<string, unknown>;
+  const result = await mutate((db) => {
+    const c = db.codes.find((x) => x.id === id);
+    if (!c) return 404;
+    if (c.owner !== me) return 403;
+    if ("title" in body) {
+      const t = readTitle(body.title);
+      if (!t) return 400;
+      c.title = t;
+    }
+    if ("visibility" in body) {
+      const v = readVisibility(body.visibility);
+      if (!v) return 400;
+      c.visibility = v;
+    }
+    if ("people" in body) {
+      const p = readPeople(body.people, c.owner);
+      if (!p) return 400;
+      c.people = p;
+      c.requests = c.requests.filter((r) => !p.some((g) => g.personId === r.personId));
+    }
+    if ("style" in body) c.style = readStyle(body.style);
+    if (typeof body.approve === "string") {
+      const who = body.approve;
+      if (c.requests.some((r) => r.personId === who) && !c.people.some((g) => g.personId === who)) {
+        c.people.push({ personId: who, role: "view", until: null });
+        // Одобрили человека — значит код открыт выбранным людям (если был «только я»).
+        if (c.visibility === "me") c.visibility = "people";
+      }
+      c.requests = c.requests.filter((r) => r.personId !== who);
+    }
+    if (typeof body.decline === "string") c.requests = c.requests.filter((r) => r.personId !== body.decline);
+    if (body.newInvite) c.invite = newId(12);
+    return viewOf(c, me);
+  });
+  if (typeof result === "number") return Response.json({ error: result }, { status: result });
+  return Response.json(result);
+}
+
+export async function DELETE(_req: NextRequest, ctx: RouteContext<"/api/codes/[id]">) {
+  const { id } = await ctx.params;
+  const me = await currentPerson();
+  const removed = await mutate((db) => {
+    const i = db.codes.findIndex((x) => x.id === id && x.owner === me);
+    return i < 0 ? null : db.codes.splice(i, 1)[0];
+  });
+  if (!removed) return Response.json({ error: "forbidden" }, { status: 403 });
+  await Promise.all(removed.blocks.filter((b) => b.media).map((b) => fs.rm(path.join(MEDIA_DIR, b.media!), { force: true })));
+  return Response.json({ ok: true });
+}
