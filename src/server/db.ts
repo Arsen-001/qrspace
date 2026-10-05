@@ -4,7 +4,7 @@ import { randomBytes } from "node:crypto";
 import { promises as fs } from "node:fs";
 import { networkInterfaces } from "node:os";
 import path from "node:path";
-import { ymd, type AccessLevel, type CodeRecord, type CodeView, type Kind, type Notice } from "@/lib/codes";
+import { inSchedule, ymd, type AccessLevel, type CodeRecord, type CodeView, type Kind, type Notice } from "@/lib/codes";
 import { DESIGNS, SEED_SALES, type Design } from "@/lib/market";
 import type { Listing } from "@/lib/listings";
 import type { Order } from "@/lib/orders";
@@ -20,6 +20,14 @@ export const MEDIA_DIR = path.join(DIR, "media");
 export type Db = { codes: CodeRecord[]; sales: Record<string, number>; designs: Design[]; purchases: Purchase[]; orders: Order[]; listings: Listing[]; shop: ShopOrder[]; users: User[]; notifications: Notice[] };
 
 const ALPHABET = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+// Без похожих (0/O, 1/I) — короткий номер иногда вводят руками.
+const SHORT = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const newShort = (taken: Set<string>) => {
+  for (;;) {
+    const s = Array.from(randomBytes(6), (b) => SHORT[b % SHORT.length]).join("");
+    if (!taken.has(s)) return s;
+  }
+};
 
 /** Случайный id без порядка: по коду нельзя угадать соседние (важно для ключей и вещей). Только буквы и цифры. */
 export const newId = (len = 8) => Array.from(randomBytes(len), (b) => ALPHABET[b % ALPHABET.length]).join("");
@@ -175,6 +183,11 @@ async function read(): Promise<Db> {
     const db = JSON.parse(await fs.readFile(DB, "utf8")) as Db;
     // Коды, сохранённые до шаблонов, — это «память».
     db.codes = db.codes.map((c) => ({ ...kindDefaults(c.kind ?? "memory"), ...c }));
+    // Короткий номер — у каждого кода (новые получают при первом чтении).
+    const taken = new Set(db.codes.map((c) => c.short).filter((x): x is string => !!x));
+    db.codes.forEach((c) => {
+      if (!c.short) taken.add((c.short = newShort(taken)));
+    });
     db.sales ??= { ...SEED_SALES };
     db.designs ??= [];
     db.purchases ??= [];
@@ -217,6 +230,11 @@ export function mutate<T>(fn: (db: Db) => T | Promise<T>): Promise<T> {
 
 export async function findCode(id: string): Promise<CodeRecord | null> {
   return (await read()).codes.find((c) => c.id === id) ?? null;
+}
+
+export async function findByShort(short: string): Promise<CodeRecord | null> {
+  const s = short.toUpperCase();
+  return (await read()).codes.find((c) => c.short === s) ?? null;
 }
 
 export async function allCodes(): Promise<CodeRecord[]> {
@@ -295,7 +313,10 @@ export const designerIdsIn = (db: Db) => db.users.filter((u) => u.designer).map(
 export function viewOf(code: CodeRecord, me: string | null): CodeView {
   const access = accessOf(code, me);
   const owner = access === "owner";
-  const phone = owner || code.contact.showPhone ? code.contact.phone || null : null;
+  // Номер уходит с сервера, только если хозяин включил его и (если задано расписание) сейчас время показа.
+  const sched = code.contact.schedule?.on ? code.contact.schedule : null;
+  const phoneOn = code.contact.showPhone && (!sched || inSchedule(sched));
+  const phone = owner || phoneOn ? code.contact.phone || null : null;
   return {
     id: code.id,
     kind: code.kind,
@@ -303,9 +324,11 @@ export function viewOf(code: CodeRecord, me: string | null): CodeView {
     // У ключей и машины название может выдать адрес — видит только хозяин и те, кому открыто.
     title: owner || code.kind === "memory" || code.kind === "pet" || access !== "closed" ? code.title : null,
     showOwner: code.showOwner,
-    contact: { enabled: code.contact.enabled, showPhone: code.contact.showPhone, phone },
+    contact: { enabled: code.contact.enabled, showPhone: owner ? code.contact.showPhone : phoneOn, phone, schedule: owner ? (code.contact.schedule ?? null) : null },
     lost: code.lost,
     reward: code.lost || owner ? code.reward : "",
+    short: code.short ?? "",
+    compact: !!code.compact,
     edition: code.edition ?? null,
     owners: code.edition ? (code.owners ?? []) : null,
     tasks: access === "closed" ? null : [...code.tasks].sort((a, b) => a.due.localeCompare(b.due)),

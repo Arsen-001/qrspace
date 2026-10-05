@@ -25,13 +25,16 @@ export const PRESETS: Record<Kind, string[]> = {
 };
 
 export type Grant = { personId: string; role: Role; until: string | null };
-export type Message = { id: string; from: string | null; preset: string | null; text: string; reply: string; at: string; read: boolean };
+/** place — где был нашедший, если сам согласился отправить. */
+export type Message = { id: string; from: string | null; preset: string | null; text: string; reply: string; at: string; read: boolean; place?: { lat: number; lon: number } };
 /** Напоминание: что сделать и когда; every — повтор (после «Сделано» срок переносится). */
 export const REPEATS = ["none", "week", "month", "quarter", "year"] as const;
 export type Repeat = (typeof REPEATS)[number];
 export type Task = { id: string; text: string; due: string; every: Repeat; done: { by: string; at: string }[] };
 
-export type Contact = { enabled: boolean; phone: string; showPhone: boolean };
+/** Расписание номера: виден только с from до to (по времени хозяина, tz); через полночь — тоже можно (22:00–07:00). */
+export type Schedule = { on: boolean; from: string; to: string; tz: string };
+export type Contact = { enabled: boolean; phone: string; showPhone: boolean; schedule?: Schedule };
 export type Block = { id: string; kind: "text" | "photo" | "video"; text: string; media: string | null; author: string; at: string };
 export type Visit = { personId: string | null; at: string; allowed: boolean };
 
@@ -49,6 +52,9 @@ export type CodeRecord = {
   reward: string;
   messages: Message[];
   tasks: Task[];
+  /** Короткий номер для маленьких кодов (заглавные буквы и цифры) и включён ли «маленький код». */
+  short?: string;
+  compact?: boolean;
   /** Купленный в маркете дизайн: № в тираже (of = null — без тиража). */
   edition?: { design: string; no: number; of: number | null };
   /** История владельцев коллекционного кода (кто, когда, за сколько). */
@@ -72,12 +78,14 @@ export type CodeView = {
   /** null — название видит только хозяин (у ключей название может выдать адрес). */
   title: string | null;
   showOwner: boolean;
-  contact: { enabled: boolean; showPhone: boolean; phone: string | null };
+  contact: { enabled: boolean; showPhone: boolean; phone: string | null; schedule: Schedule | null };
   lost: boolean;
   reward: string;
   /** Напоминания — тем, кому открыт код. */
   tasks: Task[] | null;
   owners: { person: string; at: string; price: number | null }[] | null;
+  short: string;
+  compact: boolean;
   edition: { design: string; no: number; of: number | null } | null;
   access: AccessLevel;
   visibility: Visibility;
@@ -105,6 +113,13 @@ export const MAX_PHOTO_PX = 1600;
 export const MAX_VIDEO_MB = 50;
 
 export const codeLink = (base: string, id: string) => `${base}/c/${id}`;
+
+/**
+ * Ссылка, которая зашита в код. «Маленький код»: всё заглавными (адрес сайта к регистру не чувствителен) — QR
+ * кодирует такие символы компактнее, клеток меньше, каждая крупнее (для жетонов и брелоков 2–3 см).
+ */
+export const linkOf = (base: string, c: { id: string; short?: string; compact?: boolean }) =>
+  c.compact && c.short ? `${base.toUpperCase()}/K/${c.short}` : codeLink(base, c.id);
 export const mediaUrl = (name: string) => `/api/media/${name}`;
 
 async function call<T>(url: string, init?: RequestInit): Promise<T> {
@@ -114,7 +129,7 @@ async function call<T>(url: string, init?: RequestInit): Promise<T> {
 }
 const json = (method: string, body: unknown): RequestInit => ({ method, headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
 
-export type CodePatch = Partial<Pick<CodeRecord, "title" | "visibility" | "people" | "style" | "showOwner" | "contact" | "lost" | "reward">> & {
+export type CodePatch = Partial<Pick<CodeRecord, "title" | "visibility" | "people" | "style" | "showOwner" | "contact" | "lost" | "reward" | "compact">> & {
   readMessages?: boolean;
   removeMessage?: string;
   approve?: string;
@@ -157,7 +172,7 @@ export const api = {
   addTask: (id: string, task: { text: string; due: string; every: Repeat }) => call<CodeView>(`/api/codes/${id}/tasks`, json("POST", task)),
   doneTask: (id: string, taskId: string) => call<CodeView>(`/api/codes/${id}/tasks/${taskId}`, json("PATCH", { done: true })),
   removeTask: (id: string, taskId: string) => call<CodeView>(`/api/codes/${id}/tasks/${taskId}`, { method: "DELETE" }),
-  message: (id: string, m: { preset: string | null; text: string; reply: string }) => call<{ ok: true }>(`/api/codes/${id}/messages`, json("POST", m)),
+  message: (id: string, m: { preset: string | null; text: string; reply: string; place?: { lat: number; lon: number } }) => call<{ ok: true }>(`/api/codes/${id}/messages`, json("POST", m)),
   get: (id: string, opts: { visit?: boolean } = {}) => call<CodeView>(`/api/codes/${id}${opts.visit ? "?visit=1" : ""}`),
   patch: (id: string, patch: CodePatch) => call<CodeView>(`/api/codes/${id}`, json("PATCH", patch)),
   remove: (id: string) => call<{ ok: true }>(`/api/codes/${id}`, { method: "DELETE" }),
@@ -188,4 +203,10 @@ export function daysLeft(due: string): number {
   const [y, m, d] = due.split("-").map(Number);
   const [ty, tm, td] = todayYmd().split("-").map(Number);
   return Math.round((Date.UTC(y, m - 1, d) - Date.UTC(ty, tm - 1, td)) / 86_400_000);
+}
+
+/** Сейчас внутри окна расписания? Время — в часовом поясе хозяина. */
+export function inSchedule(s: Schedule, now = new Date()): boolean {
+  const hm = new Intl.DateTimeFormat("en-GB", { timeZone: s.tz || "UTC", hour: "2-digit", minute: "2-digit", hour12: false }).format(now);
+  return s.from <= s.to ? hm >= s.from && hm < s.to : hm >= s.from || hm < s.to;
 }

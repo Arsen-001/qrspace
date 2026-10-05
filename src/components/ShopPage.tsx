@@ -2,7 +2,7 @@
 // Товары с моим кодом: выбрать код — все товары сразу показываются с ним; заказ с адресом, оплата — демо.
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
-import { api, codeLink, type CodeView } from "@/lib/codes";
+import { api, linkOf, type CodeView } from "@/lib/codes";
 import { fmtDateTime } from "@/lib/format";
 import type { Dict } from "@/lib/i18n";
 import { useLang } from "@/lib/lang";
@@ -118,7 +118,7 @@ export function ShopPage() {
   }, [me]);
   const mine = data?.me === me ? data : null;
   const code = mine?.codes.find((c) => c.id === codeId) ?? mine?.codes[0] ?? null;
-  const link = code ? codeLink(base, code.id) : sampleLink(base);
+  const link = code ? linkOf(base, code) : sampleLink(base);
   const style: SavedStyle | null = code?.style ?? null;
   const qr = <QrThumb link={link} style={style} />;
 

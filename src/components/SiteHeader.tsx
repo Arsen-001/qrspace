@@ -69,7 +69,7 @@ export function SiteHeader({ t, lang }: { t: Dict; lang: Lang }) {
         {ready && me && <Bell t={t} lang={lang} />}
         {ready &&
           (me ? (
-            <Link href={`/login?next=${encodeURIComponent(path)}`} title={`${personName(me, lang)} · ${t.switchPerson}`} className="rounded-full">
+            <Link href="/profile" title={`${personName(me, lang)} · ${t.profileTitle}`} className="rounded-full">
               <Avatar id={me} lang={lang} size={36} />
             </Link>
           ) : (

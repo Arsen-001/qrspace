@@ -2,7 +2,7 @@
 // Лист наклеек: выбрать коды (или создать набор пустых меток), размер, сколько каждой — и напечатать на A4.
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { api, codeLink, type CodeView } from "@/lib/codes";
+import { api, linkOf, type CodeView } from "@/lib/codes";
 import type { Dict } from "@/lib/i18n";
 import { useLang } from "@/lib/lang";
 import { useMe } from "@/lib/me";
@@ -77,7 +77,7 @@ export function PrintPage() {
 
   const items = useMemo(() => {
     if (!browser) return [];
-    const one = chosen.map((c) => ({ id: c.id, title: c.title ?? "", svg: toSvg(buildDrawing(codeLink(base, c.id), toQrStyle(c.style ? fromSaved(c.style) : DEFAULT_STYLE)), 400) }));
+    const one = chosen.map((c) => ({ id: c.id, title: c.title ?? "", svg: toSvg(buildDrawing(linkOf(base, c), toQrStyle(c.style ? fromSaved(c.style) : DEFAULT_STYLE)), 400) }));
     return one.flatMap((it) => Array.from({ length: copies }, () => it));
   }, [browser, chosen, base, copies]);
 

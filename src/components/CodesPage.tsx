@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { api, codeLink, daysLeft, KINDS, type CodeList, type CodeView, type Kind, type Task } from "@/lib/codes";
+import { api, linkOf, daysLeft, KINDS, type CodeList, type CodeView, type Kind, type Task } from "@/lib/codes";
 import type { Dict, Lang } from "@/lib/i18n";
 import { useLang } from "@/lib/lang";
 import { useMe } from "@/lib/me";
@@ -21,7 +21,7 @@ function CodeCard({ t, lang, base, code, shared }: { t: Dict; lang: Lang; base: 
   return (
     <li>
       <Link href={shared ? `/c/${code.id}` : `/codes/${code.id}`} className="flex h-full gap-4 rounded-2xl border border-line bg-card p-4 transition-colors hover:border-muted">
-        <QrThumb link={codeLink(base, code.id)} style={code.style} className="h-24 w-24 shrink-0 border border-line" />
+        <QrThumb link={linkOf(base, code)} style={code.style} className="h-24 w-24 shrink-0 border border-line" />
         <div className="min-w-0 flex-1 space-y-2">
           <div className="flex items-start gap-1.5">
             <KindIcon kind={code.kind} className="mt-0.5 h-4 w-4 text-muted" />

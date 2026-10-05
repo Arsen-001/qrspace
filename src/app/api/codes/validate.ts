@@ -44,5 +44,12 @@ export function readContact(v: unknown): Contact | null {
   if (typeof c.enabled !== "boolean" || typeof c.showPhone !== "boolean") return null;
   // В номере — только цифры, пробелы, плюс, скобки и дефисы.
   const phone = readShort(c.phone, 30).replace(/[^\d+()\s-]/g, "");
-  return { enabled: c.enabled, phone, showPhone: c.showPhone && !!phone };
+  const sc = c.schedule as Record<string, unknown> | undefined | null;
+  const time = (v: unknown) => (typeof v === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(v) ? v : null);
+  let tzOk = false;
+  try {
+    tzOk = typeof sc?.tz === "string" && !!new Intl.DateTimeFormat("en", { timeZone: sc.tz });
+  } catch {}
+  const schedule = sc && typeof sc.on === "boolean" && time(sc.from) && time(sc.to) && tzOk ? { on: sc.on, from: time(sc.from)!, to: time(sc.to)!, tz: sc.tz as string } : undefined;
+  return { enabled: c.enabled, phone, showPhone: c.showPhone && !!phone, ...(schedule && { schedule }) };
 }

@@ -86,13 +86,22 @@ function ContactBox({ t, code }: { t: Dict; code: CodeView }) {
   const [preset, setPreset] = useState<string | null>(null);
   const [text, setText] = useState("");
   const [reply, setReply] = useState("");
+  const [share, setShare] = useState(false);
   const [state, setState] = useState<"idle" | "sending" | "sent" | "limit" | "error">("idle");
   const field = "w-full rounded-xl border border-line bg-field px-3.5 py-2.5 text-base outline-none transition-colors focus:border-accent";
 
   const send = async () => {
     setState("sending");
     try {
-      await api.message(code.id, { preset, text, reply });
+      // Место — только по согласию нашедшего; не дал доступ или нет GPS — отправляем без него.
+      const place = share
+        ? await new Promise<{ lat: number; lon: number } | undefined>((done) =>
+            navigator.geolocation
+              ? navigator.geolocation.getCurrentPosition((p) => done({ lat: p.coords.latitude, lon: p.coords.longitude }), () => done(undefined), { timeout: 8000, maximumAge: 60_000 })
+              : done(undefined),
+          )
+        : undefined;
+      await api.message(code.id, { preset, text, reply, place });
       setState("sent");
       setPreset(null);
       setText("");
@@ -144,6 +153,15 @@ function ContactBox({ t, code }: { t: Dict; code: CodeView }) {
           )}
           <textarea value={text} rows={3} maxLength={500} placeholder={t.messagePlaceholder} onChange={(e) => setText(e.target.value)} className={`${field} resize-y`} />
           <input value={reply} maxLength={100} placeholder={t.replyPlaceholder} onChange={(e) => setReply(e.target.value)} className={field} autoComplete="tel" />
+          {code.kind !== "memory" && (
+            <label className="flex cursor-pointer items-start gap-2 text-sm">
+              <input type="checkbox" checked={share} onChange={(e) => setShare(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[var(--accent)]" />
+              <span>
+                {t.shareWhere}
+                <span className="block text-xs text-muted">{t.shareWhereHint}</span>
+              </span>
+            </label>
+          )}
           {state === "limit" && <p className="text-sm text-warn">{t.sendLimit}</p>}
           {state === "error" && <p className="text-sm text-warn">{t.sendError}</p>}
           <button type="submit" disabled={state === "sending" || !(preset || text.trim())} className={primary}>

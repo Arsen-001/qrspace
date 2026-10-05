@@ -28,6 +28,11 @@ export async function POST(req: NextRequest, ctx: RouteContext<"/api/codes/[id]/
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const text = readText(body.text).slice(0, 500);
   const reply = readShort(body.reply, 100);
+  // Место — только если нашедший сам нажал «отправить, где я»; округляем до ~10 м.
+  const pl = body.place as { lat?: unknown; lon?: unknown } | undefined;
+  const lat = Number(pl?.lat);
+  const lon = Number(pl?.lon);
+  const place = pl && Number.isFinite(lat) && Number.isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180 ? { lat: Math.round(lat * 1e4) / 1e4, lon: Math.round(lon * 1e4) / 1e4 } : undefined;
 
   const now = Date.now();
   const key = `${id}:${me ?? anon}`;
@@ -41,7 +46,7 @@ export async function POST(req: NextRequest, ctx: RouteContext<"/api/codes/[id]/
     const preset = typeof body.preset === "string" && PRESETS[c.kind].includes(body.preset) ? body.preset : null;
     if (!preset && !text) return 400;
     if (c.messages.filter((m) => now - Date.parse(m.at) < HOUR).length >= PER_CODE) return 429;
-    c.messages.push({ id: newId(), from: me, preset, text, reply, at: new Date(now).toISOString(), read: false });
+    c.messages.push({ id: newId(), from: me, preset, text, reply, at: new Date(now).toISOString(), read: false, ...(place && { place }) });
     c.messages = c.messages.slice(-200);
     notify(db, c.owner, me, "message", { title: c.title, preset: preset ?? "", text: text.slice(0, 80) }, `/codes/${c.id}`);
     return 200;

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { api, codeLink, type CodePatch, type CodeView } from "@/lib/codes";
+import { api, linkOf, type CodePatch, type CodeView } from "@/lib/codes";
 import type { Dict, Lang } from "@/lib/i18n";
 import { useLang } from "@/lib/lang";
 import { refreshPeople, useMe } from "@/lib/me";
@@ -18,6 +18,7 @@ import { Memory } from "./Memory";
 import { QrThumb } from "./QrThumb";
 import { Notice, Shell } from "./Shell";
 import type { StyleState } from "./StylePanel";
+import { Switch } from "./ui";
 
 type Tab = "memory" | "contact" | "access" | "look";
 type Status = "idle" | "saving" | "saved" | "error";
@@ -32,7 +33,12 @@ function LookTab({ t, code, link, save }: { t: Dict; code: CodeView; link: strin
     return () => clearTimeout(id);
   }, [style, save]);
   // Код с памятью оплачивается один раз за код (ссылка в нём не меняется); стиль красивее — доплата разницы.
-  return <CodeDesigner t={t} payload={link} style={style} setStyle={setStyle} fileName={`qr-${code.id}`} gate={{ tier: tierOf(style), key: () => `code:${code.id}` }} side={<p className="px-1 text-sm text-muted">{t.changeAnytime}</p>} />;
+  return <CodeDesigner t={t} payload={link} style={style} setStyle={setStyle} fileName={`qr-${code.id}`} gate={{ tier: tierOf(style), key: () => `code:${code.id}` }}
+    top={
+      <section className="rounded-2xl border border-line bg-card p-5">
+        <Switch label={t.compactCode} hint={t.compactHint} checked={code.compact} onChange={(compact) => save({ compact })} />
+      </section>
+    } side={<p className="px-1 text-sm text-muted">{t.changeAnytime}</p>} />;
 }
 
 function TitleField({ t, value, save }: { t: Dict; value: string; save: (p: CodePatch) => Promise<void> }) {
@@ -82,30 +88,37 @@ function Editor({ t, lang, me, base, initial }: { t: Dict; lang: Lang; me: strin
   const [code, setCode] = useState(initial);
   const [tab, setTab] = useState<Tab>(initial.kind === "memory" ? "memory" : "contact");
   const [status, setStatus] = useState<Status>("idle");
-  const link = codeLink(base, code.id);
+  const link = linkOf(base, code);
 
   // Одна функция сохранения на всю страницу — чтобы автосохранение вида не перезапускалось.
   const id = initial.id;
+  const seq = useRef(0);
   const save = useCallback(
     async (p: CodePatch) => {
       setStatus("saving");
       // Выключатели и выбор отвечают сразу, не дожидаясь сервера; ответ сервера потом поправит, если что.
       setCode((c) => {
-        const { title, visibility, people, showOwner, lost, reward, contact } = p;
+        const { title, visibility, people, showOwner, lost, reward, contact, compact } = p;
         return {
           ...c,
           ...(title !== undefined && { title }),
           ...(visibility !== undefined && { visibility }),
           ...(people !== undefined && { people }),
           ...(showOwner !== undefined && { showOwner }),
+          ...(compact !== undefined && { compact }),
           ...(lost !== undefined && { lost }),
           ...(reward !== undefined && { reward }),
-          ...(contact !== undefined && { contact: { ...contact, phone: contact.phone || null } }),
+          ...(contact !== undefined && { contact: { ...contact, phone: contact.phone || null, schedule: contact.schedule ?? null } }),
         };
       });
+      // Быстрые изменения подряд: ответ на старое не должен откатить новое — берём только ответ на последнее.
+      const n = ++seq.current;
       try {
-        setCode(await api.patch(id, p));
-        setStatus("saved");
+        const fresh = await api.patch(id, p);
+        if (n === seq.current) {
+          setCode(fresh);
+          setStatus("saved");
+        }
       } catch {
         setStatus("error");
         api.get(id).then(setCode, () => {});

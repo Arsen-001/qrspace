@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { CodePatch, CodeView, Message } from "@/lib/codes";
 import { fmtDateTime } from "@/lib/format";
-import type { Dict, Lang } from "@/lib/i18n";
+import { fill, type Dict, type Lang } from "@/lib/i18n";
 import { Avatar, personName } from "./Avatar";
 import { Card, Switch } from "./ui";
 
@@ -51,6 +51,11 @@ function Inbox({ t, lang, messages, save }: { t: Dict; lang: Lang; messages: Mes
                   </div>
                   {messageTitle(t, m) && <div className="mt-1 font-semibold">{messageTitle(t, m)}</div>}
                   {m.text && <p className="mt-0.5 whitespace-pre-wrap break-words text-sm">{m.text}</p>}
+                  {m.place && (
+                    <a href={`https://maps.google.com/?q=${m.place.lat},${m.place.lon}`} target="_blank" rel="noreferrer" className="mt-1 inline-block text-xs font-semibold text-accent underline underline-offset-2">
+                      📍 {t.openMap}
+                    </a>
+                  )}
                   <div className="mt-1 text-xs text-muted">
                     {t.inboxReply}: {m.reply ? <span className="select-all font-medium text-ink">{m.reply}</span> : t.inboxNoReply}
                   </div>
@@ -74,7 +79,10 @@ function Inbox({ t, lang, messages, save }: { t: Dict; lang: Lang; messages: Mes
 
 export function ContactPanel({ t, lang, code, save }: { t: Dict; lang: Lang; code: CodeView; save: (p: CodePatch) => Promise<void> }) {
   const phone = code.contact.phone ?? "";
-  const contact = { enabled: code.contact.enabled, phone, showPhone: code.contact.showPhone };
+  const schedule = code.contact.schedule ?? { on: false, from: "08:00", to: "22:00", tz: Intl.DateTimeFormat().resolvedOptions().timeZone };
+  const contact = { enabled: code.contact.enabled, phone, showPhone: code.contact.showPhone, schedule };
+  // Часовой пояс — того, кто настраивает: «с 8 до 22» по его времени.
+  const setSchedule = (p: Partial<typeof schedule>) => save({ contact: { ...contact, schedule: { ...schedule, ...p, tz: Intl.DateTimeFormat().resolvedOptions().timeZone } } });
   const canLose = code.kind === "lost" || code.kind === "pet";
   return (
     <div className="space-y-5">
@@ -96,6 +104,18 @@ export function ContactPanel({ t, lang, code, save }: { t: Dict; lang: Lang; cod
                 disabled={!phone}
                 onChange={(showPhone) => save({ contact: { ...contact, showPhone } })}
               />
+              {code.contact.showPhone && (
+                <div className="mt-4 space-y-3 border-t border-black/5 pt-4">
+                  <Switch label={t.byScheduleLabel} hint={schedule.on ? fill(t.byScheduleOn, { from: schedule.from, to: schedule.to }) : t.byScheduleOff} checked={schedule.on} onChange={(on) => setSchedule({ on })} />
+                  {schedule.on && (
+                    <div className="flex flex-wrap items-center gap-2 text-sm">
+                      <input type="time" aria-label={t.fromTime} value={schedule.from} onChange={(e) => e.target.value && setSchedule({ from: e.target.value })} className="min-h-10 rounded-xl border border-line bg-card px-3" />
+                      <span>—</span>
+                      <input type="time" aria-label={t.toTime} value={schedule.to} onChange={(e) => e.target.value && setSchedule({ to: e.target.value })} className="min-h-10 rounded-xl border border-line bg-card px-3" />
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
