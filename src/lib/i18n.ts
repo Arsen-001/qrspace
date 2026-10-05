@@ -595,6 +595,10 @@ const ru = {
   certOwner: "Владелец",
   certVerify: "Проверить сертификат — отсканируйте или откройте:",
   designerLabel: "Дизайнер",
+  liveCode: "Живой код — видео",
+  liveHint: "4 с для Instagram и TikTok",
+  liveRecording: "Записываем…",
+  liveBad: "Не получилось записать видео в этом браузере — попробуйте Chrome или Safari.",
   "notice.itemPassed": "Ваша вещь «{title}» перешла новому владельцу",
 };
 
@@ -1188,6 +1192,10 @@ const en: Dict = {
   certOwner: "Owner",
   certVerify: "Verify this certificate — scan or open:",
   designerLabel: "Designer",
+  liveCode: "Live code — video",
+  liveHint: "4 s for Instagram and TikTok",
+  liveRecording: "Recording…",
+  liveBad: "Couldn’t record a video in this browser — try Chrome or Safari.",
   "notice.itemPassed": "Your item “{title}” passed to a new owner",
 };
 
@@ -1779,6 +1787,10 @@ const hy: Dict = {
   certOwner: "Տեր",
   certVerify: "Ստուգել վկայականը — սկանավորեք կամ բացեք՝",
   designerLabel: "Դիզայներ",
+  liveCode: "Կենդանի կոդ — տեսանյութ",
+  liveHint: "4 վ Instagram-ի և TikTok-ի համար",
+  liveRecording: "Տեսագրում ենք…",
+  liveBad: "Այս դիտարկիչում չհաջողվեց տեսանյութ ստեղծել — փորձեք Chrome կամ Safari։",
   "notice.itemPassed": "Ձեր «{title}» իրն անցավ նոր տիրոջը",
 };
 

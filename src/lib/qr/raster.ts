@@ -240,3 +240,88 @@ export async function iconMask(file: File, w = 28): Promise<IconMask> {
     URL.revokeObjectURL(url);
   }
 }
+
+// ——— Живой код: короткое видео (4 с, 1080×1080) для Instagram и TikTok ———
+// По коду пробегает блик и он чуть «дышит». Перед записью проверяем, что код читается в самых трудных кадрах.
+
+const LIVE = { px: 1080, seconds: 4, fps: 30 };
+
+/** Кадр живого кода: t — от 0 до 1 по кругу. glint — сила блика (0…1). */
+function liveFrame(ctx: CanvasRenderingContext2D, base: HTMLCanvasElement, t: number, glint: number) {
+  const S = LIVE.px;
+  // «Дыхание»: чуть крупнее и обратно (только больше 1 — края остаются заполненными фоном кода).
+  const s = 1 + 0.025 * (1 - Math.cos(2 * Math.PI * t)) * 0.5;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalCompositeOperation = "source-over";
+  ctx.drawImage(base, (S - S * s) / 2, (S - S * s) / 2, S * s, S * s);
+  // Блик: диагональная полоса проходит раз за цикл; светлее только поверх кода.
+  const x = -0.6 * S + t * 2.2 * S;
+  const g = ctx.createLinearGradient(x - 0.18 * S, x * 0.2, x + 0.18 * S, x * 0.2 + 0.36 * S);
+  g.addColorStop(0, "rgba(255,255,255,0)");
+  g.addColorStop(0.5, `rgba(255,255,255,${0.55 * glint})`);
+  g.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.globalCompositeOperation = "screen";
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, S, S);
+  ctx.globalCompositeOperation = "source-over";
+}
+
+async function liveReads(base: HTMLCanvasElement, glint: number, expected: string): Promise<boolean> {
+  const { readBarcodes } = await getReader();
+  const c = document.createElement("canvas");
+  c.width = c.height = LIVE.px;
+  const ctx = c.getContext("2d", { willReadFrequently: true })!;
+  const small = document.createElement("canvas");
+  small.width = small.height = 360;
+  const sctx = small.getContext("2d", { willReadFrequently: true })!;
+  // Самые трудные кадры — когда блик посередине кода; проверяем «как с камеры» (мелко и чуть размыто).
+  for (const t of [0.35, 0.45, 0.5, 0.55, 0.65]) {
+    liveFrame(ctx, base, t, glint);
+    sctx.filter = "blur(1.2px)";
+    sctx.drawImage(c, 0, 0, 360, 360);
+    const res = await readBarcodes(sctx.getImageData(0, 0, 360, 360), { formats: ["QRCode"], tryHarder: false, tryInvert: true, maxNumberOfSymbols: 1 });
+    if (!res.some((r) => r.isValid && r.text === expected)) return false;
+  }
+  return true;
+}
+
+/** Записать живой код. Блик ослабляем, пока код не читается в каждом кадре. */
+export async function recordLive(drawing: Drawing, expected: string, onProgress?: (p: number) => void): Promise<{ blob: Blob; ext: string } | null> {
+  const base = await drawToCanvas(drawing, LIVE.px);
+  let glint = 1;
+  while (glint > 0.15 && !(await liveReads(base, glint, expected))) glint -= 0.25;
+  if (!(await liveReads(base, glint, expected))) return null;
+
+  const c = document.createElement("canvas");
+  c.width = c.height = LIVE.px;
+  const ctx = c.getContext("2d")!;
+  liveFrame(ctx, base, 0, glint);
+  const type = ["video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp9", "video/webm"].find((m) => MediaRecorder.isTypeSupported(m));
+  if (!type) return null;
+  const rec = new MediaRecorder(c.captureStream(LIVE.fps), { mimeType: type, videoBitsPerSecond: 8_000_000 });
+  const chunks: Blob[] = [];
+  rec.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+  const done = new Promise<void>((r) => (rec.onstop = () => r()));
+  rec.start();
+  const start = performance.now();
+  await new Promise<void>((resolve) => {
+    const tick = () => {
+      const el = (performance.now() - start) / 1000;
+      liveFrame(ctx, base, (el % LIVE.seconds) / LIVE.seconds, glint);
+      onProgress?.(Math.min(1, el / LIVE.seconds));
+      if (el < LIVE.seconds) requestAnimationFrame(tick);
+      else resolve();
+    };
+    requestAnimationFrame(tick);
+  });
+  rec.stop();
+  await done;
+  return { blob: new Blob(chunks, { type: type.split(";")[0] }), ext: type.includes("mp4") ? "mp4" : "webm" };
+}
+
+export async function downloadLive(drawing: Drawing, expected: string, name: string, onProgress?: (p: number) => void): Promise<boolean> {
+  const r = await recordLive(drawing, expected, onProgress);
+  if (!r) return false;
+  save(r.blob, `${name}-live.${r.ext}`);
+  return true;
+}

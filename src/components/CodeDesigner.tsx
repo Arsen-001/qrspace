@@ -167,7 +167,7 @@ export function CodeDesigner({
         </div>
       </div>
       <div className="order-2 min-w-0 space-y-4 lg:sticky lg:top-4">
-        <Preview key={payload} t={t} drawing={drawing} scan={scan} error={tooLong ? t.tooLong : null} name={fileName} gate={gate} />
+        <Preview key={payload} t={t} drawing={drawing} scan={scan} error={tooLong ? t.tooLong : null} name={fileName} gate={gate} payload={payload} />
         {side}
       </div>
     </div>

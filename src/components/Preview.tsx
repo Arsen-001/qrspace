@@ -6,16 +6,17 @@ import { api } from "@/lib/codes";
 import type { Dict } from "@/lib/i18n";
 import { useMe } from "@/lib/me";
 import { PRICES, type Quote, type Tier } from "@/lib/pricing";
+import { useInBrowser } from "./QrThumb";
 import { type Drawing, toSvg } from "@/lib/qr/render";
-import { downloadPng, downloadSvg } from "@/lib/qr/raster";
+import { downloadLive, downloadPng, downloadSvg } from "@/lib/qr/raster";
 
 export type ScanState = "idle" | "checking" | "ok" | "bad";
 
 /** Оплата при скачивании: tier — простой или красивый, key — какой это код (считается только по нажатию). */
 export type Gate = { tier: Tier; key: () => string };
-type Format = "png" | "svg";
+type Format = "png" | "svg" | "live";
 
-export function Preview({ t, drawing, scan, error, name = "qr-code", gate }: { t: Dict; drawing: Drawing | null; scan: ScanState; error: string | null; name?: string; gate?: Gate | null }) {
+export function Preview({ t, drawing, scan, error, name = "qr-code", gate, payload }: { t: Dict; drawing: Drawing | null; scan: ScanState; error: string | null; name?: string; gate?: Gate | null; payload?: string }) {
   const [forced, setForced] = useState(false);
   const canDownload = !!drawing && (scan === "ok" || (scan === "bad" && forced));
   const { me } = useMe();
@@ -23,7 +24,18 @@ export function Preview({ t, drawing, scan, error, name = "qr-code", gate }: { t
   const [pay, setPay] = useState<{ format: Format; quote: Quote | null; key: string } | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const save = (format: Format) => drawing && (format === "png" ? downloadPng(drawing, 2048, name) : downloadSvg(drawing, name));
+  const [live, setLive] = useState<number | "bad" | null>(null);
+  // Запись видео есть не во всех браузерах; на сервере кнопку не рисуем — иначе страницы не совпадут.
+  const canRecord = useInBrowser() && typeof MediaRecorder !== "undefined";
+  const save = async (format: Format) => {
+    if (!drawing) return;
+    if (format === "png") return downloadPng(drawing, 2048, name);
+    if (format === "svg") return downloadSvg(drawing, name);
+    // Живой код пишется в реальном времени (4 с) — показываем, сколько осталось.
+    setLive(0);
+    const ok = await downloadLive(drawing, payload ?? "", name, (p) => setLive(p)).catch(() => false);
+    setLive(ok ? null : "bad");
+  };
   const download = async (format: Format) => {
     if (!gate) return save(format);
     const key = gate.key();
@@ -112,6 +124,18 @@ export function Preview({ t, drawing, scan, error, name = "qr-code", gate }: { t
           <span className="block text-xs text-muted">{t.svgHint}</span>
         </button>
       </div>
+      {payload && canRecord && (
+        <button
+          type="button"
+          disabled={!canDownload || busy || typeof live === "number"}
+          onClick={() => download("live")}
+          className="mt-2 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-line bg-field px-3 text-sm font-semibold transition-opacity hover:border-muted disabled:opacity-40"
+        >
+          ✨ {typeof live === "number" ? `${t.liveRecording} ${Math.round(live * 100)}%` : t.liveCode}
+          <span className="text-xs font-normal text-muted">{t.liveHint}</span>
+        </button>
+      )}
+      {live === "bad" && <p className="mt-2 text-xs text-warn">{t.liveBad}</p>}
       {gate && (
         <p className="mt-3 text-center text-xs text-muted">
           {gate.tier === "simple" ? t.tierSimple : t.tierStyled} · {t.priceFrom} ${PRICES[gate.tier]}
