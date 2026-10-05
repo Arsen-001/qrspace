@@ -71,7 +71,7 @@ function Closed({ t, code, me, id, invite, onChange }: { t: Dict; code: CodeView
 function AuthCard({ t, lang, code, me, onChange }: { t: Dict; lang: Lang; code: CodeView; me: string | null; onChange: (v: CodeView) => void }) {
   const a = code.auth!;
   const [secret, setSecret] = useState("");
-  const [state, setState] = useState<"idle" | "busy" | "bad" | "taken">("idle");
+  const [state, setState] = useState<"idle" | "busy" | "bad" | "taken" | "limit">("idle");
   const [given, setGiven] = useState<string | null>(null);
   const claim = async () => {
     setState("busy");
@@ -79,7 +79,8 @@ function AuthCard({ t, lang, code, me, onChange }: { t: Dict; lang: Lang; code: 
       onChange(await api.claimItem(code.id, secret));
       setState("idle");
     } catch (e) {
-      setState((e as Error).message === "409" ? "taken" : "bad");
+      const code = (e as Error).message;
+      setState(code === "409" ? "taken" : code === "429" ? "limit" : "bad");
     }
   };
   const warn = a.status === "taken" || a.suspicious;
@@ -141,6 +142,7 @@ function AuthCard({ t, lang, code, me, onChange }: { t: Dict; lang: Lang; code: 
                   </button>
                   {state === "bad" && <p className="w-full text-sm text-warn">{t.authBadSecret}</p>}
                   {state === "taken" && <p className="w-full text-sm text-warn">{t.authTakenHint}</p>}
+                  {state === "limit" && <p className="w-full text-sm text-warn">{t.sendLimit}</p>}
                 </form>
               ) : (
                 <Link href={`/login?next=${encodeURIComponent(`/c/${code.id}`)}`} className={`${primary} mt-4`}>

@@ -2,6 +2,9 @@ import type { NextRequest } from "next/server";
 import { mutate, newSecret, notify, viewOf } from "@/server/db";
 import { currentPerson } from "@/server/session";
 
+const g = globalThis as { __qrClaimTries?: Map<string, number[]> };
+const tries: Map<string, number[]> = (g.__qrClaimTries ??= new Map());
+
 /**
  * Зарегистрировать вещь на себя секретом из-под стираемого слоя. Свободную — сразу; чужую — только если прежний
  * владелец разрешил передачу (дал новый секрет). После регистрации секрет меняется: старая бирка больше не сработает.
@@ -10,6 +13,12 @@ export async function POST(req: NextRequest, ctx: RouteContext<"/api/codes/[id]/
   const { id } = await ctx.params;
   const me = await currentPerson();
   if (!me) return Response.json({ error: "login" }, { status: 401 });
+  // Против подбора секрета: не больше 10 попыток в час на человека и вещь.
+  const key = `${id}:${me}`;
+  const now = Date.now();
+  const recent = (tries.get(key) ?? []).filter((t) => now - t < 3_600_000);
+  if (recent.length >= 10) return Response.json({ error: "limit" }, { status: 429 });
+  tries.set(key, [...recent, now]);
   const { secret } = (await req.json().catch(() => ({}))) as { secret?: unknown };
   const s = typeof secret === "string" ? secret.trim().toUpperCase().replace(/\s|-/g, "") : "";
   const result = await mutate((db) => {

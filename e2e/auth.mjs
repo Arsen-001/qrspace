@@ -71,5 +71,9 @@ await shot(g, "a-suspicious");
 // бренд: в «Моих кодах» вещи партии не засоряют список
 await brand.goto(B + "/codes", { waitUntil: "networkidle" });
 ok(await brand.locator("text=Худи чёрное № 1").count() === 0, "batch items not in brand's My codes");
+// подбор секрета ограничен: 10 попыток в час
+const codes = [];
+for (let i = 0; i < 11; i++) codes.push(await d.evaluate((id) => fetch(`/api/codes/${id}/claim`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ secret: "AAAAAAAA" }) }).then((r) => r.status), items[2].id));
+ok(codes.slice(0, 10).every((c) => c === 403) && codes[10] === 429, "secret guessing limited (10/hour)");
 console.log("errors:", errors.length ? errors : "none");
 await browser.close();
