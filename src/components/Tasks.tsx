@@ -50,7 +50,7 @@ function Row({ t, lang, me, code, task, canEdit, onChange }: { t: Dict; lang: La
       </div>
       {canEdit && (
         <div className="flex gap-1">
-          <button type="button" disabled={busy} onClick={() => run(() => api.doneTask(code.id, task.id))} className="min-h-10 rounded-xl bg-ok px-4 text-sm font-semibold text-white disabled:opacity-50">
+          <button type="button" disabled={busy} onClick={() => run(() => api.doneTask(code.id, task.id))} className="min-h-10 rounded-xl bg-ok px-4 text-sm font-semibold text-on-ok disabled:opacity-50">
             ✓ {t.markDone}
           </button>
           <button type="button" disabled={busy} onClick={() => run(() => api.removeTask(code.id, task.id))} aria-label={`${t.delete}: ${task.text}`} className="min-h-10 rounded-xl px-2.5 text-sm text-muted hover:text-warn">

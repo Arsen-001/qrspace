@@ -69,7 +69,7 @@ function DeleteCode({ t, id }: { t: Dict; id: string }) {
       <button
         type="button"
         onClick={() => api.remove(id).then(() => router.push("/codes"))}
-        className="min-h-11 rounded-xl bg-warn px-4 text-sm font-semibold text-white"
+        className="min-h-11 rounded-xl bg-warn px-4 text-sm font-semibold text-on-warn"
       >
         {t.deleteSure}
       </button>
@@ -175,7 +175,7 @@ function Editor({ t, lang, me, base, initial }: { t: Dict; lang: Lang; me: strin
             className={`-mb-px flex min-h-11 shrink-0 items-center gap-2 border-b-2 px-3 text-sm font-semibold ${tab === x.id ? "border-accent text-ink" : "border-transparent text-muted hover:text-ink"}`}
           >
             {x.label}
-            {!!x.badge && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-warn px-1 text-[11px] text-white">{x.badge}</span>}
+            {!!x.badge && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-warn px-1 text-[11px] text-on-warn">{x.badge}</span>}
           </button>
         ))}
       </div>

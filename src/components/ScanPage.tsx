@@ -86,7 +86,7 @@ function AuthCard({ t, lang, code, me, onChange }: { t: Dict; lang: Lang; code: 
   const warn = a.status === "taken" || a.suspicious;
   return (
     <div className="space-y-4">
-      <section className={`rounded-2xl p-5 text-white ${warn ? "bg-warn" : "bg-ok"}`}>
+      <section className={`rounded-2xl p-5 text-on-ok ${warn ? "bg-warn" : "bg-ok"}`}>
         <div className="text-sm font-semibold uppercase tracking-wider opacity-90">{a.brand}</div>
         <div className="mt-1 font-heading text-3xl font-extrabold leading-tight">{warn ? `⚠ ${t.authCheck}` : `✓ ${t.authOriginal}`}</div>
         <div className="mt-2 text-sm opacity-95">
@@ -159,7 +159,7 @@ function AuthCard({ t, lang, code, me, onChange }: { t: Dict; lang: Lang; code: 
 /** Крупно, если хозяин включил «Потеряно». */
 function LostBanner({ t, code }: { t: Dict; code: CodeView }) {
   return (
-    <div className="mb-5 rounded-2xl bg-warn p-5 text-white">
+    <div className="mb-5 rounded-2xl bg-warn p-5 text-on-warn">
       <div className="font-heading text-2xl font-extrabold leading-tight">{t[`lostBanner.${code.kind}`]}</div>
       {code.reward && (
         <div className="mt-2 text-sm font-medium">
@@ -203,7 +203,7 @@ function ContactBox({ t, code }: { t: Dict; code: CodeView }) {
   return (
     <section className="mt-5 rounded-2xl border border-line bg-card p-5">
       {code.contact.phone && (
-        <a href={`tel:${code.contact.phone.replace(/[^\d+]/g, "")}`} className="mb-5 flex min-h-14 flex-col items-center justify-center rounded-xl bg-ok px-4 py-2.5 text-white">
+        <a href={`tel:${code.contact.phone.replace(/[^\d+]/g, "")}`} className="mb-5 flex min-h-14 flex-col items-center justify-center rounded-xl bg-ok px-4 py-2.5 text-on-ok">
           <span className="text-base font-semibold">{t.callOwner}</span>
           <span className="text-sm opacity-90">{code.contact.phone}</span>
         </a>

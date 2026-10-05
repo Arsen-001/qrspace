@@ -166,7 +166,7 @@ function Entry({ t, lang, code, block, me, onChange }: { t: Dict; lang: Lang; co
               </>
             ) : sure ? (
               <>
-                <button type="button" disabled={busy} onClick={() => run(() => api.removeBlock(code.id, block.id))} className="min-h-9 rounded-lg bg-warn px-2.5 font-semibold text-white">
+                <button type="button" disabled={busy} onClick={() => run(() => api.removeBlock(code.id, block.id))} className="min-h-9 rounded-lg bg-warn px-2.5 font-semibold text-on-warn">
                   {t.delete}
                 </button>
                 <button type="button" onClick={() => setSure(false)} className="min-h-9 rounded-lg px-2.5 font-medium hover:text-ink">

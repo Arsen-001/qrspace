@@ -7,8 +7,12 @@ const head = Manrope({ variable: "--font-head", subsets: ["latin", "cyrillic"] }
 const armenian = Noto_Sans_Armenian({ variable: "--font-armenian", subsets: ["armenian"] });
 
 export const metadata: Metadata = {
-  title: "QR Studio — QR-код из ссылки, Wi-Fi, контакта или вашей фотографии",
+  // Полные адреса для превью ссылок: APP_URL при выкладке, на этом компьютере — localhost.
+  metadataBase: new URL(process.env.APP_URL || "http://localhost:3720"),
+  title: { default: "QR Studio — QR-код из ссылки, Wi-Fi, контакта или вашей фотографии", template: "%s — QR Studio" },
   description: "Генератор QR-кодов: свои цвета, логотип, QR-картинка из фото, проверка чтения и коды с памятью. Первый простой код — бесплатно.",
+  openGraph: { siteName: "QR Studio", type: "website" },
+  twitter: { card: "summary_large_image" },
 };
 
 export const viewport: Viewport = {

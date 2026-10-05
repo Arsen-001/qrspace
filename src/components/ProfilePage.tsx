@@ -129,7 +129,7 @@ export function ProfilePage() {
                 <div className="rounded-xl bg-warn-soft p-4">
                   <p className="text-sm font-semibold text-warn">{t.deleteAccountSure}</p>
                   <div className="mt-3 flex gap-2">
-                    <button type="button" onClick={remove} className="min-h-11 flex-1 rounded-xl bg-warn px-4 text-sm font-semibold text-white">
+                    <button type="button" onClick={remove} className="min-h-11 flex-1 rounded-xl bg-warn px-4 text-sm font-semibold text-on-warn">
                       {t.deleteAccountYes}
                     </button>
                     <button type="button" onClick={() => setSure(false)} className="min-h-11 rounded-xl px-3 text-sm font-medium text-muted hover:text-ink">

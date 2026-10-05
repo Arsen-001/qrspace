@@ -42,7 +42,7 @@ function CodeCard({ t, lang, base, code, shared }: { t: Dict; lang: Lang; base: 
                 {code.edition.of !== null && ` / ${code.edition.of}`}
               </span>
             )}
-            {code.lost && <span className="rounded-full bg-warn px-2.5 py-1 text-xs font-semibold text-white">{t.lostMode}</span>}
+            {code.lost && <span className="rounded-full bg-warn px-2.5 py-1 text-xs font-semibold text-on-warn">{t.lostMode}</span>}
             {unread > 0 && <span className="rounded-full bg-warn-soft px-2.5 py-1 text-xs font-semibold text-warn">{t.messagesBadge}: {unread}</span>}
             {requests > 0 && <span className="rounded-full bg-warn-soft px-2.5 py-1 text-xs font-semibold text-warn">{t.requestsTitle}: {requests}</span>}
           </div>
@@ -90,7 +90,7 @@ function Upcoming({ t, lang, codes, onDone }: { t: Dict; lang: Lang; codes: Code
                 </Link>
               </div>
             </div>
-            <button type="button" disabled={busy === task.id} onClick={() => done(c, task)} className="min-h-10 rounded-xl bg-ok px-4 text-sm font-semibold text-white disabled:opacity-50">
+            <button type="button" disabled={busy === task.id} onClick={() => done(c, task)} className="min-h-10 rounded-xl bg-ok px-4 text-sm font-semibold text-on-ok disabled:opacity-50">
               ✓ {t.markDone}
             </button>
           </li>

@@ -10,9 +10,11 @@
   --muted: #6b6872;
   --accent: #2e3fd6;
   --on-accent: #ffffff;
-  --ok: #16a34a;
+  --ok: #15803d;
+  --on-ok: #ffffff;
   --ok-soft: #e9f7ee;
   --warn: #c2410c;
+  --on-warn: #ffffff;
   --warn-soft: #fdf0e8;
 }
 
@@ -27,8 +29,10 @@
     --accent: #7c8bff;
     --on-accent: #0d0f24;
     --ok: #22c55e;
+    --on-ok: #052e16;
     --ok-soft: #13261a;
     --warn: #fb923c;
+    --on-warn: #2a1204;
     --warn-soft: #2a1a10;
   }
 }
@@ -43,8 +47,10 @@
   --color-accent: var(--accent);
   --color-on-accent: var(--on-accent);
   --color-ok: var(--ok);
+  --color-on-ok: var(--on-ok);
   --color-ok-soft: var(--ok-soft);
   --color-warn: var(--warn);
+  --color-on-warn: var(--on-warn);
   --color-warn-soft: var(--warn-soft);
   --font-sans: var(--font-body), var(--font-armenian), system-ui, sans-serif;
   --font-heading: var(--font-head), var(--font-armenian), system-ui, sans-serif;

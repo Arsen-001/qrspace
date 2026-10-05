@@ -47,7 +47,7 @@ function Inbox({ t, lang, messages, save }: { t: Dict; lang: Lang; messages: Mes
                   <div className="flex flex-wrap items-baseline gap-x-2 text-xs text-muted">
                     <span className="font-medium text-ink">{m.from ? personName(m.from, lang) : t.guest}</span>
                     <span>{fmtDateTime(m.at, lang)}</span>
-                    {!m.read && <span className="rounded-full bg-warn px-1.5 py-0.5 text-[11px] font-semibold text-white">{t.newMark}</span>}
+                    {!m.read && <span className="rounded-full bg-warn px-1.5 py-0.5 text-[11px] font-semibold text-on-warn">{t.newMark}</span>}
                   </div>
                   {messageTitle(t, m) && <div className="mt-1 font-semibold">{messageTitle(t, m)}</div>}
                   {m.text && <p className="mt-0.5 whitespace-pre-wrap break-words text-sm">{m.text}</p>}

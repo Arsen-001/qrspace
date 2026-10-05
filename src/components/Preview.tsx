@@ -77,7 +77,7 @@ export function Preview({ t, drawing, scan, error, name = "qr-code", gate, paylo
         {drawing && scan === "checking" && <p className="text-sm text-muted">{t.checking}</p>}
         {drawing && scan === "ok" && (
           <div className="flex items-start gap-2.5 rounded-xl bg-ok-soft p-3">
-            <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-ok text-xs text-white">✓</span>
+            <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-ok text-xs text-on-ok">✓</span>
             <div>
               <div className="text-sm font-semibold">{t.scanOk}</div>
               <div className="text-xs text-muted">{t.scanOkHint}</div>
@@ -86,7 +86,7 @@ export function Preview({ t, drawing, scan, error, name = "qr-code", gate, paylo
         )}
         {drawing && scan === "bad" && (
           <div className="flex items-start gap-2.5 rounded-xl bg-warn-soft p-3">
-            <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-warn text-xs text-white">!</span>
+            <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-warn text-xs text-on-warn">!</span>
             <div>
               <div className="text-sm font-semibold">{t.scanBad}</div>
               <div className="text-xs text-muted">{t.scanBadHint}</div>
