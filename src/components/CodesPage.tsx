@@ -3,32 +3,40 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { api, codeLink, type CodeList, type CodeView } from "@/lib/codes";
+import { api, codeLink, KINDS, type CodeList, type CodeView, type Kind } from "@/lib/codes";
 import type { Dict, Lang } from "@/lib/i18n";
 import { useLang } from "@/lib/lang";
 import { useMe } from "@/lib/me";
 import { DEFAULT_STYLE, toSaved } from "@/lib/qr/style";
 import { personName } from "./Avatar";
+import { KindIcon } from "./KindIcon";
 import { QrThumb } from "./QrThumb";
 import { Notice, Shell } from "./Shell";
 import { VisBadge } from "./VisBadge";
 
 function CodeCard({ t, lang, base, code, shared }: { t: Dict; lang: Lang; base: string; code: CodeView; shared?: boolean }) {
   const requests = code.requests?.length ?? 0;
+  const unread = code.messages?.filter((m) => !m.read).length ?? 0;
   return (
     <li>
       <Link href={shared ? `/c/${code.id}` : `/codes/${code.id}`} className="flex h-full gap-4 rounded-2xl border border-line bg-card p-4 transition-colors hover:border-muted">
         <QrThumb link={codeLink(base, code.id)} style={code.style} className="h-24 w-24 shrink-0 border border-line" />
         <div className="min-w-0 flex-1 space-y-2">
-          <div className="font-heading font-bold leading-snug">{code.title}</div>
+          <div className="flex items-start gap-1.5">
+            <KindIcon kind={code.kind} className="mt-0.5 h-4 w-4 text-muted" />
+            <span className="font-heading font-bold leading-snug">{code.title}</span>
+          </div>
           <div className="flex flex-wrap gap-1.5">
             {shared ? (
               <span className="rounded-full bg-field px-2.5 py-1 text-xs font-medium text-muted">
-                {t.ownerLabel}: {personName(code.owner, lang)} · {t[`role.${code.access === "edit" ? "edit" : "view"}`]}
+                {code.owner && `${t.ownerLabel}: ${personName(code.owner, lang)} · `}
+                {t[`role.${code.access === "edit" ? "edit" : "view"}`]}
               </span>
             ) : (
               <VisBadge t={t} v={code.visibility} />
             )}
+            {code.lost && <span className="rounded-full bg-warn px-2.5 py-1 text-xs font-semibold text-white">{t.lostMode}</span>}
+            {unread > 0 && <span className="rounded-full bg-warn-soft px-2.5 py-1 text-xs font-semibold text-warn">{t.messagesBadge}: {unread}</span>}
             {requests > 0 && <span className="rounded-full bg-warn-soft px-2.5 py-1 text-xs font-semibold text-warn">{t.requestsTitle}: {requests}</span>}
           </div>
           <div className="text-xs text-muted">
@@ -44,6 +52,7 @@ function NewCode({ t }: { t: Dict }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
+  const [kind, setKind] = useState<Kind>("memory");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
   if (!open) {
@@ -57,7 +66,7 @@ function NewCode({ t }: { t: Dict }) {
     if (!title.trim()) return;
     setBusy(true);
     try {
-      const code = await api.create(title, toSaved(DEFAULT_STYLE));
+      const code = await api.create(title, kind, toSaved(DEFAULT_STYLE));
       router.push(`/codes/${code.id}`);
     } catch {
       setError(true);
@@ -72,12 +81,30 @@ function NewCode({ t }: { t: Dict }) {
         submit();
       }}
     >
+      <div className="mb-1.5 text-sm font-medium text-muted">{t.templateLabel}</div>
+      <div role="radiogroup" aria-label={t.templateLabel} className="mb-4 grid gap-2 sm:grid-cols-2">
+        {KINDS.map((k) => (
+          <button
+            key={k}
+            type="button"
+            role="radio"
+            aria-checked={kind === k}
+            onClick={() => setKind(k)}
+            className={`flex min-w-0 items-start gap-3 rounded-xl border p-3 text-left transition-colors ${kind === k ? "border-accent bg-accent text-on-accent" : "border-line bg-field hover:border-muted"}`}
+          >
+            <KindIcon kind={k} className="mt-0.5 h-5 w-5" />
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold">{t[`tpl.${k}`]}</span>
+              <span className={`mt-0.5 block text-xs ${kind === k ? "opacity-85" : "text-muted"}`}>{t[`tplHint.${k}`]}</span>
+            </span>
+          </button>
+        ))}
+      </div>
       <label htmlFor="new-code" className="mb-1.5 block text-sm font-medium text-muted">
         {t.newCodeTitle}
       </label>
       <input
         id="new-code"
-        autoFocus
         value={title}
         maxLength={80}
         placeholder={t.newCodePlaceholder}

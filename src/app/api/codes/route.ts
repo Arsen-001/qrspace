@@ -1,7 +1,7 @@
-import { accessOf, allCodes, mutate, newId, publicBase, viewOf } from "@/server/db";
+import { accessOf, allCodes, kindDefaults, mutate, newId, publicBase, viewOf } from "@/server/db";
 import { currentPerson } from "@/server/session";
 import type { CodeRecord } from "@/lib/codes";
-import { readStyle, readTitle } from "./validate";
+import { readKind, readStyle, readTitle } from "./validate";
 
 /** Мои коды и коды, которые мне открыли. */
 export async function GET(req: Request) {
@@ -26,11 +26,11 @@ export async function POST(req: Request) {
   const title = readTitle(body.title);
   if (!title) return Response.json({ error: "title" }, { status: 400 });
   const code: CodeRecord = {
+    // Новая память — закрытая: человек сам решит, кому открыть. Остальное — по шаблону.
+    ...kindDefaults(readKind(body.kind)),
     id: newId(),
     owner: me,
     title,
-    // Новый код — закрытый: человек сам решит, кому открыть.
-    visibility: "me",
     people: [],
     requests: [],
     invite: newId(12),

@@ -140,8 +140,14 @@ function Entry({ t, lang, code, block, me, onChange }: { t: Dict; lang: Lang; co
       )}
       <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-muted">
         <span className="flex items-center gap-1.5">
-          <Avatar id={block.author} lang={lang} size={20} />
-          {block.author === me ? t.you : personName(block.author, lang)} · {fmtDateTime(block.at, lang)}
+          {block.author ? (
+            <>
+              <Avatar id={block.author} lang={lang} size={20} />
+              {block.author === me ? t.you : personName(block.author, lang)} · {fmtDateTime(block.at, lang)}
+            </>
+          ) : (
+            fmtDateTime(block.at, lang)
+          )}
         </span>
         {canChange && (
           <span className="ml-auto flex gap-1">

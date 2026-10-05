@@ -53,7 +53,10 @@ export function Generator() {
         }
       />
 
-      <footer className="mt-12 text-center text-sm text-muted">{t.footer}</footer>
+      <footer className="mt-12 space-y-2 text-center text-sm text-muted">
+        <p>{t.footer}</p>
+        <p className="text-xs">{t.trademark}</p>
+      </footer>
     </div>
   );
 }

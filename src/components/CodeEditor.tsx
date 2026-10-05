@@ -9,13 +9,15 @@ import { useLang } from "@/lib/lang";
 import { useMe } from "@/lib/me";
 import { DEFAULT_STYLE, fromSaved, toSaved } from "@/lib/qr/style";
 import { AccessPanel } from "./AccessPanel";
+import { ContactPanel } from "./ContactPanel";
+import { KindIcon } from "./KindIcon";
 import { CodeDesigner } from "./CodeDesigner";
 import { Memory } from "./Memory";
 import { QrThumb } from "./QrThumb";
 import { Notice, Shell } from "./Shell";
 import type { StyleState } from "./StylePanel";
 
-type Tab = "memory" | "access" | "look";
+type Tab = "memory" | "contact" | "access" | "look";
 type Status = "idle" | "saving" | "saved" | "error";
 
 /** Вид кода: тот же конструктор, что в генераторе; изменения сохраняются сами через секунду. */
@@ -75,7 +77,7 @@ function DeleteCode({ t, id }: { t: Dict; id: string }) {
 
 function Editor({ t, lang, me, base, initial }: { t: Dict; lang: Lang; me: string; base: string; initial: CodeView }) {
   const [code, setCode] = useState(initial);
-  const [tab, setTab] = useState<Tab>("memory");
+  const [tab, setTab] = useState<Tab>(initial.kind === "memory" ? "memory" : "contact");
   const [status, setStatus] = useState<Status>("idle");
   const link = codeLink(base, code.id);
 
@@ -84,19 +86,39 @@ function Editor({ t, lang, me, base, initial }: { t: Dict; lang: Lang; me: strin
   const save = useCallback(
     async (p: CodePatch) => {
       setStatus("saving");
+      // Выключатели и выбор отвечают сразу, не дожидаясь сервера; ответ сервера потом поправит, если что.
+      setCode((c) => {
+        const { title, visibility, people, showOwner, lost, reward, contact } = p;
+        return {
+          ...c,
+          ...(title !== undefined && { title }),
+          ...(visibility !== undefined && { visibility }),
+          ...(people !== undefined && { people }),
+          ...(showOwner !== undefined && { showOwner }),
+          ...(lost !== undefined && { lost }),
+          ...(reward !== undefined && { reward }),
+          ...(contact !== undefined && { contact: { ...contact, phone: contact.phone || null } }),
+        };
+      });
       try {
         setCode(await api.patch(id, p));
         setStatus("saved");
       } catch {
         setStatus("error");
+        api.get(id).then(setCode, () => {});
       }
     },
     [id],
   );
 
   const requests = code.requests?.length ?? 0;
+  const unread = code.messages?.filter((m) => !m.read).length ?? 0;
+  // У машины, ключей и питомца главное — связь: эта вкладка первая.
+  const contactTab = { id: "contact" as const, label: t.tabContact, badge: unread };
   const tabs: { id: Tab; label: string; badge?: number }[] = [
+    ...(code.kind === "memory" ? [] : [contactTab]),
     { id: "memory", label: t.tabMemory },
+    ...(code.kind === "memory" ? [contactTab] : []),
     { id: "access", label: t.tabAccess, badge: requests },
     { id: "look", label: t.tabLook },
   ];
@@ -108,7 +130,12 @@ function Editor({ t, lang, me, base, initial }: { t: Dict; lang: Lang; me: strin
       </Link>
       <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
         <div className="min-w-0 flex-1 basis-64 -ml-2">
-          <TitleField key={code.title} t={t} value={code.title} save={save} />
+          <div className="flex items-center gap-1">
+            <span className="grid h-9 w-9 shrink-0 place-items-center text-muted" title={t[`tpl.${code.kind}`]}>
+              <KindIcon kind={code.kind} className="h-6 w-6" />
+            </span>
+            <TitleField key={code.title} t={t} value={code.title ?? ""} save={save} />
+          </div>
         </div>
         <span className="text-sm text-muted" aria-live="polite">
           {status === "saving" ? t.saving : status === "saved" ? t.saved : status === "error" ? <span className="text-warn">{t.saveError}</span> : null}
@@ -137,7 +164,13 @@ function Editor({ t, lang, me, base, initial }: { t: Dict; lang: Lang; me: strin
         ) : (
           <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
             <div className="min-w-0">
-              {tab === "memory" ? <Memory t={t} lang={lang} code={code} me={me} onChange={setCode} /> : <AccessPanel t={t} lang={lang} code={code} base={base} save={save} />}
+              {tab === "memory" ? (
+                <Memory t={t} lang={lang} code={code} me={me} onChange={setCode} />
+              ) : tab === "contact" ? (
+                <ContactPanel t={t} lang={lang} code={code} save={save} />
+              ) : (
+                <AccessPanel t={t} lang={lang} code={code} base={base} save={save} />
+              )}
             </div>
             <aside className="order-first rounded-2xl border border-line bg-card p-4 lg:sticky lg:top-4 lg:order-none">
               <div className="flex gap-4 lg:block">
@@ -197,7 +230,7 @@ export function CodeEditor({ id }: { id: string }) {
       ) : loaded.code.access !== "owner" ? (
         <div className="rounded-2xl border border-line bg-card p-6 text-center">
           <Link href={`/c/${id}`} className="inline-grid min-h-11 place-items-center rounded-xl border border-line bg-field px-5 text-sm font-semibold">
-            {loaded.code.title} →
+            {loaded.code.title ?? t.notFound} →
           </Link>
         </div>
       ) : (

@@ -4,7 +4,7 @@ import { randomBytes } from "node:crypto";
 import { promises as fs } from "node:fs";
 import { networkInterfaces } from "node:os";
 import path from "node:path";
-import type { AccessLevel, CodeRecord, CodeView } from "@/lib/codes";
+import type { AccessLevel, CodeRecord, CodeView, Kind } from "@/lib/codes";
 import { PEOPLE } from "@/lib/people";
 import { DEFAULT_STYLE, type SavedStyle } from "@/lib/qr/style";
 
@@ -19,13 +19,19 @@ const ALPHABET = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 /** Случайный id без порядка: по коду нельзя угадать соседние (важно для ключей и вещей). Только буквы и цифры. */
 export const newId = (len = 8) => Array.from(randomBytes(len), (b) => ALPHABET[b % ALPHABET.length]).join("");
 
+/** С чего начинается код каждого шаблона. Машина и ключи — хозяин скрыт, память закрыта; питомец — анкета открыта. */
+export function kindDefaults(kind: Kind): Pick<CodeRecord, "kind" | "visibility" | "showOwner" | "contact" | "lost" | "reward" | "messages"> {
+  const contact = { enabled: kind !== "memory", phone: "", showPhone: false };
+  return { kind, visibility: kind === "pet" ? "all" : "me", showOwner: kind === "memory", contact, lost: false, reward: "", messages: [] };
+}
+
 const style = (p: Partial<SavedStyle>): SavedStyle => ({ ...DEFAULT_STYLE, eyeIcon: null, picture: null, ...p });
 
 function seed(): Db {
   const now = Date.now();
   const at = (minAgo: number) => new Date(now - minAgo * 60_000).toISOString();
   const text = (t: string, author: string, minAgo: number) => ({ id: newId(), kind: "text" as const, text: t, media: null, author, at: at(minAgo) });
-  const base = { requests: [], visits: [] };
+  const base = { requests: [], visits: [], ...kindDefaults("memory") };
   return {
     codes: [
       {
@@ -83,6 +89,48 @@ function seed(): Db {
         style: style({ texture: "paper", fg: "#2b2620", bg: "#f3efe6", eyeColor: "#14532d", eyeBallColor: "#14532d", dot: "leaf", eye: "leaf" }),
         createdAt: at(1500),
       },
+      {
+        ...base,
+        ...kindDefaults("car"),
+        id: newId(),
+        owner: "arman",
+        title: "Моя машина",
+        contact: { enabled: true, phone: "+374 99 123456", showPhone: false },
+        messages: [{ id: newId(), from: null, preset: "lights", text: "Стоит у дома 12, фары горят с утра.", reply: "", at: at(45), read: false }],
+        people: [],
+        invite: newId(12),
+        blocks: [],
+        style: style({ fg: "#111111", bg: "#ffffff", eyeColor: "#111111", eyeBallColor: "#c2410c", dot: "rounded", eye: "drop" }),
+        createdAt: at(1000),
+      },
+      {
+        ...base,
+        ...kindDefaults("pet"),
+        id: newId(),
+        owner: "arman",
+        title: "Бублик",
+        people: [],
+        invite: newId(12),
+        blocks: [
+          text("Бублик, 3 года, бигль. Добрый, любит людей и сосиски.\nЧипирован. Прививки — все, по графику.", "arman", 800),
+          text("Если нашли — дайте воды и напишите нам кнопкой ниже. Спасибо!", "arman", 790),
+        ],
+        style: style({ fg: "#7c2d12", bg: "#fff7ed", eyeColor: "#7c2d12", eyeBallColor: "#7c2d12", dot: "heart", eye: "circle" }),
+        createdAt: at(800),
+      },
+      {
+        ...base,
+        ...kindDefaults("lost"),
+        id: newId(),
+        owner: "arman",
+        title: "Ключи от дома",
+        reward: "5 000 ֏",
+        people: [],
+        invite: newId(12),
+        blocks: [],
+        style: style({ fg: "#1b2a4a", bg: "#ffffff", eyeColor: "#1b2a4a", eyeBallColor: "#1b2a4a", dot: "dots", eye: "rounded" }),
+        createdAt: at(600),
+      },
     ],
   };
 }
@@ -92,7 +140,10 @@ const g = globalThis as { __qrDbChain?: Promise<unknown>; __qrDbSeed?: Promise<D
 
 async function read(): Promise<Db> {
   try {
-    return JSON.parse(await fs.readFile(DB, "utf8")) as Db;
+    const db = JSON.parse(await fs.readFile(DB, "utf8")) as Db;
+    // Коды, сохранённые до шаблонов, — это «память».
+    db.codes = db.codes.map((c) => ({ ...kindDefaults(c.kind ?? "memory"), ...c }));
+    return db;
   } catch {
     // Файла нет — заполняем демо-данными один раз, даже если пришло несколько запросов сразу.
     g.__qrDbSeed ??= (async () => {
@@ -148,16 +199,30 @@ export function accessOf(code: CodeRecord, me: string | null): AccessLevel {
 export function viewOf(code: CodeRecord, me: string | null): CodeView {
   const access = accessOf(code, me);
   const owner = access === "owner";
+  const phone = owner || code.contact.showPhone ? code.contact.phone || null : null;
   return {
     id: code.id,
-    owner: code.owner,
-    title: code.title,
+    kind: code.kind,
+    owner: owner || code.showOwner ? code.owner : null,
+    // У ключей и машины название может выдать адрес — видит только хозяин и те, кому открыто.
+    title: owner || code.kind === "memory" || code.kind === "pet" || access !== "closed" ? code.title : null,
+    showOwner: code.showOwner,
+    contact: { enabled: code.contact.enabled, showPhone: code.contact.showPhone, phone },
+    lost: code.lost,
+    reward: code.lost || owner ? code.reward : "",
     access,
     visibility: code.visibility,
-    blocks: access === "closed" ? null : code.blocks,
+    // Хозяин скрыт — его имя не должно проступить и в подписях к записям.
+    blocks: access === "closed" ? null : owner || code.showOwner ? code.blocks : code.blocks.map((b) => (b.author === code.owner ? { ...b, author: "" } : b)),
     requested: !!me && code.requests.some((r) => r.personId === me),
     style: owner || access !== "closed" ? code.style : null,
-    ...(owner && { people: code.people, requests: code.requests, invite: code.invite, visits: code.visits.slice(-50).reverse() }),
+    ...(owner && {
+      people: code.people,
+      requests: code.requests,
+      invite: code.invite,
+      visits: code.visits.slice(-50).reverse(),
+      messages: [...code.messages].reverse(),
+    }),
   };
 }
 

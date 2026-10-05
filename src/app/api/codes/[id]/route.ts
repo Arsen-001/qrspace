@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 import { accessOf, findCode, MEDIA_DIR, mutate, newId, viewOf } from "@/server/db";
 import { currentPerson } from "@/server/session";
 import type { CodePatch } from "@/lib/codes";
-import { readPeople, readStyle, readTitle, readVisibility } from "../validate";
+import { readContact, readPeople, readShort, readStyle, readTitle, readVisibility } from "../validate";
 
 /** Код глазами текущего человека; ?visit=1 — это скан, пишем в историю (кроме хозяина). */
 export async function GET(req: NextRequest, ctx: RouteContext<"/api/codes/[id]">) {
@@ -50,6 +50,16 @@ export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/codes/[id]
       c.requests = c.requests.filter((r) => !p.some((g) => g.personId === r.personId));
     }
     if ("style" in body) c.style = readStyle(body.style);
+    if ("showOwner" in body) c.showOwner = body.showOwner === true;
+    if ("contact" in body) {
+      const ct = readContact(body.contact);
+      if (!ct) return 400;
+      c.contact = ct;
+    }
+    if ("lost" in body) c.lost = body.lost === true;
+    if ("reward" in body) c.reward = readShort(body.reward, 60);
+    if (body.readMessages) c.messages.forEach((m) => (m.read = true));
+    if (typeof body.removeMessage === "string") c.messages = c.messages.filter((m) => m.id !== body.removeMessage);
     if (typeof body.approve === "string") {
       const who = body.approve;
       if (c.requests.some((r) => r.personId === who) && !c.people.some((g) => g.personId === who)) {

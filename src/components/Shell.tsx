@@ -9,6 +9,7 @@ export function Shell({ t, lang, narrow, children }: { t: Dict; lang: Lang; narr
     <div className={`mx-auto w-full px-4 pb-16 sm:px-6 ${narrow ? "max-w-2xl" : "max-w-6xl"}`}>
       <SiteHeader t={t} lang={lang} />
       <main className="pt-4 sm:pt-6">{children}</main>
+      <p className="mt-12 text-center text-xs text-muted">{t.trademark}</p>
     </div>
   );
 }
