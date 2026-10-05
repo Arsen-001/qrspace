@@ -2,7 +2,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { buildPayload, CONTENT_TYPES, type ContentType, type Fields } from "@/lib/qr/payload";
-import { DEFAULT_STYLE } from "@/lib/qr/style";
+import { codeKey, tierOf } from "@/lib/pricing";
+import { DEFAULT_STYLE, toSaved } from "@/lib/qr/style";
 import { useLang } from "@/lib/lang";
 import { useMe } from "@/lib/me";
 import { isDesigner } from "@/lib/people";
@@ -45,6 +46,7 @@ export function Generator() {
         payload={payload}
         style={style}
         setStyle={setStyle}
+        gate={{ tier: tierOf(style), key: () => codeKey(payload, toSaved(style)) }}
         top={<ContentForm t={t} type={type} fields={fields[type]} onType={setType} onField={(k, v) => setFields((f) => ({ ...f, [type]: { ...f[type], [k]: v } }))} />}
         side={
           isDesigner(me) ? (

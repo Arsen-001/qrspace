@@ -1,5 +1,6 @@
 // Код с памятью: общие типы для сервера и браузера и запросы браузера к нашему API.
 import type { Design } from "./market";
+import type { Quote, Tier } from "./pricing";
 import type { SavedStyle } from "./qr/style";
 
 export type Visibility = "all" | "people" | "me";
@@ -113,6 +114,8 @@ export const api = {
   login: (personId: string | null) => call<{ me: string | null }>("/api/me", json("POST", { personId })),
   list: () => call<CodeList>("/api/codes"),
   create: (title: string, kind: Kind, style: SavedStyle) => call<CodeView>("/api/codes", json("POST", { title, kind, style })),
+  quote: (key: string, tier: Tier) => call<Quote>(`/api/purchases?key=${encodeURIComponent(key)}&tier=${tier}`),
+  pay: (key: string, tier: Tier) => call<{ ok: true; price: number }>("/api/purchases", json("POST", { key, tier })),
   market: () => call<MarketState>("/api/market"),
   publish: (d: { name: string; about: string; price: number; edition: number | null; drop: boolean; style: SavedStyle }) =>
     call<Design>("/api/market", json("POST", d)),

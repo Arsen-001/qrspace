@@ -33,6 +33,8 @@ export async function POST(_req: NextRequest, ctx: RouteContext<"/api/market/[de
       edition: { design: d.id, no: sold + 1, of: d.edition },
     };
     db.codes.push(code);
+    // Купленный дизайн уже оплачен — скачивать его код можно без доплаты.
+    db.purchases.push({ person: me, key: `code:${code.id}`, tier: "styled", price: d.price, free: false, at: code.createdAt });
     return viewOf(code, me);
   });
   return typeof result === "number" ? Response.json({ error: result }, { status: result }) : Response.json(result);

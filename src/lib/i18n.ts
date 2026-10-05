@@ -155,7 +155,7 @@ const ru = {
   imageError: "Не удалось открыть картинку",
   presets: "Готовые цвета",
   lowContrast: "Точки и фон слишком похожи — телефон может не прочитать",
-  footer: "Бесплатно и без регистрации. Готовые коды работают всегда.",
+  footer: "Первый простой код — бесплатно. Готовые коды работают всегда.",
   navGenerator: "Генератор",
   navCodes: "Мои коды",
   login: "Войти",
@@ -370,6 +370,15 @@ const ru = {
   noTasks: "Напоминаний нет",
   upcomingTitle: "Что сделать",
   upcomingHint: "Просроченное и на ближайшие 2 недели — по всем вашим кодам",
+  tierSimple: "Простой код",
+  tierStyled: "Красивый код",
+  priceFrom: "скачать —",
+  firstFree: "Первый простой код — бесплатно, смотреть и настраивать — всегда бесплатно",
+  payTitle: "К оплате",
+  freeFirst: "Ваш первый простой код — бесплатно",
+  downloadFree: "Скачать бесплатно",
+  payAndDownload: "Оплатить и скачать",
+  loginToDownload: "Войдите, чтобы скачать — так код останется за вами",
 };
 
 export type Dict = typeof ru;
@@ -522,7 +531,7 @@ const en: Dict = {
   imageError: "Couldn't open the image",
   presets: "Color presets",
   lowContrast: "Dots and background are too similar — phones may not read it",
-  footer: "Free, no sign-up. Codes you make keep working forever.",
+  footer: "Your first simple code is free. Finished codes work forever.",
   navGenerator: "Generator",
   navCodes: "My codes",
   login: "Sign in",
@@ -737,6 +746,15 @@ const en: Dict = {
   noTasks: "No reminders",
   upcomingTitle: "To do",
   upcomingHint: "Overdue and due in the next 2 weeks — across all your codes",
+  tierSimple: "Simple code",
+  tierStyled: "Styled code",
+  priceFrom: "download —",
+  firstFree: "Your first simple code is free; viewing and designing are always free",
+  payTitle: "To pay",
+  freeFirst: "Your first simple code is free",
+  downloadFree: "Download for free",
+  payAndDownload: "Pay and download",
+  loginToDownload: "Sign in to download — the code stays yours",
 };
 
 const hy: Dict = {
@@ -887,7 +905,7 @@ const hy: Dict = {
   imageError: "Չհաջողվեց բացել նկարը",
   presets: "Պատրաստի գույներ",
   lowContrast: "Կետերը և ֆոնը շատ նման են — հեռախոսը կարող է չկարդալ",
-  footer: "Անվճար և առանց գրանցման։ Ստեղծված կոդերը միշտ աշխատում են։",
+  footer: "Առաջին պարզ կոդն անվճար է։ Ստեղծված կոդերը միշտ աշխատում են։",
   navGenerator: "Գեներատոր",
   navCodes: "Իմ կոդերը",
   login: "Մուտք",
@@ -1102,6 +1120,15 @@ const hy: Dict = {
   noTasks: "Հիշեցումներ չկան",
   upcomingTitle: "Ինչ անել",
   upcomingHint: "Ուշացածը և առաջիկա 2 շաբաթվանը — ձեր բոլոր կոդերով",
+  tierSimple: "Պարզ կոդ",
+  tierStyled: "Գեղեցիկ կոդ",
+  priceFrom: "ներբեռնել —",
+  firstFree: "Առաջին պարզ կոդն անվճար է, դիտելն ու կարգավորելը՝ միշտ անվճար",
+  payTitle: "Վճարման ենթակա",
+  freeFirst: "Ձեր առաջին պարզ կոդն անվճար է",
+  downloadFree: "Ներբեռնել անվճար",
+  payAndDownload: "Վճարել և ներբեռնել",
+  loginToDownload: "Մուտք գործեք ներբեռնելու համար — կոդը կմնա ձերը",
 };
 
 export const DICTS: Record<Lang, Dict> = { hy, ru, en };

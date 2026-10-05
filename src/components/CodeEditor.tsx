@@ -7,6 +7,7 @@ import { api, codeLink, type CodePatch, type CodeView } from "@/lib/codes";
 import type { Dict, Lang } from "@/lib/i18n";
 import { useLang } from "@/lib/lang";
 import { useMe } from "@/lib/me";
+import { tierOf } from "@/lib/pricing";
 import { DEFAULT_STYLE, fromSaved, toSaved } from "@/lib/qr/style";
 import { AccessPanel } from "./AccessPanel";
 import { ContactPanel } from "./ContactPanel";
@@ -29,7 +30,8 @@ function LookTab({ t, code, link, save }: { t: Dict; code: CodeView; link: strin
     const id = setTimeout(() => save({ style: toSaved(style) }), 800);
     return () => clearTimeout(id);
   }, [style, save]);
-  return <CodeDesigner t={t} payload={link} style={style} setStyle={setStyle} fileName={`qr-${code.id}`} side={<p className="px-1 text-sm text-muted">{t.changeAnytime}</p>} />;
+  // Код с памятью оплачивается один раз за код (ссылка в нём не меняется); стиль красивее — доплата разницы.
+  return <CodeDesigner t={t} payload={link} style={style} setStyle={setStyle} fileName={`qr-${code.id}`} gate={{ tier: tierOf(style), key: () => `code:${code.id}` }} side={<p className="px-1 text-sm text-muted">{t.changeAnytime}</p>} />;
 }
 
 function TitleField({ t, value, save }: { t: Dict; value: string; save: (p: CodePatch) => Promise<void> }) {

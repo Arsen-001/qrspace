@@ -7,7 +7,7 @@ import { layoutFor, MAX_PHOTOS } from "@/lib/qr/collage";
 import { toQrStyle } from "@/lib/qr/style";
 import { checkScan, composeCollage, iconMask, prepareImage } from "@/lib/qr/raster";
 import { PicturePicker } from "./PicturePicker";
-import { Preview, type ScanState } from "./Preview";
+import { Preview, type Gate, type ScanState } from "./Preview";
 import { StylePanel, type StyleState } from "./StylePanel";
 
 function luminance(hex: string): number {
@@ -41,6 +41,7 @@ export function CodeDesigner({
   top,
   side,
   fileName,
+  gate,
 }: {
   t: Dict;
   payload: string;
@@ -51,6 +52,7 @@ export function CodeDesigner({
   /** Что под предпросмотром. */
   side?: ReactNode;
   fileName?: string;
+  gate?: Gate | null;
 }) {
   const [imageError, setImageError] = useState(false);
   const patchStyle = (p: Partial<StyleState>) => setStyle((s) => ({ ...s, ...p }));
@@ -165,7 +167,7 @@ export function CodeDesigner({
         </div>
       </div>
       <div className="order-2 min-w-0 space-y-4 lg:sticky lg:top-4">
-        <Preview key={payload} t={t} drawing={drawing} scan={scan} error={tooLong ? t.tooLong : null} name={fileName} />
+        <Preview key={payload} t={t} drawing={drawing} scan={scan} error={tooLong ? t.tooLong : null} name={fileName} gate={gate} />
         {side}
       </div>
     </div>

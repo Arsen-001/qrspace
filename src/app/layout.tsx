@@ -8,7 +8,7 @@ const armenian = Noto_Sans_Armenian({ variable: "--font-armenian", subsets: ["ar
 
 export const metadata: Metadata = {
   title: "QR Studio — QR-код из ссылки, Wi-Fi, контакта или вашей фотографии",
-  description: "Бесплатный генератор QR-кодов: свои цвета, логотип, QR-картинка из фото и проверка, что код читается. Без регистрации.",
+  description: "Генератор QR-кодов: свои цвета, логотип, QR-картинка из фото, проверка чтения и коды с памятью. Первый простой код — бесплатно.",
 };
 
 export const viewport: Viewport = {
