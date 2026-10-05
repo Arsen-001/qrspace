@@ -1,14 +1,14 @@
-import { allOrders, mutate, newId } from "@/server/db";
+import { allOrders, mutate, newId, isDesignerId } from "@/server/db";
 import { currentPerson } from "@/server/session";
 import { NEEDS, PACKAGES, type Need, type Order, type Pkg } from "@/lib/orders";
-import { isDesigner } from "@/lib/people";
 import { readShort, readText } from "../codes/validate";
 
 /** Мои заказы; дизайнеру — все. Новые сверху. */
 export async function GET() {
   const me = await currentPerson();
   if (!me) return Response.json({ error: "login" }, { status: 401 });
-  const orders = (await allOrders()).filter((o) => isDesigner(me) || o.client === me);
+  const designer = await isDesignerId(me);
+  const orders = (await allOrders()).filter((o) => designer || o.client === me);
   return Response.json([...orders].reverse());
 }
 

@@ -1,7 +1,6 @@
 // Проверка того, что присылает браузер: демо, но мусор в хранилище не пускаем.
 import { KINDS, type Contact, type Grant, type Kind, type Visibility } from "@/lib/codes";
 import type { SavedStyle } from "@/lib/qr/style";
-import { isPerson } from "@/server/db";
 
 export function readTitle(v: unknown): string | null {
   const s = typeof v === "string" ? v.trim().slice(0, 80) : "";
@@ -14,11 +13,12 @@ export function readText(v: unknown): string {
 
 export const readVisibility = (v: unknown): Visibility | null => (v === "all" || v === "people" || v === "me" ? v : null);
 
-export function readPeople(v: unknown, owner: string): Grant[] | null {
+/** Список людей кода; validIds — кто вообще может войти (иначе — мусор). */
+export function readPeople(v: unknown, owner: string, validIds: Set<string>): Grant[] | null {
   if (!Array.isArray(v)) return null;
   const out: Grant[] = [];
   for (const g of v as Record<string, unknown>[]) {
-    if (!isPerson(g?.personId) || g.personId === owner || out.some((o) => o.personId === g.personId)) return null;
+    if (typeof g?.personId !== "string" || !validIds.has(g.personId) || g.personId === owner || out.some((o) => o.personId === g.personId)) return null;
     if (g.role !== "view" && g.role !== "edit") return null;
     const until = g.until === null || g.until === undefined || g.until === "" ? null : g.until;
     if (until !== null && !(typeof until === "string" && /^\d{4}-\d{2}-\d{2}$/.test(until))) return null;

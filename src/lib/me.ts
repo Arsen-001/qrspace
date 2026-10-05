@@ -2,9 +2,10 @@
 // Кем вошёл человек (демо-вход) и адрес сайта для ссылок в кодах. Загружается один раз на страницу.
 import { useSyncExternalStore } from "react";
 import { api } from "./codes";
+import { setDirectory } from "./people";
 
-type MeState = { ready: boolean; me: string | null; base: string };
-const SERVER: MeState = { ready: false, me: null, base: "" };
+type MeState = { ready: boolean; me: string | null; base: string; demo: boolean; providers: { google: boolean; apple: boolean } };
+const SERVER: MeState = { ready: false, me: null, base: "", demo: false, providers: { google: false, apple: false } };
 let state: MeState = SERVER;
 let loading = false;
 const listeners = new Set<() => void>();
@@ -15,8 +16,11 @@ function load() {
   loading = true;
   api
     .me()
-    .then((r) => (state = { ready: true, me: r.me, base: r.base }))
-    .catch(() => (state = { ready: true, me: null, base: location.origin }))
+    .then((r) => {
+      setDirectory(r.people);
+      state = { ready: true, me: r.me, base: r.base, demo: r.demo, providers: r.providers };
+    })
+    .catch(() => (state = { ...SERVER, ready: true, base: location.origin }))
     .finally(() => {
       loading = false;
       emit();

@@ -38,6 +38,20 @@ export const PEOPLE: Person[] = [
   },
 ];
 
-export const personById = (id: string | null | undefined) => PEOPLE.find((p) => p.id === id) ?? null;
+/** Публичные имена пользователей (вошедших через Google/Apple и демо) — браузер получает их с /api/me. */
+const directory = new Map<string, Person>();
+export const setDirectory = (people: Person[]) => {
+  directory.clear();
+  people.forEach((p) => directory.set(p.id, p));
+};
+
+export const personById = (id: string | null | undefined) => (id ? (directory.get(id) ?? PEOPLE.find((p) => p.id === id) ?? null) : null);
 
 export const isDesigner = (id: string | null | undefined) => !!personById(id)?.designer;
+
+/** Цвет кружка для нового человека — из id, чтобы у каждого был свой и не менялся. */
+export function colorFor(id: string): string {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return `hsl(${h % 360} 55% 42%)`;
+}

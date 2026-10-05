@@ -1,10 +1,9 @@
 "use client";
 // «Кто видит»: все / выбранные люди / только я; список людей с правами и сроком; просьбы; приглашение; кто открывал.
 import { useState, type ReactNode } from "react";
-import { codeLink, type CodePatch, type CodeView, type Grant, type Role, type Visibility } from "@/lib/codes";
+import { api, codeLink, type CodePatch, type CodeView, type Grant, type Role, type Visibility } from "@/lib/codes";
 import { fmtDate, fmtDateTime } from "@/lib/format";
 import type { Dict, Lang } from "@/lib/i18n";
-import { PEOPLE } from "@/lib/people";
 import { Avatar, personName } from "./Avatar";
 import { Card } from "./ui";
 import { VisIcon } from "./VisBadge";
@@ -29,14 +28,25 @@ export function AccessPanel({ t, lang, code, base, save }: { t: Dict; lang: Lang
   const people = code.people ?? [];
   const requests = code.requests ?? [];
   const visits = code.visits ?? [];
-  const candidates = PEOPLE.filter((p) => p.id !== code.owner && !people.some((g) => g.personId === p.id));
-  const [adding, setAdding] = useState("");
+  const [email, setEmail] = useState("");
+  const [addError, setAddError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const invite = `${codeLink(base, code.id)}?invite=${code.invite}`;
 
   const setPeople = (next: Grant[]) => save({ people: next });
   const patchGrant = (id: string, p: Partial<Grant>) => setPeople(people.map((g) => (g.personId === id ? { ...g, ...p } : g)));
-  const add = adding || candidates[0]?.id;
+  // Человек должен хотя бы раз войти (через Google или Apple) — тогда его можно найти по почте.
+  const addByEmail = async () => {
+    setAddError(null);
+    try {
+      const { id } = await api.lookup(email.trim());
+      if (id === code.owner || people.some((g) => g.personId === id)) return setAddError(t.alreadyAdded);
+      await setPeople([...people, { personId: id, role: "view", until: null }]);
+      setEmail("");
+    } catch {
+      setAddError(t.notRegistered);
+    }
+  };
 
   return (
     <div className="space-y-5">
@@ -124,30 +134,30 @@ export function AccessPanel({ t, lang, code, base, save }: { t: Dict; lang: Lang
             })}
           </ul>
         )}
-        {candidates.length > 0 && add && (
-          <div className="mt-4 border-t border-line pt-4">
-            <div className="flex flex-wrap gap-2">
-              <select aria-label={t.addPerson} value={add} onChange={(e) => setAdding(e.target.value)} className={`${small} min-w-0 flex-1 sm:flex-none`}>
-                {candidates.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name[lang]}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                onClick={() => {
-                  setAdding("");
-                  setPeople([...people, { personId: add, role: "view", until: null }]);
-                }}
-                className="min-h-10 rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent"
-              >
-                + {t.addPerson}
-              </button>
-            </div>
-            <p className="mt-2 text-xs text-muted">{t.addPersonHint}</p>
+        <form
+          className="mt-4 border-t border-line pt-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (email.trim()) addByEmail();
+          }}
+        >
+          <div className="flex flex-wrap gap-2">
+            <input
+              type="email"
+              value={email}
+              placeholder={t.addByEmail}
+              aria-label={t.addByEmail}
+              onChange={(e) => setEmail(e.target.value)}
+              className={`${small} min-w-0 flex-1 text-base`}
+              autoComplete="off"
+            />
+            <button type="submit" disabled={!email.trim()} className="min-h-10 rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent disabled:opacity-40">
+              + {t.addPerson}
+            </button>
           </div>
-        )}
+          {addError && <p className="mt-2 text-sm text-warn">{addError}</p>}
+          <p className="mt-2 text-xs text-muted">{t.addPersonHint}</p>
+        </form>
       </Card>
 
       <Card title={t.inviteTitle}>

@@ -1,7 +1,6 @@
-import { market, mutate, newId } from "@/server/db";
+import { market, mutate, newId, isDesignerId } from "@/server/db";
 import { currentPerson } from "@/server/session";
 import type { Design } from "@/lib/market";
-import { isDesigner } from "@/lib/people";
 import { readShort, readStyle, readText } from "../codes/validate";
 
 /** Что выложено дизайнерами и сколько продано (для «осталось N из M»). */
@@ -12,7 +11,7 @@ export async function GET() {
 /** Дизайнер выкладывает код в маркет (чтение кода он проверил у себя перед публикацией). */
 export async function POST(req: Request) {
   const me = await currentPerson();
-  if (!isDesigner(me)) return Response.json({ error: "designer" }, { status: 403 });
+  if (!(await isDesignerId(me))) return Response.json({ error: "designer" }, { status: 403 });
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const name = readShort(body.name, 40);
   const about = readText(body.about).slice(0, 300);

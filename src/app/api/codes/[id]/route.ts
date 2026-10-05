@@ -3,6 +3,7 @@ import path from "node:path";
 import type { NextRequest } from "next/server";
 import { accessOf, findCode, MEDIA_DIR, mutate, newId, viewOf } from "@/server/db";
 import { currentPerson } from "@/server/session";
+import { usable } from "@/server/users";
 import type { CodePatch } from "@/lib/codes";
 import { readContact, readPeople, readShort, readStyle, readTitle, readVisibility } from "../validate";
 
@@ -44,7 +45,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/codes/[id]
       c.visibility = v;
     }
     if ("people" in body) {
-      const p = readPeople(body.people, c.owner);
+      const p = readPeople(body.people, c.owner, new Set(usable(db).map((u) => u.id)));
       if (!p) return 400;
       c.people = p;
       c.requests = c.requests.filter((r) => !p.some((g) => g.personId === r.personId));

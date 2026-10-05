@@ -5,19 +5,19 @@ import { promises as fs } from "node:fs";
 import { networkInterfaces } from "node:os";
 import path from "node:path";
 import { ymd, type AccessLevel, type CodeRecord, type CodeView, type Kind } from "@/lib/codes";
-import { PEOPLE } from "@/lib/people";
 import { DESIGNS, SEED_SALES, type Design } from "@/lib/market";
 import type { Listing } from "@/lib/listings";
 import type { Order } from "@/lib/orders";
 import type { Purchase } from "@/lib/pricing";
 import type { ShopOrder } from "@/lib/shop";
+import { demoEnabled, demoUsers, publicPerson, usable, type User } from "./users";
 import { DEFAULT_STYLE, type SavedStyle } from "@/lib/qr/style";
 
 const DIR = path.join(process.cwd(), ".data");
 const DB = path.join(DIR, "db.json");
 export const MEDIA_DIR = path.join(DIR, "media");
 
-export type Db = { codes: CodeRecord[]; sales: Record<string, number>; designs: Design[]; purchases: Purchase[]; orders: Order[]; listings: Listing[]; shop: ShopOrder[] };
+export type Db = { codes: CodeRecord[]; sales: Record<string, number>; designs: Design[]; purchases: Purchase[]; orders: Order[]; listings: Listing[]; shop: ShopOrder[]; users: User[] };
 
 const ALPHABET = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
@@ -52,6 +52,7 @@ function seed(): Db {
   return {
     listings,
     shop: [],
+    users: demoUsers(),
     sales: { ...SEED_SALES },
     designs: [],
     purchases: [],
@@ -179,6 +180,7 @@ async function read(): Promise<Db> {
     db.orders ??= [];
     db.listings ??= [];
     db.shop ??= [];
+    db.users ??= demoUsers();
     return db;
   } catch {
     // Файла нет — заполняем демо-данными один раз, даже если пришло несколько запросов сразу.
@@ -304,7 +306,22 @@ export function viewOf(code: CodeRecord, me: string | null): CodeView {
   };
 }
 
-export const isPerson = (id: unknown): id is string => typeof id === "string" && PEOPLE.some((p) => p.id === id);
+export async function findUser(id: string): Promise<User | null> {
+  const u = (await read()).users.find((x) => x.id === id) ?? null;
+  return u && (u.provider !== "demo" || demoEnabled()) ? u : null;
+}
+
+/** Имена всех, кто может войти, — для подписей в браузере (без почт). */
+export async function directory() {
+  return usable(await read()).map(publicPerson);
+}
+
+export async function userByEmail(email: string): Promise<User | null> {
+  const e = email.trim().toLowerCase();
+  return usable(await read()).find((u) => u.email.toLowerCase() === e) ?? null;
+}
+
+export const isDesignerId = async (id: string | null) => !!id && !!(await findUser(id))?.designer;
 
 /** Адрес для ссылки в коде: с localhost телефон не откроет — подставляем адрес компьютера в сети. */
 export function publicBase(req: Request): string {

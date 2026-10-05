@@ -193,7 +193,7 @@ const ru = {
   expired: "срок вышел",
   peopleTitle: "Люди",
   addPerson: "Добавить",
-  addPersonHint: "Пока — из демо-людей. Потом — по номеру телефона или имени в приложении",
+  addPersonHint: "По почте, с которой человек входит на сайт. Ещё не входил — отправьте ссылку-приглашение",
   noPeople: "В списке пока никого",
   removePerson: "Убрать",
   peopleOffHint: "Список работает, когда выбрано «Выбранные люди». С «Все» люди из списка с правом «дописывать» могут дописывать.",
@@ -504,6 +504,16 @@ const ru = {
   "shopStatus.paid": "Оплачен",
   "shopStatus.printing": "Печатаем",
   "shopStatus.shipped": "Отправлен",
+  loginOnlyHint: "Регистрация и вход — через ваш Google или Apple. Пароль придумывать не нужно.",
+  withGoogle: "Войти через Google",
+  withApple: "Войти через Apple",
+  providersPending: "Вход через Google и Apple заработает, когда подключим ключи — пока для проверки есть демо-вход ниже.",
+  providerOff: "Этот способ входа ещё не подключён.",
+  loginFailed: "Не получилось войти — попробуйте ещё раз.",
+  demoLoginTitle: "Демо-вход",
+  addByEmail: "Почта человека (Google или Apple)",
+  notRegistered: "Такой человек ещё не входил на сайт — отправьте ему ссылку-приглашение",
+  alreadyAdded: "Этот человек уже в списке",
 };
 
 export type Dict = typeof ru;
@@ -694,7 +704,7 @@ const en: Dict = {
   expired: "expired",
   peopleTitle: "People",
   addPerson: "Add",
-  addPersonHint: "Demo people for now. Later — by phone number or app username",
+  addPersonHint: "By the email they sign in with. Not signed in yet — send the invite link",
   noPeople: "Nobody on the list yet",
   removePerson: "Remove",
   peopleOffHint: "The list applies when “Chosen people” is selected. With “Everyone”, people on the list with “add” rights can add entries.",
@@ -1005,6 +1015,16 @@ const en: Dict = {
   "shopStatus.paid": "Paid",
   "shopStatus.printing": "Printing",
   "shopStatus.shipped": "Shipped",
+  loginOnlyHint: "Sign up and sign in with your Google or Apple account. No password needed.",
+  withGoogle: "Sign in with Google",
+  withApple: "Sign in with Apple",
+  providersPending: "Google and Apple sign-in will work once the keys are connected — for now there is a demo sign-in below.",
+  providerOff: "This sign-in method isn’t connected yet.",
+  loginFailed: "Couldn’t sign in — try again.",
+  demoLoginTitle: "Demo sign-in",
+  addByEmail: "Their email (Google or Apple)",
+  notRegistered: "This person hasn’t signed in yet — send them the invite link",
+  alreadyAdded: "This person is already on the list",
 };
 
 const hy: Dict = {
@@ -1193,7 +1213,7 @@ const hy: Dict = {
   expired: "ժամկետն անցել է",
   peopleTitle: "Մարդիկ",
   addPerson: "Ավելացնել",
-  addPersonHint: "Առայժմ՝ դեմո մարդկանցից։ Հետո՝ հեռախոսահամարով կամ հավելվածի անունով",
+  addPersonHint: "Այն փոստով, որով մարդը մտնում է կայք։ Դեռ չի մտել — ուղարկեք հրավերի հղումը",
   noPeople: "Ցուցակում դեռ ոչ ոք չկա",
   removePerson: "Հեռացնել",
   peopleOffHint: "Ցուցակը գործում է, երբ ընտրված է «Ընտրված մարդիկ»։ «Բոլորը»-ի դեպքում ցուցակի «լրացնել» իրավունքով մարդիկ կարող են լրացնել։",
@@ -1504,6 +1524,16 @@ const hy: Dict = {
   "shopStatus.paid": "Վճարված",
   "shopStatus.printing": "Տպում ենք",
   "shopStatus.shipped": "Ուղարկված",
+  loginOnlyHint: "Գրանցում և մուտք՝ ձեր Google-ով կամ Apple-ով։ Գաղտնաբառ հորինել պետք չէ։",
+  withGoogle: "Մուտք Google-ով",
+  withApple: "Մուտք Apple-ով",
+  providersPending: "Google-ով և Apple-ով մուտքը կաշխատի, երբ միացնենք բանալիները — առայժմ ստուգման համար ստորև կա դեմո մուտք։",
+  providerOff: "Մուտքի այս եղանակը դեռ միացված չէ։",
+  loginFailed: "Չհաջողվեց մուտք գործել — փորձեք կրկին։",
+  demoLoginTitle: "Դեմո մուտք",
+  addByEmail: "Մարդու փոստը (Google կամ Apple)",
+  notRegistered: "Այս մարդը դեռ չի մտել կայք — ուղարկեք նրան հրավերի հղումը",
+  alreadyAdded: "Այս մարդն արդեն ցուցակում է",
 };
 
 export const DICTS: Record<Lang, Dict> = { hy, ru, en };

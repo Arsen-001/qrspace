@@ -1,6 +1,7 @@
 // Код с памятью: общие типы для сервера и браузера и запросы браузера к нашему API.
 import type { Design } from "./market";
 import type { Listing } from "./listings";
+import type { Person } from "./people";
 import type { Need, Order, OrderStatus, Pkg } from "./orders";
 import type { ProductId, ShopOrder } from "./shop";
 import type { Quote, Tier } from "./pricing";
@@ -118,7 +119,8 @@ export type CodePatch = Partial<Pick<CodeRecord, "title" | "visibility" | "peopl
 };
 
 export const api = {
-  me: () => call<{ me: string | null; base: string }>("/api/me"),
+  me: () => call<{ me: string | null; base: string; people: Person[]; demo: boolean; providers: { google: boolean; apple: boolean } }>("/api/me"),
+  lookup: (email: string) => call<{ id: string }>(`/api/people/lookup?email=${encodeURIComponent(email)}`),
   login: (personId: string | null) => call<{ me: string | null }>("/api/me", json("POST", { personId })),
   list: () => call<CodeList>("/api/codes"),
   create: (title: string, kind: Kind, style: SavedStyle) => call<CodeView>("/api/codes", json("POST", { title, kind, style })),

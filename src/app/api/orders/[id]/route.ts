@@ -1,15 +1,14 @@
 import type { NextRequest } from "next/server";
-import { allOrders, mutate } from "@/server/db";
+import { allOrders, mutate, isDesignerId } from "@/server/db";
 import { currentPerson } from "@/server/session";
 import { STATUSES, type OrderStatus } from "@/lib/orders";
-import { isDesigner } from "@/lib/people";
 import { readStyle, readText } from "../../codes/validate";
 
 export async function GET(_req: NextRequest, ctx: RouteContext<"/api/orders/[id]">) {
   const { id } = await ctx.params;
   const me = await currentPerson();
   const o = (await allOrders()).find((x) => x.id === id);
-  if (!o || !me || !(isDesigner(me) || o.client === me)) return Response.json({ error: "not-found" }, { status: 404 });
+  if (!o || !me || !((await isDesignerId(me)) || o.client === me)) return Response.json({ error: "not-found" }, { status: 404 });
   return Response.json(o);
 }
 
@@ -18,10 +17,11 @@ export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/orders/[id
   const { id } = await ctx.params;
   const me = await currentPerson();
   const b = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+  const designer = await isDesignerId(me);
   const result = await mutate((db) => {
     const o = db.orders.find((x) => x.id === id);
     if (!o || !me) return 404;
-    if (isDesigner(me)) {
+    if (designer) {
       if ((STATUSES as readonly unknown[]).includes(b.status)) o.status = b.status as OrderStatus;
       if ("design" in b) {
         const style = readStyle((b.design as Record<string, unknown> | null)?.style);

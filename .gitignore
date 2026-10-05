@@ -43,3 +43,4 @@ public/zxing_reader.wasm
 
 # демо-хранилище кодов, фото и видео
 /.data/
+!.env.example
