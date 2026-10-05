@@ -342,3 +342,10 @@ export async function downloadLive(drawing: Drawing, expected: string, name: str
   save(r.blob, `${name}-live.${r.ext}`);
   return true;
 }
+
+/** Прочитать QR с картинки (кадр камеры или фото) — для «Проверить код». null — кода не нашли. */
+export async function readQr(img: ImageData): Promise<string | null> {
+  const { readBarcodes } = await getReader();
+  const res = await readBarcodes(img, { formats: ["QRCode"], tryHarder: true, tryInvert: true, maxNumberOfSymbols: 1 });
+  return res.find((r) => r.isValid)?.text ?? null;
+}

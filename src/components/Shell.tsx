@@ -11,9 +11,14 @@ export function Shell({ t, lang, narrow, children }: { t: Dict; lang: Lang; narr
       <SiteHeader t={t} lang={lang} />
       <main className="pt-4 sm:pt-6 print:pt-0">{children}</main>
       <footer className="mt-12 space-y-2 text-center text-xs text-muted print:hidden">
-        <Link href="/how" className="font-semibold text-accent">
-          {t.howTitle}
-        </Link>
+        <p className="flex justify-center gap-4">
+          <Link href="/how" className="font-semibold text-accent">
+            {t.howTitle}
+          </Link>
+          <Link href="/verify" className="font-semibold text-accent">
+            {t.verifyTitle}
+          </Link>
+        </p>
         <p>{t.trademark}</p>
       </footer>
     </div>
