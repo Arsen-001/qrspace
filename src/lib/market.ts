@@ -12,6 +12,9 @@ export type Design = {
   edition: number | null;
   /** Дроп дня — крупно наверху маркета. */
   drop?: boolean;
+  /** Кто выложил (дизайнер); у встроенных — нет. */
+  by?: string;
+  createdAt?: string;
   style: SavedStyle;
 };
 
@@ -117,7 +120,12 @@ export const DESIGNS: Design[] = [
   },
 ];
 
-export const designById = (id: string) => DESIGNS.find((d) => d.id === id) ?? null;
+/** Выложенные дизайнером (новые первыми) + встроенные. Дроп дня — самый свежий выложенный дроп, иначе встроенный. */
+export function catalog(published: Design[]): { drop: Design; rest: Design[]; all: Design[] } {
+  const all = [...[...published].reverse(), ...DESIGNS];
+  const drop = all.find((d) => d.drop)!;
+  return { drop, rest: all.filter((d) => d !== drop), all };
+}
 
 /** Сколько уже продано (демо-начало), чтобы тиражи выглядели живыми. */
 export const SEED_SALES: Record<string, number> = { nebula: 21, parchment: 63, wood: 37, linen: 50 };

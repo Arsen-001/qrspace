@@ -4,8 +4,11 @@ import { useState } from "react";
 import { buildPayload, CONTENT_TYPES, type ContentType, type Fields } from "@/lib/qr/payload";
 import { DEFAULT_STYLE } from "@/lib/qr/style";
 import { useLang } from "@/lib/lang";
+import { useMe } from "@/lib/me";
+import { isDesigner } from "@/lib/people";
 import { CodeDesigner } from "./CodeDesigner";
 import { ContentForm } from "./ContentForm";
+import { PublishBox } from "./PublishBox";
 import { SiteHeader } from "./SiteHeader";
 import type { StyleState } from "./StylePanel";
 
@@ -20,6 +23,7 @@ export function Generator() {
   });
   const [style, setStyle] = useState<StyleState>(DEFAULT_STYLE);
   const payload = buildPayload(type, fields[type]);
+  const { me, base } = useMe();
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 pb-16 sm:px-6">
@@ -43,13 +47,17 @@ export function Generator() {
         setStyle={setStyle}
         top={<ContentForm t={t} type={type} fields={fields[type]} onType={setType} onField={(k, v) => setFields((f) => ({ ...f, [type]: { ...f[type], [k]: v } }))} />}
         side={
-          <section className="rounded-2xl border border-line bg-card p-5">
-            <h2 className="font-heading text-base font-bold">{t.memoryPromoTitle}</h2>
-            <p className="mt-1 text-sm text-muted">{t.memoryPromoText}</p>
-            <Link href="/codes" className="mt-3 inline-grid min-h-11 place-items-center rounded-xl border border-line bg-field px-4 text-sm font-semibold hover:border-muted">
-              {t.memoryPromoCta}
-            </Link>
-          </section>
+          isDesigner(me) ? (
+            <PublishBox t={t} style={style} base={base} />
+          ) : (
+            <section className="rounded-2xl border border-line bg-card p-5">
+              <h2 className="font-heading text-base font-bold">{t.memoryPromoTitle}</h2>
+              <p className="mt-1 text-sm text-muted">{t.memoryPromoText}</p>
+              <Link href="/codes" className="mt-3 inline-grid min-h-11 place-items-center rounded-xl border border-line bg-field px-4 text-sm font-semibold hover:border-muted">
+                {t.memoryPromoCta}
+              </Link>
+            </section>
+          )
         }
       />
 

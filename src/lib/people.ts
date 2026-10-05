@@ -2,7 +2,7 @@
 import type { Lang } from "./i18n";
 
 /** demo — кто это в демо-данных, чтобы было понятно, кем войти и что проверить. */
-export type Person = { id: string; name: Record<Lang, string>; color: string; demo: Record<Lang, string> };
+export type Person = { id: string; name: Record<Lang, string>; color: string; demo: Record<Lang, string>; designer?: boolean };
 
 export const PEOPLE: Person[] = [
   {
@@ -29,6 +29,15 @@ export const PEOPLE: Person[] = [
     color: "#b45309",
     demo: { hy: "Հյուրը՝ խնդրել է մուտք «Կաթսա»-ին", ru: "Гостья: попросила доступ к «Котлу»", en: "Guest: asked for access to “Boiler”" },
   },
+  {
+    id: "nare",
+    name: { hy: "Նարե", ru: "Наре", en: "Nare" },
+    color: "#7c3aed",
+    designer: true,
+    demo: { hy: "Դիզայներ՝ կոդեր է հրապարակում շուկայում", ru: "Дизайнер: выкладывает коды в маркет", en: "Designer: publishes codes to the market" },
+  },
 ];
 
 export const personById = (id: string | null | undefined) => PEOPLE.find((p) => p.id === id) ?? null;
+
+export const isDesigner = (id: string | null | undefined) => !!personById(id)?.designer;

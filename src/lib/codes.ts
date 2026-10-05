@@ -1,4 +1,5 @@
 // Код с памятью: общие типы для сервера и браузера и запросы браузера к нашему API.
+import type { Design } from "./market";
 import type { SavedStyle } from "./qr/style";
 
 export type Visibility = "all" | "people" | "me";
@@ -76,7 +77,7 @@ export type CodeView = {
 };
 
 export type CodeList = { base: string; mine: CodeView[]; shared: CodeView[] };
-export type MarketState = { sold: Record<string, number> };
+export type MarketState = { sold: Record<string, number>; designs: Design[] };
 
 export const MAX_PHOTO_PX = 1600;
 export const MAX_VIDEO_MB = 50;
@@ -105,6 +106,9 @@ export const api = {
   list: () => call<CodeList>("/api/codes"),
   create: (title: string, kind: Kind, style: SavedStyle) => call<CodeView>("/api/codes", json("POST", { title, kind, style })),
   market: () => call<MarketState>("/api/market"),
+  publish: (d: { name: string; about: string; price: number; edition: number | null; drop: boolean; style: SavedStyle }) =>
+    call<Design>("/api/market", json("POST", d)),
+  unpublish: (design: string) => call<{ ok: true }>(`/api/market/${design}`, { method: "DELETE" }),
   buy: (design: string) => call<CodeView>(`/api/market/${design}`, { method: "POST" }),
   message: (id: string, m: { preset: string | null; text: string; reply: string }) => call<{ ok: true }>(`/api/codes/${id}/messages`, json("POST", m)),
   get: (id: string, opts: { visit?: boolean } = {}) => call<CodeView>(`/api/codes/${id}${opts.visit ? "?visit=1" : ""}`),

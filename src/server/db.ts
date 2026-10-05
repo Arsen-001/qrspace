@@ -6,14 +6,14 @@ import { networkInterfaces } from "node:os";
 import path from "node:path";
 import type { AccessLevel, CodeRecord, CodeView, Kind } from "@/lib/codes";
 import { PEOPLE } from "@/lib/people";
-import { SEED_SALES } from "@/lib/market";
+import { SEED_SALES, type Design } from "@/lib/market";
 import { DEFAULT_STYLE, type SavedStyle } from "@/lib/qr/style";
 
 const DIR = path.join(process.cwd(), ".data");
 const DB = path.join(DIR, "db.json");
 export const MEDIA_DIR = path.join(DIR, "media");
 
-type Db = { codes: CodeRecord[]; sales: Record<string, number> };
+type Db = { codes: CodeRecord[]; sales: Record<string, number>; designs: Design[] };
 
 const ALPHABET = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
@@ -35,6 +35,7 @@ function seed(): Db {
   const base = { requests: [], visits: [], ...kindDefaults("memory") };
   return {
     sales: { ...SEED_SALES },
+    designs: [],
     codes: [
       {
         ...base,
@@ -146,6 +147,7 @@ async function read(): Promise<Db> {
     // Коды, сохранённые до шаблонов, — это «память».
     db.codes = db.codes.map((c) => ({ ...kindDefaults(c.kind ?? "memory"), ...c }));
     db.sales ??= { ...SEED_SALES };
+    db.designs ??= [];
     return db;
   } catch {
     // Файла нет — заполняем демо-данными один раз, даже если пришло несколько запросов сразу.
@@ -185,8 +187,9 @@ export async function allCodes(): Promise<CodeRecord[]> {
   return (await read()).codes;
 }
 
-export async function sales(): Promise<Record<string, number>> {
-  return (await read()).sales;
+export async function market(): Promise<{ sold: Record<string, number>; designs: Design[] }> {
+  const db = await read();
+  return { sold: db.sales, designs: db.designs };
 }
 
 const today = () => new Date().toISOString().slice(0, 10);

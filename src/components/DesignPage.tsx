@@ -5,22 +5,24 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/codes";
 import { useLang } from "@/lib/lang";
-import { designById } from "@/lib/market";
+import { catalog, DESIGNS } from "@/lib/market";
 import { useMe } from "@/lib/me";
 import { checkScan } from "@/lib/qr/raster";
 import { toSvg, type Drawing } from "@/lib/qr/render";
 import { DEFAULT_STYLE, fromSaved, toSaved } from "@/lib/qr/style";
 import { useDrawing } from "./CodeDesigner";
-import { EditionNote, sampleLink, useSold } from "./MarketPage";
+import { EditionNote, sampleLink, useMarket } from "./MarketPage";
 import { useInBrowser } from "./QrThumb";
+import { personName } from "./Avatar";
 import { Notice, Shell } from "./Shell";
 
 export function DesignPage({ id }: { id: string }) {
-  const d = designById(id);
+  const market = useMarket();
+  const d = catalog(market?.designs ?? []).all.find((x) => x.id === id) ?? null;
   const { lang, t } = useLang((t) => `${t.marketTitle} — ${t.appName}`);
   const { ready, me, base } = useMe();
   const router = useRouter();
-  const sold = useSold();
+  const sold = market?.sold;
   const [text, setText] = useState("");
   const [state, setState] = useState<"idle" | "buying" | "error" | "soldout">("idle");
 
@@ -47,9 +49,10 @@ export function DesignPage({ id }: { id: string }) {
   const scan = !drawing ? null : checked?.drawing !== drawing ? "checking" : checked.ok ? "ok" : "bad";
 
   if (!d) {
+    // Выложенные дизайнером приходят с сервера — пока грузятся, «загружаем».
     return (
       <Shell t={t} lang={lang}>
-        <Notice>{t.notFound}</Notice>
+        <Notice>{market || DESIGNS.some((x) => x.id === id) ? t.notFound : t.loading}</Notice>
       </Shell>
     );
   }
@@ -83,7 +86,7 @@ export function DesignPage({ id }: { id: string }) {
           <div>
             {d.drop && <span className="mb-2 inline-block rounded-full bg-accent px-3 py-1 text-xs font-semibold text-on-accent">{t.dropOfDay}</span>}
             <h1 className="font-heading text-3xl font-extrabold tracking-tight">{d.name[lang]}</h1>
-            <p className="mt-1 text-sm text-muted">{t.byDesigner}</p>
+            <p className="mt-1 text-sm text-muted">{d.by ? `${t.designBy}: ${personName(d.by, lang)}` : t.byDesigner}</p>
             <p className="mt-3">{d.about[lang]}</p>
           </div>
           <div className="rounded-2xl border border-line bg-card p-5">
@@ -110,6 +113,15 @@ export function DesignPage({ id }: { id: string }) {
               {state === "error" && <p className="mt-2 text-sm text-warn">{t.buyError}</p>}
               {state === "soldout" && <p className="mt-2 text-sm text-warn">{t.soldOutError}</p>}
               <p className="mt-3 text-xs text-muted">{t.buyDemo}</p>
+              {d.by && d.by === me && (
+                <button
+                  type="button"
+                  onClick={() => api.unpublish(d.id).then(() => router.push("/market"))}
+                  className="mt-3 min-h-10 rounded-xl px-1 text-sm font-medium text-muted hover:text-warn"
+                >
+                  {t.unpublish}
+                </button>
+              )}
             </div>
           </div>
           <div className="rounded-2xl border border-line bg-card p-5">

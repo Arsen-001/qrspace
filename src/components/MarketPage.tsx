@@ -2,10 +2,10 @@
 // Маркет: дроп дня, все дизайны с ценой и остатком тиража.
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { api } from "@/lib/codes";
+import { api, type MarketState } from "@/lib/codes";
 import type { Dict, Lang } from "@/lib/i18n";
 import { useLang } from "@/lib/lang";
-import { DESIGNS, type Design } from "@/lib/market";
+import { catalog, type Design } from "@/lib/market";
 import { useMe } from "@/lib/me";
 import { QrThumb } from "./QrThumb";
 import { Shell } from "./Shell";
@@ -26,17 +26,17 @@ export function EditionNote({ t, d, sold, className = "" }: { t: Dict; d: Design
   );
 }
 
-/** Продано по дизайнам; пока не загрузилось — undefined. */
-export function useSold(): Record<string, number> | undefined {
-  const [sold, setSold] = useState<Record<string, number>>();
+/** Что выложено и сколько продано; пока не загрузилось — undefined. */
+export function useMarket(): MarketState | undefined {
+  const [state, setState] = useState<MarketState>();
   useEffect(() => {
     let live = true;
-    api.market().then((m) => live && setSold(m.sold), () => {});
+    api.market().then((m) => live && setState(m), () => {});
     return () => {
       live = false;
     };
   }, []);
-  return sold;
+  return state;
 }
 
 function DesignCard({ t, lang, d, link, sold }: { t: Dict; lang: Lang; d: Design; link: string; sold: Record<string, number> | undefined }) {
@@ -59,9 +59,10 @@ function DesignCard({ t, lang, d, link, sold }: { t: Dict; lang: Lang; d: Design
 export function MarketPage() {
   const { lang, t } = useLang((t) => `${t.marketTitle} — ${t.appName}`);
   const { base } = useMe();
-  const sold = useSold();
+  const market = useMarket();
+  const sold = market?.sold;
   const link = sampleLink(base);
-  const drop = DESIGNS.find((d) => d.drop)!;
+  const { drop, rest } = catalog(market?.designs ?? []);
 
   return (
     <Shell t={t} lang={lang}>
@@ -85,7 +86,7 @@ export function MarketPage() {
 
       <h2 className="mt-10 font-heading text-xl font-bold">{t.allDesigns}</h2>
       <ul className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        {DESIGNS.filter((d) => !d.drop).map((d) => (
+        {rest.map((d) => (
           <DesignCard key={d.id} t={t} lang={lang} d={d} link={link} sold={sold} />
         ))}
       </ul>
