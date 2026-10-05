@@ -1,0 +1,84 @@
+import http from "node:http";
+import { chromium } from "playwright";
+const out = new URL("./out/", import.meta.url).pathname;
+const B = "http://localhost:3720";
+const mock = http.createServer((req, res) => {
+  let body = "";
+  req.on("data", (c) => (body += c));
+  req.on("end", () => {
+    const info = JSON.parse(Buffer.from(new URLSearchParams(body).get("code"), "base64url").toString());
+    const b64 = (o) => Buffer.from(JSON.stringify(o)).toString("base64url");
+    res.writeHead(200, { "content-type": "application/json" });
+    res.end(JSON.stringify({ id_token: `${b64({})}.${b64({ iss: "https://accounts.google.com", aud: "test-client.apps.googleusercontent.com", sub: info.sub, exp: Math.floor(Date.now() / 1000) + 600, nonce: info.nonce, email: info.email, email_verified: true, name: info.name })}.x` }));
+  });
+}).listen(3799);
+const browser = await chromium.launch();
+const errors = [];
+const ok = (c, m) => { console.log(c ? "  ✓" : "  ✗", m); if (!c) errors.push(m); };
+const page = async (w = 1280) => { const ctx = await browser.newContext({ viewport: { width: w, height: 900 }, locale: "ru-RU" }); const p = await ctx.newPage(); p.on("pageerror", (e) => errors.push(e.message)); return p; };
+const demo = async (who, next = "/codes", w) => { const p = await page(w); await p.goto(`${B}/login?next=${encodeURIComponent(next)}`); await p.getByRole("button", { name: new RegExp(who) }).click(); await p.waitForURL((u) => !u.pathname.startsWith("/login")); return p; };
+const google = async (email, name, sub) => {
+  const p = await page();
+  await p.goto(`${B}/login`);
+  const r = await p.request.get(B + (await p.getByRole("link", { name: "Войти через Google" }).getAttribute("href")), { maxRedirects: 0 });
+  const u = new URL(r.headers()["location"]);
+  const code = Buffer.from(JSON.stringify({ nonce: u.searchParams.get("nonce"), email, name, sub })).toString("base64url");
+  await p.goto(`${u.searchParams.get("redirect_uri")}?state=${u.searchParams.get("state")}&code=${code}`);
+  await p.waitForURL(/codes/);
+  return p;
+};
+const me = (p) => p.evaluate(() => fetch("/api/me").then((r) => r.json()));
+const notices = (p) => p.evaluate(() => fetch("/api/notifications").then((r) => r.json()));
+
+// 1) приватность имён: два чужих человека не видят друг друга
+const m = await google("mariam@gmail.com", "Мариам", "g-1");
+const z = await google("zara@gmail.com", "Зара", "g-2");
+ok(!(await me(z)).people.some((x) => x.name.ru === "Мариам"), "Zara doesn't see Mariam's name (nothing shared)");
+// 2) контакты: Мариам создаёт код «Мои контакты», добавляет Зару
+await m.goto(B + "/codes");
+await m.getByRole("button", { name: /Новый код/ }).click();
+await m.getByLabel("Название кода").fill("Семейные рецепты");
+await m.getByRole("button", { name: "Создать" }).click();
+await m.waitForURL(/\/codes\/\w+/);
+const scan = m.url().replace("/codes/", "/c/");
+await m.getByRole("tab", { name: /Кто видит/ }).click();
+await m.getByRole("radio", { name: /Мои контакты/ }).click();
+await m.waitForSelector("text=Контактов пока нет");
+await z.goto(scan, { waitUntil: "networkidle" });
+await z.waitForSelector("text=Код закрыт");
+ok(true, "not in contacts → closed");
+await m.getByLabel("Почта человека (Google или Apple)").first().fill("zara@gmail.com");
+await m.getByLabel("Почта человека (Google или Apple)").first().press("Enter");
+await m.waitForSelector("text=Зара");
+await z.reload({ waitUntil: "networkidle" });
+await z.waitForSelector("text=Семейные рецепты");
+ok(await z.locator("text=Код закрыт").count() === 0, "in contacts → open");
+ok((await me(z)).people.some((x) => x.name.ru === "Мариам"), "now Zara sees Mariam's name (shared code)");
+await m.screenshot({ path: out + "n-contacts.png", fullPage: true });
+// 3) уведомления
+const g = await page(390);
+const cars = await demo("Арман");
+await cars.getByRole("link", { name: /Моя машина/ }).click();
+await cars.waitForURL(/codes\/\w+/);
+const carScan = cars.url().replace("/codes/", "/c/");
+await g.goto(carScan, { waitUntil: "networkidle" });
+await g.getByRole("radio", { name: "Горят фары" }).click();
+await g.getByRole("button", { name: "Отправить" }).click();
+await g.waitForSelector("text=Отправлено");
+let n = await notices(cars);
+ok(n.items.some((x) => x.kind === "message"), "owner notified about a message");
+ok(n.due >= 1, "owner sees due tasks count");
+const l = await demo("Лилит", "/market");
+await l.getByRole("link", { name: /Туманность № 3/ }).click();
+await l.getByRole("button", { name: /Сделать ставку/ }).click();
+await l.waitForSelector("text=Ваша ставка — лучшая");
+const a = await demo("Ани", "/codes", 390);
+n = await notices(a);
+ok(n.items.some((x) => x.kind === "outbid"), "previous top bidder notified (outbid)");
+await a.getByRole("button", { name: "Уведомления" }).click();
+await a.waitForSelector("text=Вашу ставку перебили");
+await a.screenshot({ path: out + "n-bell-390.png" });
+ok((await notices(a)).unread === 0, "opening the bell marks as read");
+console.log("errors:", errors.length ? errors : "none");
+await browser.close();
+mock.close();

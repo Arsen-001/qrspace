@@ -21,7 +21,8 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/api/media/[name]
   const size = (await fs.stat(file).catch(() => null))?.size;
   if (size === undefined) return new Response(null, { status: 404 });
 
-  const headers = { "content-type": type, "accept-ranges": "bytes", "cache-control": "private, max-age=3600" };
+  // nosniff — браузер не попробует «угадать», что внутри файла (загруженное — только как картинка или видео).
+  const headers = { "content-type": type, "accept-ranges": "bytes", "cache-control": "private, max-age=3600", "x-content-type-options": "nosniff" };
   const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.get("range") ?? "");
   if (range && (range[1] || range[2])) {
     const start = range[1] ? Number(range[1]) : Math.max(0, size - Number(range[2]));

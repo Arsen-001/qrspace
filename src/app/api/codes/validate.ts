@@ -1,5 +1,6 @@
 // Проверка того, что присылает браузер: демо, но мусор в хранилище не пускаем.
 import { KINDS, type Contact, type Grant, type Kind, type Visibility } from "@/lib/codes";
+import { sanitizeStyle } from "@/lib/qr/sanitize";
 import type { SavedStyle } from "@/lib/qr/style";
 
 export function readTitle(v: unknown): string | null {
@@ -27,10 +28,10 @@ export function readPeople(v: unknown, owner: string, validIds: Set<string>): Gr
   return out;
 }
 
-/** Оформление — объект не больше ~1,5 МБ (коллаж из фото и его тона). */
+/** Оформление: не больше ~1,5 МБ (коллаж из фото и его тона) и только проверенные поля — его увидят другие люди. */
 export function readStyle(v: unknown): SavedStyle | null {
-  if (!v || typeof v !== "object") return null;
-  return JSON.stringify(v).length < 1_500_000 ? (v as SavedStyle) : null;
+  if (!v || typeof v !== "object" || JSON.stringify(v).length >= 1_500_000) return null;
+  return sanitizeStyle(v);
 }
 
 export const readKind = (v: unknown): Kind => (KINDS as readonly unknown[]).includes(v) ? (v as Kind) : "memory";

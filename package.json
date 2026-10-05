@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "predev": "node scripts/copy-wasm.mjs",
-    "prebuild": "node scripts/copy-wasm.mjs"
+    "prebuild": "node scripts/copy-wasm.mjs",
+    "e2e": "node e2e/run.mjs"
   },
   "dependencies": {
     "next": "16.3.8",
@@ -25,6 +26,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.8",
+    "playwright": "^1.63.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

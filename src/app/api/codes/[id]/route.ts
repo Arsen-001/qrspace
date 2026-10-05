@@ -52,7 +52,11 @@ export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/codes/[id]
       c.people = p;
       c.requests = c.requests.filter((r) => !p.some((g) => g.personId === r.personId));
     }
-    if ("style" in body) c.style = readStyle(body.style);
+    if ("style" in body) {
+      const st = readStyle(body.style);
+      if (body.style !== null && !st) return 400;
+      c.style = st;
+    }
     if ("compact" in body) c.compact = body.compact === true;
     if ("showOwner" in body) c.showOwner = body.showOwner === true;
     if ("contact" in body) {
