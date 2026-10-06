@@ -55,14 +55,14 @@ export function CertPage({ id }: { id: string }) {
               <dl className="space-y-3 text-sm">
                 <div>
                   <dt className="text-white/60">{t.certDesign}</dt>
-                  <dd className="font-heading text-xl font-bold">{cert.design?.name[lang] ?? cert.edition.design}</dd>
+                  <dd className="font-heading text-xl font-bold">{cert.design?.name[lang] ?? (cert.edition.design === "number" ? t.numberCode : cert.edition.design)}</dd>
                   {cert.design?.collab && <dd className="text-sm font-semibold text-[#9aa6ff]">QR Studio × {cert.design.collab}</dd>}
                 </div>
                 <div>
                   <dt className="text-white/60">{t.editionOf}</dt>
                   <dd className="font-heading text-3xl font-extrabold text-[#9aa6ff]">
                     {t.editionNo} {cert.edition.no}
-                    {cert.edition.of !== null && <span className="text-xl text-white/70"> / {cert.edition.of}</span>}
+                    {cert.edition.of !== null && <span className="text-xl text-white/70"> / {cert.edition.of.toLocaleString("ru-RU").replace(/\u00a0/g, " ")}</span>}
                   </dd>
                 </div>
                 <div>

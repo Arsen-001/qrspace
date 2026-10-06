@@ -87,6 +87,15 @@ export function MarketPage() {
         <QrThumb link={link} style={drop.style} className="w-full max-w-[280px] justify-self-center shadow-2xl" />
       </Link>
 
+      <Link href="/numbers" className="mt-4 flex items-center gap-4 rounded-2xl border border-line bg-card p-4 hover:border-muted">
+        <span className="font-heading text-3xl font-extrabold">№ 1</span>
+        <span className="min-w-0">
+          <span className="block font-semibold">{t.numbersTitle}</span>
+          <span className="block text-xs text-muted">{t.numbersTeaser}</span>
+        </span>
+        <span className="ml-auto text-muted">→</span>
+      </Link>
+
       {lots && lots.length > 0 && (
         <section className="mt-10">
           <h2 className="font-heading text-xl font-bold">{t.resaleTitle}</h2>

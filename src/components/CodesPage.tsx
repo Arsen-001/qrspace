@@ -39,8 +39,7 @@ function CodeCard({ t, lang, base, code, shared }: { t: Dict; lang: Lang; base: 
             )}
             {code.edition && (
               <span className="rounded-full bg-ink px-2.5 py-1 text-xs font-semibold text-bg">
-                {t.editionNo} {code.edition.no}
-                {code.edition.of !== null && ` / ${code.edition.of}`}
+                {code.edition.design === "number" ? t.numberCode : `${t.editionNo} ${code.edition.no}${code.edition.of !== null ? ` / ${code.edition.of}` : ""}`}
               </span>
             )}
             {code.lost && <span className="rounded-full bg-warn px-2.5 py-1 text-xs font-semibold text-on-warn">{t.lostMode}</span>}

@@ -154,8 +154,7 @@ function Editor({ t, lang, me, base, initial }: { t: Dict; lang: Lang; me: strin
             <TitleField key={code.title} t={t} value={code.title ?? ""} save={save} />
             {code.edition && (
               <span className="shrink-0 rounded-full bg-ink px-2.5 py-1 text-xs font-semibold text-bg">
-                {t.editionNo} {code.edition.no}
-                {code.edition.of !== null && ` / ${code.edition.of}`}
+                {code.edition.design === "number" ? t.numberCode : `${t.editionNo} ${code.edition.no}${code.edition.of !== null ? ` / ${code.edition.of}` : ""}`}
               </span>
             )}
           </div>

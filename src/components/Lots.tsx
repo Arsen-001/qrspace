@@ -9,7 +9,9 @@ import { DURATIONS, FEE, sellerGets, topBid } from "@/lib/listings";
 import { QrThumb } from "./QrThumb";
 import { Segmented } from "./ui";
 
-export const editionLabel = (t: Dict, e: { no: number; of: number | null } | null) => (e ? `${t.editionNo} ${e.no}${e.of !== null ? ` / ${e.of}` : ""}` : "");
+// У номерных кодов номер уже в названии («№ 777») — второй раз не пишем.
+export const editionLabel = (t: Dict, e: { design?: string; no: number; of: number | null } | null) =>
+  !e || e.design === "number" ? "" : `${t.editionNo} ${e.no}${e.of !== null ? ` / ${e.of}` : ""}`;
 
 /** Что сейчас по лоту: цена, ставка и сколько осталось, «продано». */
 export function LotPrice({ t, lang, lot }: { t: Dict; lang: Lang; lot: Lot }) {
