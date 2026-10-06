@@ -46,7 +46,7 @@ function pgStore(url: string): DocStore {
   // pg подключаем только когда он нужен (на этом компьютере без базы модуль не грузится).
   const g = globalThis as { __qrPg?: Promise<import("pg").Pool> };
   const pool = (g.__qrPg ??= import("pg").then(async ({ default: pg }) => {
-    const p = new pg.Pool({ connectionString: url, max: 5, ssl: /sslmode=require|neon\.tech|supabase/.test(url) ? { rejectUnauthorized: false } : undefined });
+    const p = new pg.Pool({ connectionString: url, max: 5, ssl: /sslmode=require|neon\.tech|supabase|rlwy\.net/.test(url) ? { rejectUnauthorized: false } : undefined });
     await p.query("create table if not exists qr_doc (id int primary key, version int not null, data jsonb not null, updated_at timestamptz not null default now())");
     return p;
   }));

@@ -1,6 +1,7 @@
-// Где лежат фото и видео под кодами. Сейчас — папка .data/media на этом компьютере. При выкладке сюда
-// добавится хранилище файлов (например, Vercel Blob) — остальной код не меняется: он знает только put/open/remove.
+// Где лежат фото и видео под кодами. С BLOB_READ_WRITE_TOKEN (выкладка на Vercel) — закрытое хранилище Vercel Blob,
+// без него — папка .data/media на этом компьютере. Остальной код знает только put/open/remove.
 import { createReadStream, promises as fs } from "node:fs";
+import { del, get, head, put } from "@vercel/blob";
 import path from "node:path";
 import { Readable } from "node:stream";
 
@@ -32,4 +33,29 @@ const local: MediaStore = {
   },
 };
 
-export const media: MediaStore = local;
+// Файлы закрытые: отдаём только через наш сервер, который сначала проверяет, кому их можно видеть.
+const blob: MediaStore = {
+  async put(name, data, type) {
+    await put(name, data, { access: "private", contentType: type, addRandomSuffix: false, allowOverwrite: true });
+  },
+  async remove(name) {
+    await del(name).catch(() => {});
+  },
+  async open(name, range) {
+    const headers = range ? { Range: `bytes=${range.start}-${range.end ?? ""}` } : undefined;
+    const r = await get(name, { access: "private", headers }).catch(() => undefined);
+    if (r === undefined) {
+      // 416: кусок за концом файла (или файл пустой) — как и у папки, отдаём пустое тело.
+      const size = (await head(name).catch(() => null))?.size;
+      return size === undefined ? null : { size, start: range?.start ?? 0, end: (range?.start ?? 0) - 1, body: new ReadableStream() };
+    }
+    if (!r || !r.stream) return null;
+    const total = /\/(\d+)$/.exec(r.headers.get("content-range") ?? "")?.[1];
+    const size = total ? Number(total) : r.blob.size;
+    const start = total ? (range?.start ?? 0) : 0;
+    const end = start + Number(r.headers.get("content-length") ?? size - start) - 1;
+    return { size, start, end, body: r.stream };
+  },
+};
+
+export const media: MediaStore = process.env.BLOB_READ_WRITE_TOKEN ? blob : local;
