@@ -10,8 +10,17 @@ import { Bell } from "./Bell";
 
 export function Logo() {
   // Тот же знак, что в иконке сайта: чёрная плитка, три «глаза» с лаймом и точки.
-  const eyes = [[8, 8], [56, 8], [8, 56]];
-  const dots = [[60, 60], [78, 60], [60, 78], [78, 78]];
+  const eyes = [
+    [8, 8],
+    [56, 8],
+    [8, 56],
+  ];
+  const dots = [
+    [60, 60],
+    [78, 60],
+    [60, 78],
+    [78, 78],
+  ];
   return (
     <svg viewBox="0 0 100 100" className="h-9 w-9 shrink-0 rounded-md border border-stage-line text-on-stage" aria-hidden>
       <rect width="100" height="100" className="fill-stage" />
@@ -32,7 +41,7 @@ export function Logo() {
 
 export function SiteHeader({ t, lang }: { t: Dict; lang: Lang }) {
   const path = usePathname();
-  const { ready, me, admin } = useMe();
+  const { ready, me, admin, demo } = useMe();
   const nav = [
     { href: "/", label: t.navGenerator, on: path === "/" },
     { href: "/market", label: t.navMarket, on: path.startsWith("/market") },
@@ -42,56 +51,75 @@ export function SiteHeader({ t, lang }: { t: Dict; lang: Lang }) {
     ...(admin ? [{ href: "/admin", label: t.navAdmin, on: path.startsWith("/admin") }] : []),
   ];
   return (
-    <header className="flex flex-wrap items-center gap-x-3 gap-y-2 py-4 print:hidden">
-      <Link href="/" className="flex items-center gap-2.5" aria-label={t.appName}>
-        <Logo />
-        <span className="hidden font-heading text-lg font-extrabold sm:inline">{t.appName}</span>
-      </Link>
-      {/* На телефоне разделы — отдельной строкой с прокруткой, чтобы шапка не вылезала за экран. */}
-      <nav className="order-last -mx-1 flex w-full gap-1 overflow-x-auto px-1 sm:order-none sm:mx-0 sm:w-auto sm:px-0">
-        {nav.map((n) => (
-          <Link
-            key={n.href}
-            href={n.href}
-            aria-current={n.on ? "page" : undefined}
-            className={`grid min-h-10 shrink-0 place-items-center rounded-xl px-3 text-sm font-medium ${n.on ? "bg-card text-ink shadow-sm" : "text-muted hover:text-ink"}`}
-          >
-            {n.label}
-          </Link>
-        ))}
-      </nav>
-      <div className="ml-auto flex items-center gap-2">
-        {/* Языков семь — выпадающий список, чтобы шапка помещалась на телефоне. */}
-        <label className="relative">
-          <span className="sr-only">Language</span>
-          <select
-            value={lang}
-            onChange={(e) => saveLang(e.target.value as Lang)}
-            aria-label="Language"
-            className="min-h-10 cursor-pointer appearance-none rounded-xl border border-line bg-card py-1 pl-3 pr-8 text-sm font-medium hover:border-muted"
-          >
-            {LANGS.map((l) => (
-              <option key={l.id} value={l.id}>
-                {l.name}
-              </option>
-            ))}
-          </select>
-          <svg viewBox="0 0 24 24" className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-            <path d="m6 9 6 6 6-6" />
-          </svg>
-        </label>
-        {ready && me && <Bell t={t} lang={lang} />}
-        {ready &&
-          (me ? (
-            <Link href="/profile" title={`${personName(me, lang)} · ${t.profileTitle}`} className="rounded-full">
-              <Avatar id={me} lang={lang} size={36} />
-            </Link>
-          ) : (
-            <Link href={`/login?next=${encodeURIComponent(path)}`} className="grid min-h-10 place-items-center rounded-xl bg-accent px-3 text-sm font-semibold text-on-accent">
-              {t.login}
+    <>
+      {ready && demo && (
+        // Пока сайт — демо (DEMO_LOGIN не выключен): честно говорим, что покупки ненастоящие.
+        <p className="mx-[calc(50%-50vw)] bg-stage px-4 py-2 text-center text-xs font-medium text-on-stage print:hidden">
+          <span className="mr-2 rounded-sm bg-accent px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase text-on-accent">Demo</span>
+          {t.demoBanner}
+        </p>
+      )}
+      <header className="flex flex-wrap items-center gap-x-3 gap-y-2 py-4 print:hidden">
+        <Link href="/" className="flex items-center gap-2.5" aria-label={t.appName}>
+          <Logo />
+          <span className="hidden font-heading text-lg font-extrabold sm:inline">{t.appName}</span>
+        </Link>
+        {/* На телефоне разделы — отдельной строкой с прокруткой, чтобы шапка не вылезала за экран. */}
+        <nav className="order-last -mx-1 flex w-full gap-1 overflow-x-auto px-1 sm:order-none sm:mx-0 sm:w-auto sm:px-0">
+          {nav.map((n) => (
+            <Link
+              key={n.href}
+              href={n.href}
+              aria-current={n.on ? "page" : undefined}
+              className={`grid min-h-10 shrink-0 place-items-center rounded-xl px-3 text-sm font-medium ${n.on ? "bg-card text-ink shadow-sm" : "text-muted hover:text-ink"}`}
+            >
+              {n.label}
             </Link>
           ))}
-      </div>
-    </header>
+        </nav>
+        <div className="ml-auto flex items-center gap-2">
+          {/* Языков семь — выпадающий список, чтобы шапка помещалась на телефоне. */}
+          <label className="relative">
+            <span className="sr-only">Language</span>
+            <select
+              value={lang}
+              onChange={(e) => saveLang(e.target.value as Lang)}
+              aria-label="Language"
+              className="min-h-10 cursor-pointer appearance-none rounded-xl border border-line bg-card py-1 pl-3 pr-8 text-sm font-medium hover:border-muted"
+            >
+              {LANGS.map((l) => (
+                <option key={l.id} value={l.id}>
+                  {l.name}
+                </option>
+              ))}
+            </select>
+            <svg
+              viewBox="0 0 24 24"
+              className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-hidden
+            >
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </label>
+          {ready && me && <Bell t={t} lang={lang} />}
+          {ready &&
+            (me ? (
+              <Link href="/profile" title={`${personName(me, lang)} · ${t.profileTitle}`} className="rounded-full">
+                <Avatar id={me} lang={lang} size={36} />
+              </Link>
+            ) : (
+              <Link
+                href={`/login?next=${encodeURIComponent(path)}`}
+                className="grid min-h-10 place-items-center rounded-xl bg-accent px-3 text-sm font-semibold text-on-accent"
+              >
+                {t.login}
+              </Link>
+            ))}
+        </div>
+      </header>
+    </>
   );
 }

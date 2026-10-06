@@ -721,4 +721,5 @@ export const es: Dict = {
   homeTicker: "Memoria bajo el código · Tu propio diseño · Código desde una foto · Número n.º 1 · Ediciones limitadas · Subastas · Tú decides quién lo ve",
   homeMakeTitle: "Crea tu código ahora mismo",
   homeWhy: "Más que un simple código QR",
+  demoBanner: "Versión demo: las compras no son reales, no se cobra dinero y los datos pueden reiniciarse",
 };

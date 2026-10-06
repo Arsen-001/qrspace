@@ -721,4 +721,5 @@ export const de: Dict = {
   homeTicker: "Erinnerung unter dem Code · Dein eigenes Design · Code aus einem Foto · Nummer Nr. 1 · Limitierte Editionen · Auktionen · Du entscheidest, wer ihn sieht",
   homeMakeTitle: "Erstelle deinen Code jetzt",
   homeWhy: "Mehr als nur ein QR-Code",
+  demoBanner: "Demoversion: Käufe sind nicht echt, es wird kein Geld abgebucht, Daten können zurückgesetzt werden",
 };

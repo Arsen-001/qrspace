@@ -741,6 +741,7 @@ const ru = {
   homeTicker: "Память под кодом · Свой дизайн · Код из фото · Номер № 1 · Лимитированные выпуски · Аукционы · Кто видит — решаете вы",
   homeMakeTitle: "Сделайте код прямо сейчас",
   homeWhy: "Больше, чем просто QR-код",
+  demoBanner: "Демо-версия: покупки ненастоящие, деньги не списываются, данные могут сбрасываться",
 };
 
 export type Dict = typeof ru;
@@ -1465,6 +1466,7 @@ const en: Dict = {
   homeTicker: "Memory under the code · Your own design · Code from a photo · Number No. 1 · Limited editions · Auctions · You decide who sees it",
   homeMakeTitle: "Make your code right now",
   homeWhy: "More than just a QR code",
+  demoBanner: "Demo version: purchases aren’t real, no money is charged, data may be reset",
 };
 
 const hy: Dict = {
@@ -2187,6 +2189,7 @@ const hy: Dict = {
   homeTicker: "Հիշողություն կոդի տակ · Ձեր դիզայնը · Կոդ լուսանկարից · Համար № 1 · Սահմանափակ թողարկումներ · Աճուրդներ · Ով է տեսնում՝ որոշում եք դուք",
   homeMakeTitle: "Ստեղծեք կոդը հենց հիմա",
   homeWhy: "Ավելին, քան պարզապես QR կոդ",
+  demoBanner: "Դեմո տարբերակ՝ գնումներն իրական չեն, գումար չի գանձվում, տվյալները կարող են զրոյացվել",
 };
 
 export const DICTS: Record<Lang, Dict> = { hy, ru, en, es, pt, fr, de };
