@@ -1,8 +1,26 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "regions": ["fra1"],
+  "regions": [
+    "fra1"
+  ],
   "redirects": [
-    { "source": "/:path(.*)", "has": [{ "type": "host", "value": "www.qrspace.co" }], "destination": "https://qrspace.co/:path", "permanent": true }
+    {
+      "source": "/:path(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.qrspace.co"
+        }
+      ],
+      "destination": "https://qrspace.co/:path",
+      "permanent": true
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/backup",
+      "schedule": "30 0 * * *"
+    }
   ]
 }
