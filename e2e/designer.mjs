@@ -66,7 +66,8 @@ await p.goto(B + href, { waitUntil: "networkidle" });
 await p.getByRole("button", { name: "Снять с продажи" }).click();
 await p.waitForURL(B + "/market");
 await p.waitForSelector("text=Туманность");
-await p.waitForTimeout(800); // лоты подгружаются отдельно
+// Лоты подгружаются отдельно — ждём, пока исчезнет и аукцион № 1 (до 10 с).
+await p.waitForFunction(() => !document.body.innerText.includes("Бетон и звёзды"), null, { timeout: 10000 }).catch(() => {});
 ok(!(await p.locator("text=Бетон и звёзды").count()), "unpublished design gone (and its № 1 auction without bids); nebula is drop again");
 console.log("errors:", errors.length ? errors : "none");
 await browser.close();
