@@ -13,6 +13,8 @@ export type User = {
   email: string;
   name: string;
   designer: boolean;
+  /** Администратор сайта: жалобы, блокировка кодов, общие цифры. Почты — ADMIN_EMAILS. */
+  admin?: boolean;
   /** «Мои контакты»: кого человек добавил (по почте). Код с «Мои контакты» видят только они. */
   contacts?: string[];
   createdAt: string;
@@ -21,10 +23,11 @@ export type User = {
 export const demoEnabled = () => process.env.DEMO_LOGIN !== "off";
 
 /** Дизайнеры: демо-Наре и почты из DESIGNER_EMAILS (через запятую). */
+const adminEmails = () => (process.env.ADMIN_EMAILS ?? "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
 const designerEmails = () => (process.env.DESIGNER_EMAILS ?? "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
 
 export const demoUsers = (): User[] =>
-  PEOPLE.map((p) => ({ id: p.id, provider: "demo", sub: p.id, email: `${p.id}@demo.local`, name: p.name.ru, designer: !!p.designer, createdAt: new Date(0).toISOString() }));
+  PEOPLE.map((p) => ({ id: p.id, provider: "demo", sub: p.id, email: `${p.id}@demo.local`, name: p.name.ru, designer: !!p.designer, admin: !!p.admin, createdAt: new Date(0).toISOString() }));
 
 /** Что видно о человеке другим: только имя и цвет (почта — никогда). */
 export function publicPerson(u: User): Person {
@@ -45,9 +48,10 @@ export function upsertUser(db: Db, provider: "google" | "apple", sub: string, em
     if (email) u.email = email;
     if (name) u.name = name;
     u.designer = u.designer || designer;
+    u.admin = !!email && adminEmails().includes(email.toLowerCase());
     return u;
   }
-  u = { id: newId(), provider, sub, email, name: name || email.split("@")[0] || "QR", designer, createdAt: new Date().toISOString() };
+  u = { id: newId(), provider, sub, email, name: name || email.split("@")[0] || "QR", designer, admin: !!email && adminEmails().includes(email.toLowerCase()), createdAt: new Date().toISOString() };
   db.users.push(u);
   return u;
 }

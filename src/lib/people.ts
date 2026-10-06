@@ -2,7 +2,7 @@
 import type { Lang } from "./i18n";
 
 /** demo — кто это в демо-данных, чтобы было понятно, кем войти и что проверить. */
-export type Person = { id: string; name: Record<Lang, string>; color: string; demo: Record<Lang, string>; designer?: boolean };
+export type Person = { id: string; name: Record<Lang, string>; color: string; demo: Record<Lang, string>; designer?: boolean; admin?: boolean };
 
 export const PEOPLE: Person[] = [
   {
@@ -35,6 +35,13 @@ export const PEOPLE: Person[] = [
     color: "#7c3aed",
     designer: true,
     demo: { hy: "Դիզայներ՝ կոդեր է հրապարակում շուկայում", ru: "Дизайнер: выкладывает коды в маркет", en: "Designer: publishes codes to the market" },
+  },
+  {
+    id: "admin",
+    name: { hy: "Ադմինիստրատոր", ru: "Администратор", en: "Admin" },
+    color: "#334155",
+    admin: true,
+    demo: { hy: "Կայքի տերը՝ բողոքներ, արգելափակում, թվեր", ru: "Хозяин сайта: жалобы, блокировка, цифры", en: "Site owner: reports, blocking, numbers" },
   },
 ];
 

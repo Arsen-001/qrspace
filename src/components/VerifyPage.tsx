@@ -8,6 +8,7 @@ import { fill } from "@/lib/i18n";
 import { useLang } from "@/lib/lang";
 import { readQr } from "@/lib/qr/raster";
 import { KindIcon } from "./KindIcon";
+import { ReportBox } from "./ReportBox";
 import { Shell } from "./Shell";
 
 type Result = { result: "ours"; id: string; kind: Kind; title: string | null } | { result: "foreign"; host: string } | { result: "missing" | "site" | "text" };
@@ -141,6 +142,7 @@ export function VerifyPage() {
           )}
           {text && <p className="break-all rounded-xl bg-field p-3 font-mono text-xs text-muted">{text}</p>}
           <div className="flex flex-wrap gap-2">
+            {res.result === "ours" && <ReportBox t={t} id={res.id} />}
             {res.result === "ours" && (
               <Link href={`/c/${res.id}`} className="grid min-h-11 place-items-center rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent">
                 {t.verifyOpen} →

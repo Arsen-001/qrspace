@@ -10,6 +10,7 @@ import { useLang } from "@/lib/lang";
 import { refreshPeople, useMe } from "@/lib/me";
 import { Avatar, personName } from "./Avatar";
 import { Memory } from "./Memory";
+import { ReportBox } from "./ReportBox";
 import { Notice, Shell } from "./Shell";
 
 function Lock() {
@@ -299,8 +300,14 @@ export function ScanPage({ id, invite }: { id: string; invite: string | null }) 
           <h1 className="font-heading text-2xl font-extrabold">{t.notFound}</h1>
           <p className="mt-2 text-sm text-muted">{t.notFoundHint}</p>
         </div>
+      ) : code.blocked && code.access !== "owner" ? (
+        <div className="rounded-2xl border border-line bg-card p-8 text-center">
+          <h1 className="font-heading text-2xl font-extrabold">⛔ {t.blockedTitle}</h1>
+          <p className="mt-2 text-sm text-muted">{t.blockedHint}</p>
+        </div>
       ) : (
         <>
+          {code.blocked && <p className="mb-4 rounded-2xl bg-warn-soft p-4 text-sm font-medium text-warn">⛔ {t.blockedOwner}</p>}
           {code.access === "owner" && (
             <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl bg-accent/10 p-3 pl-4">
               <span className="text-sm font-medium">{t.youOwner}</span>
@@ -348,6 +355,7 @@ export function ScanPage({ id, invite }: { id: string; invite: string | null }) 
         <Link href="/" className="font-semibold text-accent">
           {t.makeYours} →
         </Link>
+        {loaded?.code && loaded.code.access !== "owner" && !loaded.code.blocked && <ReportBox t={t} id={id} />}
       </footer>
     </Shell>
   );

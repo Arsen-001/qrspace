@@ -4,7 +4,7 @@ import { randomBytes } from "node:crypto";
 import { networkInterfaces } from "node:os";
 import { media as mediaStore } from "./media";
 import { store } from "./store";
-import { inSchedule, ymd, type AccessLevel, type CodeRecord, type CodeView, type Kind, type Notice } from "@/lib/codes";
+import { inSchedule, ymd, type Report, type AccessLevel, type CodeRecord, type CodeView, type Kind, type Notice } from "@/lib/codes";
 import { DESIGNS, SEED_SALES, type Design } from "@/lib/market";
 import type { Listing } from "@/lib/listings";
 import type { Order } from "@/lib/orders";
@@ -14,7 +14,7 @@ import { demoEnabled, demoUsers, publicPerson, usable, type User } from "./users
 import { DEFAULT_STYLE, type SavedStyle } from "@/lib/qr/style";
 
 
-export type Db = { codes: CodeRecord[]; sales: Record<string, number>; designs: Design[]; purchases: Purchase[]; orders: Order[]; listings: Listing[]; shop: ShopOrder[]; users: User[]; notifications: Notice[] };
+export type Db = { codes: CodeRecord[]; sales: Record<string, number>; designs: Design[]; purchases: Purchase[]; orders: Order[]; listings: Listing[]; shop: ShopOrder[]; users: User[]; notifications: Notice[]; reports: Report[] };
 
 const ALPHABET = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 // Без похожих (0/O, 1/I) — короткий номер иногда вводят руками.
@@ -63,6 +63,7 @@ function seed(): Db {
     shop: [],
     users: demoUsers(),
     notifications: [],
+    reports: [],
     sales: { ...SEED_SALES },
     designs: [],
     purchases: [],
@@ -196,6 +197,9 @@ function normalize(db: Db): Db {
   db.shop ??= [];
   db.users ??= demoUsers();
   db.notifications ??= [];
+  db.reports ??= [];
+  // Новые демо-люди (например, «Администратор») появляются и в уже заполненных данных.
+  for (const d of demoUsers()) if (!db.users.some((u) => u.id === d.id)) db.users.push(d);
   contactsOf = new Map(db.users.map((u) => [u.id, u.contacts ?? []]));
   return db;
 }
@@ -314,6 +318,7 @@ let contactsOf = new Map<string, string[]>();
 
 export function accessOf(code: CodeRecord, me: string | null): AccessLevel {
   if (me && code.owner === me) return "owner";
+  if (code.blocked) return "closed";
   if (code.visibility === "me") return "closed";
   const grant = me ? code.people.find((p) => p.personId === me && (!p.until || p.until >= today())) : undefined;
   if (grant) return grant.role;
@@ -390,6 +395,7 @@ export function viewOf(code: CodeRecord, me: string | null): CodeView {
     publicAdd: !!code.publicAdd,
     short: code.short ?? "",
     compact: !!code.compact,
+    blocked: !!code.blocked,
     edition: code.edition ?? null,
     auth: code.auth ? authView(code, me) : null,
     owners: code.edition ? (code.owners ?? []) : null,
@@ -453,6 +459,8 @@ export async function userByEmail(email: string): Promise<User | null> {
   const e = email.trim().toLowerCase();
   return usable(await read()).find((u) => u.email.toLowerCase() === e) ?? null;
 }
+
+export const isAdminId = async (id: string | null) => !!id && !!(await findUser(id))?.admin;
 
 export const isDesignerId = async (id: string | null) => !!id && !!(await findUser(id))?.designer;
 

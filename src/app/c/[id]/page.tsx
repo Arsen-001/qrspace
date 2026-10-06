@@ -18,7 +18,7 @@ export default async function Page(props: PageProps<"/c/[id]">) {
   const { id } = await props.params;
   const { invite } = await props.searchParams;
   const code = await findCode(id);
-  if (code?.kind === "link" && code.target) {
+  if (code?.kind === "link" && code.target && !code.blocked) {
     await recordVisit(id, await currentPerson(), true);
     redirect(code.target);
   }

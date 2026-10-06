@@ -175,6 +175,8 @@ function Editor({ t, lang, me, base, initial }: { t: Dict; lang: Lang; me: strin
         </span>
       </div>
 
+      {code.blocked && <p className="mt-3 rounded-2xl bg-warn-soft p-4 text-sm font-medium text-warn">⛔ {t.blockedOwner}</p>}
+
       <div role="tablist" className="mt-4 flex gap-1 overflow-x-auto border-b border-line">
         {tabs.map((x) => (
           <button

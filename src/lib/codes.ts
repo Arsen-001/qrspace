@@ -54,6 +54,8 @@ export type CodeRecord = {
   reward: string;
   messages: Message[];
   tasks: Task[];
+  /** Заблокирован администратором по жалобе: скан ничего не показывает и никуда не ведёт. */
+  blocked?: { at: string; reason: string };
   /** Код-ссылка: куда переадресует скан (меняется когда угодно — код тот же). */
   target?: string;
   /** Вещь бренда (защита от подделок): секрет под стираемым слоем, кто зарегистрировал. */
@@ -99,6 +101,8 @@ export type CodeView = {
   /** Только хозяину. */
   target?: string | null;
   stats?: ScanStats;
+  /** Заблокирован администратором (видят все: гостю — «заблокирован», хозяину — почему). */
+  blocked: boolean;
   edition: { design: string; no: number; of: number | null } | null;
   access: AccessLevel;
   visibility: Visibility;
@@ -137,6 +141,10 @@ export type BatchItem = { id: string; short: string; serial: number; secret: str
 /** Статистика сканов (только хозяину): по дням за 30 дней (от старых к сегодня, UTC), всего, за 7 дней, людей со входом. */
 export type ScanStats = { days: number[]; total: number; week: number; people: number };
 
+export const REPORT_REASONS = ["phishing", "spam", "offensive", "other"] as const;
+export type ReportReason = (typeof REPORT_REASONS)[number];
+export type Report = { id: string; code: string; reason: ReportReason; text: string; from: string | null; at: string; status: "open" | "blocked" | "dismissed" };
+
 export type CodeList = { base: string; mine: CodeView[]; shared: CodeView[]; items: CodeView[] };
 export type MarketState = { sold: Record<string, number>; designs: Design[] };
 /** Лот с тем, что нужно показать: код (вид, номер, название) и продавец. */
@@ -171,7 +179,7 @@ export type CodePatch = Partial<Pick<CodeRecord, "title" | "visibility" | "peopl
 };
 
 export const api = {
-  me: () => call<{ me: string | null; base: string; people: Person[]; demo: boolean; providers: { google: boolean; apple: boolean } }>("/api/me"),
+  me: () => call<{ me: string | null; base: string; people: Person[]; demo: boolean; providers: { google: boolean; apple: boolean }; admin: boolean }>("/api/me"),
   lookup: (email: string) => call<{ id: string }>(`/api/people/lookup?email=${encodeURIComponent(email)}`),
   login: (personId: string | null) => call<{ me: string | null }>("/api/me", json("POST", { personId })),
   list: () => call<CodeList>("/api/codes"),
@@ -203,6 +211,7 @@ export const api = {
   makeAuthBatch: (b: { brand: string; product: string; count: number }) => call<Batch>("/api/batches", json("POST", b)),
   claimItem: (id: string, secret: string) => call<CodeView>(`/api/codes/${id}/claim`, json("POST", { secret })),
   releaseItem: (id: string) => call<{ secret: string; view: CodeView }>(`/api/codes/${id}/claim`, { method: "DELETE" }),
+  report: (id: string, reason: ReportReason, text: string) => call<{ ok: true }>(`/api/codes/${id}/report`, json("POST", { reason, text })),
   market: () => call<MarketState>("/api/market"),
   publish: (d: { name: string; nameHy: string; nameEn: string; about: string; collab: string; price: number; edition: number | null; drop: boolean; firstOnAuction: boolean; style: SavedStyle }) =>
     call<Design>("/api/market", json("POST", d)),

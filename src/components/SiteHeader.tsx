@@ -24,13 +24,14 @@ export function Logo() {
 
 export function SiteHeader({ t, lang }: { t: Dict; lang: Lang }) {
   const path = usePathname();
-  const { ready, me } = useMe();
+  const { ready, me, admin } = useMe();
   const nav = [
     { href: "/", label: t.navGenerator, on: path === "/" },
     { href: "/market", label: t.navMarket, on: path.startsWith("/market") },
     { href: "/codes", label: t.navCodes, on: path.startsWith("/codes") },
     { href: "/shop", label: t.navShop, on: path.startsWith("/shop") },
     { href: "/brand", label: t.navBrand, on: path.startsWith("/brand") },
+    ...(admin ? [{ href: "/admin", label: t.navAdmin, on: path.startsWith("/admin") }] : []),
   ];
   return (
     <header className="flex flex-wrap items-center gap-x-3 gap-y-2 py-4 print:hidden">

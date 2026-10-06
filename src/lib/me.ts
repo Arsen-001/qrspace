@@ -4,8 +4,8 @@ import { useSyncExternalStore } from "react";
 import { api } from "./codes";
 import { setDirectory } from "./people";
 
-type MeState = { ready: boolean; me: string | null; base: string; demo: boolean; providers: { google: boolean; apple: boolean } };
-const SERVER: MeState = { ready: false, me: null, base: "", demo: false, providers: { google: false, apple: false } };
+type MeState = { ready: boolean; me: string | null; base: string; demo: boolean; providers: { google: boolean; apple: boolean }; admin: boolean };
+const SERVER: MeState = { ready: false, me: null, base: "", demo: false, providers: { google: false, apple: false }, admin: false };
 let state: MeState = SERVER;
 let loading = false;
 const listeners = new Set<() => void>();
@@ -18,7 +18,7 @@ function load() {
     .me()
     .then((r) => {
       setDirectory(r.people);
-      state = { ready: true, me: r.me, base: r.base, demo: r.demo, providers: r.providers };
+      state = { ready: true, me: r.me, base: r.base, demo: r.demo, providers: r.providers, admin: r.admin };
     })
     .catch(() => (state = { ...SERVER, ready: true, base: location.origin }))
     .finally(() => {
@@ -38,8 +38,11 @@ export function useMe(): MeState {
 }
 
 export async function signIn(personId: string | null) {
-  const r = await api.login(personId);
-  state = { ...state, ready: true, me: r.me };
+  await api.login(personId);
+  // Перечитываем всё: у нового человека свои имена вокруг и своя роль (администратор).
+  const r = await api.me();
+  setDirectory(r.people);
+  state = { ready: true, me: r.me, base: r.base, demo: r.demo, providers: r.providers, admin: r.admin };
   emit();
 }
 
