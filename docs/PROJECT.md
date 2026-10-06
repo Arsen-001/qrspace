@@ -29,7 +29,7 @@
 **Название не выбрано.** Кандидаты со свободными доменами (проверка whois 04.10.2026, не гарантия):
 ⭐ QR Vivid — qrvivid.com (рекомендация), QR Fresco — qrfresco.com, ScanFresco — scanfresco.com,
 Qrafty — qrafty.io, Qrtisan — qrtisan.io, QR Canvas — qrcanvas.io, Nshan (арм. «знак») — nshan.io.
-Короткие .com с «QR» почти все заняты. В шапке пока «QR Studio».
+**07.10.2026 владелец купил qrspace.co — бренд QR Space** (на сайте везде «QR Space»; qrspace.com занят чужим сайтом).
 **06.10.2026 владелец: «давай другое имя»** (не QR Vivid). Новые варианты, .com свободен (whois 06.10, не гарантия):
 ⭐ QR Crown — qrcrown.com (корона = бренд № 1, коллекционные коды и номера; знак — корона из точек), QR Lore —
 qrlore.com (код с историей), Lumtag — lumtag.com (без «QR» — проще зарегистрировать товарный знак), KinQR — kinqr.com

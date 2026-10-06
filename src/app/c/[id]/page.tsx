@@ -9,7 +9,7 @@ export async function generateMetadata(props: PageProps<"/c/[id]">): Promise<Met
   const { id } = await props.params;
   const code = await findCode(id);
   const view = code && viewOf(code, null);
-  const title = view?.title && view.access !== "closed" ? view.title : { absolute: "QR Studio" };
+  const title = view?.title && view.access !== "closed" ? view.title : { absolute: "QR Space" };
   return { title, description: "Отсканировали код? Откройте — здесь память, которую для вас оставили.", robots: { index: false } };
 }
 

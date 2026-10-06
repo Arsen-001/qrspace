@@ -11,9 +11,9 @@ const mono = JetBrains_Mono({ variable: "--font-code", subsets: ["latin", "cyril
 export const metadata: Metadata = {
   // Полные адреса для превью ссылок: APP_URL при выкладке, на этом компьютере — localhost.
   metadataBase: new URL(process.env.APP_URL || "http://localhost:3720"),
-  title: { default: "QR Studio — QR-код из ссылки, Wi-Fi, контакта или вашей фотографии", template: "%s — QR Studio" },
+  title: { default: "QR Space — QR-код из ссылки, Wi-Fi, контакта или вашей фотографии", template: "%s — QR Space" },
   description: "Генератор QR-кодов: свои цвета, логотип, QR-картинка из фото, проверка чтения и коды с памятью. Первый простой код — бесплатно.",
-  openGraph: { siteName: "QR Studio", type: "website" },
+  openGraph: { siteName: "QR Space", type: "website" },
   twitter: { card: "summary_large_image" },
 };
 

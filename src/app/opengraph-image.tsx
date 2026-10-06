@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 
 // Превью ссылки в мессенджерах: знак, название и рисунок QR. Текст латиницей — встроенный шрифт картинки
 // не знает кириллицы и армянского; название страницы мессенджер покажет сам, из заголовка.
-export const alt = "QR Studio";
+export const alt = "QR Space";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -30,7 +30,7 @@ export default function Image() {
             <div style={{ width: 72, height: 72, borderRadius: 10, background: "#c6ff2e", display: "flex", alignItems: "center", justifyContent: "center", color: "#0b0b0c", fontSize: 40, fontWeight: 800 }}>
               QR
             </div>
-            <div style={{ fontSize: 64, fontWeight: 800, color: "#f3f2ec" }}>QR Studio</div>
+            <div style={{ fontSize: 64, fontWeight: 800, color: "#f3f2ec" }}>QR Space</div>
           </div>
           <div style={{ fontSize: 38, color: "#b9b7ae", maxWidth: 560, lineHeight: 1.25 }}>Beautiful QR codes with a memory behind them</div>
           <div style={{ fontSize: 28, color: "#c6ff2e", fontWeight: 700 }}>Photos · Video · Who sees it · Collectibles</div>

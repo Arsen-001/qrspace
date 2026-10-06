@@ -3,8 +3,8 @@ import type { MetadataRoute } from "next";
 /** Сайт ставится на телефон как приложение («На экран „Домой“» / «Установить»). */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "QR Studio",
-    short_name: "QR Studio",
+    name: "QR Space",
+    short_name: "QR Space",
     description: "Красивые QR-коды с памятью: фото, видео, текст — и вы решаете, кто их видит.",
     start_url: "/codes",
     display: "standalone",

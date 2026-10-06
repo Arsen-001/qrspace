@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { findByShort, findCode, publicBase, viewOf } from "@/server/db";
 
 /**
- * Настоящий ли это код QR Studio: ссылка ведёт на наш сайт и такой код есть. Отдаём только то, что видно гостю
+ * Настоящий ли это код QR Space: ссылка ведёт на наш сайт и такой код есть. Отдаём только то, что видно гостю
  * (у машины и ключей название скрыто).
  */
 export async function GET(req: NextRequest) {

@@ -19,9 +19,9 @@ type Doc = { title: string; intro: string; sections: Section[] };
 const ru: Record<LegalDoc, Doc> = {
   terms: {
     title: "Условия использования",
-    intro: "Пользуясь QR Studio, вы соглашаетесь с этими условиями. Мы писали их простыми словами — если что-то непонятно, напишите нам.",
+    intro: "Пользуясь QR Space, вы соглашаетесь с этими условиями. Мы писали их простыми словами — если что-то непонятно, напишите нам.",
     sections: [
-      { h: "1. Что такое QR Studio", p: ["Сайт, где можно сделать красивый QR-код, положить под него «память» (текст, фото, видео), решить, кто её видит, купить коллекционные коды, номера и товары с кодом. Оператор сайта и его реквизиты указаны в разделе «Контакты»."] },
+      { h: "1. Что такое QR Space", p: ["Сайт, где можно сделать красивый QR-код, положить под него «память» (текст, фото, видео), решить, кто её видит, купить коллекционные коды, номера и товары с кодом. Оператор сайта и его реквизиты указаны в разделе «Контакты»."] },
       { h: "2. Аккаунт", p: ["Вход — только через Google или Apple. Пароль у нас не хранится.", "Пользоваться сайтом можно с 16 лет. Вы отвечаете за то, что происходит в вашем аккаунте.", "Удалить аккаунт можно в любой момент в профиле — вместе с кодами, памятью, фото и видео."] },
       { h: "3. Ваши коды и память", p: ["Всё, что вы загружаете, остаётся вашим. Вы разрешаете нам хранить это и показывать тем, кому вы открыли код (все, контакты, выбранные люди или только вы).", "Напечатанный код ведёт на нашу страницу — поэтому память и доступ можно менять без перепечатки. Перед печатью проверьте, что код читается: сайт проверяет это сам, но камеры бывают разные."] },
       { h: "4. Что нельзя", p: ["Мошенничество и поддельные сайты (в том числе через код-ссылку), вредоносные программы, спам.", "Незаконное, оскорбительное, чужие личные данные без согласия, преследование.", "Чужие логотипы и товарные знаки без права на них — в продаваемых дизайнах и товарах.", "По жалобам мы проверяем коды и можем заблокировать код или аккаунт. Заблокированный код ничего не показывает и никуда не ведёт."] },
@@ -64,9 +64,9 @@ const ru: Record<LegalDoc, Doc> = {
 const en: Record<LegalDoc, Doc> = {
   terms: {
     title: "Terms of use",
-    intro: "By using QR Studio you agree to these terms. We wrote them in plain words — if anything is unclear, write to us.",
+    intro: "By using QR Space you agree to these terms. We wrote them in plain words — if anything is unclear, write to us.",
     sections: [
-      { h: "1. What QR Studio is", p: ["A site where you can make a beautiful QR code, put a “memory” behind it (text, photos, videos), decide who sees it, and buy collectible codes, numbers and products with a code. The site operator and its details are in the Contacts section."] },
+      { h: "1. What QR Space is", p: ["A site where you can make a beautiful QR code, put a “memory” behind it (text, photos, videos), decide who sees it, and buy collectible codes, numbers and products with a code. The site operator and its details are in the Contacts section."] },
       { h: "2. Account", p: ["Sign-in is only with Google or Apple. We don’t store passwords.", "You must be 16 or older. You are responsible for what happens in your account.", "You can delete your account any time in your profile — together with your codes, memories, photos and videos."] },
       { h: "3. Your codes and memories", p: ["Everything you upload stays yours. You allow us to store it and show it to the people you opened the code to (everyone, contacts, chosen people or only you).", "A printed code leads to our page — that’s why you can change the memory and access without reprinting. Check that a code scans before printing: the site checks it, but cameras differ."] },
       { h: "4. What’s not allowed", p: ["Scams and fake websites (including via link codes), malware, spam.", "Anything illegal or abusive, other people’s personal data without consent, harassment.", "Other companies’ logos and trademarks without rights — in designs and products for sale.", "We review reports and may block a code or an account. A blocked code shows nothing and leads nowhere."] },
@@ -109,9 +109,9 @@ const en: Record<LegalDoc, Doc> = {
 const hy: Record<LegalDoc, Doc> = {
   terms: {
     title: "Օգտագործման պայմաններ",
-    intro: "Օգտվելով QR Studio-ից՝ դուք համաձայնում եք այս պայմաններին։ Գրել ենք պարզ բառերով — եթե ինչ-որ բան պարզ չէ, գրեք մեզ։",
+    intro: "Օգտվելով QR Space-ից՝ դուք համաձայնում եք այս պայմաններին։ Գրել ենք պարզ բառերով — եթե ինչ-որ բան պարզ չէ, գրեք մեզ։",
     sections: [
-      { h: "1. Ինչ է QR Studio-ն", p: ["Կայք, որտեղ կարելի է ստեղծել գեղեցիկ QR կոդ, դրա տակ դնել «հիշողություն» (տեքստ, լուսանկար, տեսանյութ), որոշել, թե ով է այն տեսնում, գնել հավաքածուի կոդեր, համարներ և ապրանքներ կոդով։ Կայքի օպերատորը և նրա տվյալները նշված են «Կոնտակտներ» բաժնում։"] },
+      { h: "1. Ինչ է QR Space-ը", p: ["Կայք, որտեղ կարելի է ստեղծել գեղեցիկ QR կոդ, դրա տակ դնել «հիշողություն» (տեքստ, լուսանկար, տեսանյութ), որոշել, թե ով է այն տեսնում, գնել հավաքածուի կոդեր, համարներ և ապրանքներ կոդով։ Կայքի օպերատորը և նրա տվյալները նշված են «Կոնտակտներ» բաժնում։"] },
       { h: "2. Հաշիվ", p: ["Մուտքը՝ միայն Google-ով կամ Apple-ով։ Գաղտնաբառեր չենք պահում։", "Կայքից կարելի է օգտվել 16 տարեկանից։ Դուք պատասխանատու եք ձեր հաշվում կատարվողի համար։", "Հաշիվը կարելի է ջնջել ցանկացած պահի պրոֆիլում՝ կոդերի, հիշողության, լուսանկարների և տեսանյութերի հետ։"] },
       { h: "3. Ձեր կոդերը և հիշողությունը", p: ["Այն ամենը, ինչ վերբեռնում եք, մնում է ձերը։ Թույլ եք տալիս մեզ պահել այն և ցույց տալ նրանց, ում բացել եք կոդը (բոլորին, կոնտակտներին, ընտրված մարդկանց կամ միայն ձեզ)։", "Տպված կոդը տանում է մեր էջը, ուստի հիշողությունը և մուտքը կարելի է փոխել առանց վերատպման։ Տպելուց առաջ ստուգեք, որ կոդը կարդացվում է. կայքն ինքն է ստուգում, բայց տեսախցիկները տարբեր են։"] },
       { h: "4. Ինչն է արգելված", p: ["Խարդախություն և կեղծ կայքեր (այդ թվում կոդ-հղումով), վնասակար ծրագրեր, սպամ։", "Անօրինական, վիրավորական բովանդակություն, ուրիշի անձնական տվյալներ առանց համաձայնության, հետապնդում։", "Ուրիշի լոգոներ և ապրանքային նշաններ առանց իրավունքի՝ վաճառվող դիզայններում և ապրանքներում։", "Բողոքներով ստուգում ենք կոդերը և կարող ենք արգելափակել կոդը կամ հաշիվը։ Արգելափակված կոդը ոչինչ ցույց չի տալիս և ոչ մի տեղ չի տանում։"] },

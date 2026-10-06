@@ -46,7 +46,7 @@ export function CertPage({ id }: { id: string }) {
         <>
           <article className="overflow-hidden rounded-3xl bg-stage p-6 text-on-stage shadow-xl print:shadow-none sm:p-8">
             <div className="flex items-center justify-between gap-3 font-mono text-xs uppercase tracking-[0.2em] text-white/70">
-              <span>QR Studio</span>
+              <span>QR Space</span>
               <span>{t.certOriginal}</span>
             </div>
             <h1 className="mt-4 font-heading text-2xl font-extrabold sm:text-3xl">{t.certTitle}</h1>
@@ -56,7 +56,7 @@ export function CertPage({ id }: { id: string }) {
                 <div>
                   <dt className="text-white/60">{t.certDesign}</dt>
                   <dd className="font-heading text-xl font-bold">{(cert.design && tr(cert.design.name, lang)) ?? (cert.edition.design === "number" ? t.numberCode : cert.edition.design)}</dd>
-                  {cert.design?.collab && <dd className="text-sm font-semibold text-accent">QR Studio × {cert.design.collab}</dd>}
+                  {cert.design?.collab && <dd className="text-sm font-semibold text-accent">QR Space × {cert.design.collab}</dd>}
                 </div>
                 <div>
                   <dt className="text-white/60">{t.editionOf}</dt>

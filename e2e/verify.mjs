@@ -1,6 +1,6 @@
 import QRCode from "qrcode";
 import { chromium } from "playwright";
-// «Проверить код»: по фото с QR сайт отличает настоящий код QR Studio от наклейки с чужой ссылкой.
+// «Проверить код»: по фото с QR сайт отличает настоящий код QR Space от наклейки с чужой ссылкой.
 const out = new URL("./out/", import.meta.url).pathname;
 const B = "http://localhost:3720";
 const browser = await chromium.launch();
@@ -23,12 +23,12 @@ const check = async (text, expect, name) => {
   await p.locator("input[type=file]").setInputFiles(await png(text));
   await p.waitForSelector(`text=${expect}`, { timeout: 15000 }).then(() => ok(true, name), () => ok(false, name));
 };
-await check(`${list.base}/c/${pet.id}`, "Настоящий код QR Studio", "genuine pet code");
+await check(`${list.base}/c/${pet.id}`, "Настоящий код QR Space", "genuine pet code");
 ok(await p.locator("text=Бублик").count() >= 1, "shows the pet's name");
 await p.screenshot({ path: out + "v-ours.png", fullPage: true });
-await check(`${list.base.toUpperCase()}/K/${car.short}`, "Настоящий код QR Studio", "genuine small code (/K/…)");
+await check(`${list.base.toUpperCase()}/K/${car.short}`, "Настоящий код QR Space", "genuine small code (/K/…)");
 ok(await p.locator("text=Моя машина").count() === 0, "car name stays hidden");
-await check("https://evil-pay.example/parking", "Это не код QR Studio", "foreign sticker detected");
+await check("https://evil-pay.example/parking", "Это не код QR Space", "foreign sticker detected");
 ok(await p.locator("text=evil-pay.example").count() >= 1, "shows where the fake leads");
 await p.screenshot({ path: out + "v-fake.png", fullPage: true });
 await check(`${list.base}/c/NOPE1234`, "такого кода нет", "our link, missing code");

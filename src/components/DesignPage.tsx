@@ -86,7 +86,7 @@ export function DesignPage({ id }: { id: string }) {
         <div className="space-y-5">
           <div>
             {d.drop && <span className="mb-2 inline-block rounded-full bg-accent px-3 py-1 text-xs font-semibold text-on-accent">{t.dropOfDay}</span>}
-            {d.collab && <div className="mb-1 text-sm font-bold uppercase tracking-wider text-accent-ink">QR Studio × {d.collab}</div>}
+            {d.collab && <div className="mb-1 text-sm font-bold uppercase tracking-wider text-accent-ink">QR Space × {d.collab}</div>}
             <h1 className="font-heading text-3xl font-extrabold tracking-tight">{tr(d.name, lang)}</h1>
             <p className="mt-1 text-sm text-muted">{d.by ? `${t.designBy}: ${personName(d.by, lang)}` : t.byDesigner}</p>
             <p className="mt-3">{tr(d.about, lang)}</p>

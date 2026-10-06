@@ -2,7 +2,7 @@
 import type { Dict } from "./i18n";
 
 export const de: Dict = {
-  appName: "QR Studio",
+  appName: "QR Space",
   tagline: "Ein QR-Code aus einem Link, WLAN oder Kontakt — oder aus deinem eigenen Foto",
   privacy: "Alles passiert auf deinem Gerät — nichts wird hochgeladen",
   step1: "Was in den Code kommt",
@@ -245,7 +245,7 @@ export const de: Dict = {
   canEdit: "Du kannst Einträge hinzufügen",
   notFound: "Code nicht gefunden",
   notFoundHint: "Vielleicht hat der Besitzer ihn gelöscht",
-  madeWith: "Erstellt mit QR Studio",
+  madeWith: "Erstellt mit QR Space",
   makeYours: "Eigenen Code erstellen",
   demoNote: "Demo: Die Daten liegen auf diesem Computer",
   "tpl.memory": "Erinnerung",
@@ -324,7 +324,7 @@ export const de: Dict = {
   tryLink: "Mit deinem Link ausprobieren",
   tryLinkHint: "Sieh dir an, wie der Code aussehen wird. Nach dem Kauf führt er zu deiner Erinnerungsseite — jederzeit änderbar.",
   tryLinkPlaceholder: "Dein Link oder Text",
-  byDesigner: "Design: QR Studio",
+  byDesigner: "Design: QR Space",
   loginToBuy: "Zum Kaufen anmelden",
   buying: "Wird gekauft…",
   buyError: "Kauf fehlgeschlagen — versuch es noch einmal",
@@ -596,7 +596,7 @@ export const de: Dict = {
   liveRecording: "Wird aufgenommen…",
   liveBad: "In diesem Browser ließ sich kein Video aufnehmen — versuch Chrome oder Safari.",
   howTitle: "So funktioniert’s",
-  howLead: "QR Studio macht schöne QR-Codes mit einer Erinnerung dahinter. Klebe einen Code irgendwohin — ein Scan zeigt das Richtige den Personen, die du erlaubst.",
+  howLead: "QR Space macht schöne QR-Codes mit einer Erinnerung dahinter. Klebe einen Code irgendwohin — ein Scan zeigt das Richtige den Personen, die du erlaubst.",
   how1: "Gestalte einen schönen Code",
   how1Text: "Punkt- und Eckenformen, Farben, Texturen, Tiefe, ein Code aus deinen Fotos. Die Seite prüft, ob Handys ihn lesen.",
   how2: "Leg eine Erinnerung dahinter",

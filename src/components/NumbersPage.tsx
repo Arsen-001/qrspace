@@ -72,7 +72,7 @@ export function NumbersPage() {
   return (
     <Shell t={t} lang={lang}>
       <section className="rounded-3xl bg-stage p-6 text-on-stage sm:p-10">
-        <div className="font-mono text-xs uppercase tracking-[0.2em] text-white/60">QR Studio</div>
+        <div className="font-mono text-xs uppercase tracking-[0.2em] text-white/60">QR Space</div>
         <h1 className="mt-3 max-w-2xl font-heading text-3xl font-extrabold leading-tight text-balance sm:text-5xl">{t.numbersTitle}</h1>
         <p className="mt-3 max-w-xl text-sm text-white/80">{t.numbersHint}</p>
         {data && <p className="mt-3 text-sm font-semibold text-accent">{fill(t.numbersSold, { sold: fmtNumber(data.sold), max: fmtNumber(data.max) })}</p>}
