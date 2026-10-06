@@ -30,7 +30,7 @@ export function HowPage() {
               <span className="font-heading text-lg font-bold leading-tight">{s.title}</span>
             </div>
             <p className="mt-3 flex-1 text-sm text-muted">{s.text}</p>
-            <Link href={s.href} className="mt-4 text-sm font-semibold text-accent">
+            <Link href={s.href} className="mt-4 text-sm font-semibold text-accent-ink">
               {s.cta} →
             </Link>
           </li>

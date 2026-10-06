@@ -53,7 +53,7 @@ function Thumbs({ t, files, onMove, onRemove }: { t: Dict; files: File[]; onMove
               aria-label={t.moveLeft}
               title={t.moveLeft}
               onClick={() => onMove(i)}
-              className="absolute -bottom-1.5 -left-1.5 grid h-6 w-6 place-items-center rounded-full border border-line bg-card text-xs leading-none shadow-sm hover:text-accent"
+              className="absolute -bottom-1.5 -left-1.5 grid h-6 w-6 place-items-center rounded-full border border-line bg-card text-xs leading-none shadow-sm hover:text-accent-ink"
             >
               ←
             </button>

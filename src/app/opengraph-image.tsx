@@ -24,20 +24,20 @@ export default function Image() {
   const S = 22;
   return new ImageResponse(
     (
-      <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 90px", background: "#f6f5f2" }}>
+      <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 90px", background: "#0b0b0c" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-            <div style={{ width: 72, height: 72, borderRadius: 18, background: "#2e3fd6", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 40, fontWeight: 800 }}>
+            <div style={{ width: 72, height: 72, borderRadius: 10, background: "#c6ff2e", display: "flex", alignItems: "center", justifyContent: "center", color: "#0b0b0c", fontSize: 40, fontWeight: 800 }}>
               QR
             </div>
-            <div style={{ fontSize: 64, fontWeight: 800, color: "#17161a" }}>QR Studio</div>
+            <div style={{ fontSize: 64, fontWeight: 800, color: "#f3f2ec" }}>QR Studio</div>
           </div>
-          <div style={{ fontSize: 38, color: "#46434c", maxWidth: 560, lineHeight: 1.25 }}>Beautiful QR codes with a memory behind them</div>
-          <div style={{ fontSize: 28, color: "#2e3fd6", fontWeight: 700 }}>Photos · Video · Who sees it · Collectibles</div>
+          <div style={{ fontSize: 38, color: "#b9b7ae", maxWidth: 560, lineHeight: 1.25 }}>Beautiful QR codes with a memory behind them</div>
+          <div style={{ fontSize: 28, color: "#c6ff2e", fontWeight: 700 }}>Photos · Video · Who sees it · Collectibles</div>
         </div>
-        <div style={{ display: "flex", flexWrap: "wrap", width: N * S + 40, padding: 20, background: "#fff", borderRadius: 28, boxShadow: "0 20px 60px rgba(0,0,0,0.12)" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", width: N * S + 40, padding: 20, border: "2px solid #2a2a2e", borderRadius: 14 }}>
           {Array.from({ length: N * N }, (_, i) => (
-            <div key={i} style={{ width: S, height: S, borderRadius: 6, background: cell(i % N, Math.floor(i / N)) ? (i % 5 ? "#1b2a4a" : "#2e3fd6") : "transparent" }} />
+            <div key={i} style={{ width: S, height: S, borderRadius: 4, background: cell(i % N, Math.floor(i / N)) ? (i % 5 ? "#f3f2ec" : "#c6ff2e") : "transparent" }} />
           ))}
         </div>
       </div>

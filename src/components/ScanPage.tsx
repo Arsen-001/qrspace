@@ -352,7 +352,7 @@ export function ScanPage({ id, invite }: { id: string; invite: string | null }) 
 
       <footer className="mt-10 flex flex-col items-center gap-2 text-center text-sm text-muted">
         <span>{t.madeWith}</span>
-        <Link href="/" className="font-semibold text-accent">
+        <Link href="/" className="font-semibold text-accent-ink">
           {t.makeYours} →
         </Link>
         {loaded?.code && loaded.code.access !== "owner" && !loaded.code.blocked && <ReportBox t={t} id={id} />}

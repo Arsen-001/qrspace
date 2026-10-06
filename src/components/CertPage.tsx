@@ -44,7 +44,7 @@ export function CertPage({ id }: { id: string }) {
         <Notice>{t.notFound}</Notice>
       ) : (
         <>
-          <article className="overflow-hidden rounded-3xl bg-[#11131a] p-6 text-[#f2f3f7] shadow-xl print:shadow-none sm:p-8">
+          <article className="overflow-hidden rounded-3xl bg-stage p-6 text-on-stage shadow-xl print:shadow-none sm:p-8">
             <div className="flex items-center justify-between gap-3 font-mono text-xs uppercase tracking-[0.2em] text-white/70">
               <span>QR Studio</span>
               <span>{t.certOriginal}</span>
@@ -56,11 +56,11 @@ export function CertPage({ id }: { id: string }) {
                 <div>
                   <dt className="text-white/60">{t.certDesign}</dt>
                   <dd className="font-heading text-xl font-bold">{(cert.design && tr(cert.design.name, lang)) ?? (cert.edition.design === "number" ? t.numberCode : cert.edition.design)}</dd>
-                  {cert.design?.collab && <dd className="text-sm font-semibold text-[#9aa6ff]">QR Studio × {cert.design.collab}</dd>}
+                  {cert.design?.collab && <dd className="text-sm font-semibold text-accent">QR Studio × {cert.design.collab}</dd>}
                 </div>
                 <div>
                   <dt className="text-white/60">{t.editionOf}</dt>
-                  <dd className="font-heading text-3xl font-extrabold text-[#9aa6ff]">
+                  <dd className="font-heading text-3xl font-extrabold text-accent">
                     {t.editionNo} {cert.edition.no}
                     {cert.edition.of !== null && <span className="text-xl text-white/70"> / {cert.edition.of.toLocaleString("ru-RU").replace(/\u00a0/g, " ")}</span>}
                   </dd>

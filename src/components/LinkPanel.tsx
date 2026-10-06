@@ -46,7 +46,7 @@ export function LinkPanel({ t, code, save }: { t: Dict; code: CodeView; save: (p
       {code.target ? (
         <p className="mt-3 break-all text-xs text-muted">
           {t.linkNow}:{" "}
-          <a href={code.target} target="_blank" rel="noreferrer" className="font-medium text-accent underline underline-offset-2">
+          <a href={code.target} target="_blank" rel="noreferrer" className="font-medium text-accent-ink underline underline-offset-2">
             {code.target}
           </a>
         </p>

@@ -1,21 +1,24 @@
 @import "tailwindcss";
 
-/* Цвета сайта — только здесь; светлая и тёмная тема. */
+/* Цвета сайта — только здесь (вид с 06.10.2026): бетон, чернила и кислотный лайм; светлая и тёмная тема.
+   Лайм — заливка кнопок и выбранного; как текст и рамка на светлом фоне он не читается — там --accent-ink. */
 :root {
-  --bg: #f6f5f2;
-  --card: #ffffff;
-  --field: #fbfaf8;
-  --line: #e4e1da;
-  --ink: #17161a;
-  --muted: #6b6872;
-  --accent: #2e3fd6;
-  --on-accent: #ffffff;
+  --bg: #edebe4;
+  --card: #f9f8f4;
+  --field: #f2f0e9;
+  --line: #d8d5ca;
+  --ink: #0b0b0c;
+  --muted: #5d5b55;
+  --accent: #c6ff2e;
+  --on-accent: #0b0b0c;
+  --accent-ink: #0b0b0c;
   --ok: #15803d;
   --on-ok: #ffffff;
   --ok-soft: #e9f7ee;
   --warn: #c2410c;
   --on-warn: #ffffff;
   --warn-soft: #fdf0e8;
+  /* Чёрная «сцена»: первый экран, дроп дня, номера, сертификат. */
   --stage: #0b0b0c;
   --on-stage: #f3f2ec;
   --stage-line: #2a2a2e;
@@ -23,21 +26,30 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #111114;
-    --card: #19191e;
-    --field: #202027;
-    --line: #2e2e37;
-    --ink: #f1f0f4;
-    --muted: #a09eaa;
-    --accent: #7c8bff;
-    --on-accent: #0d0f24;
+    --bg: #0b0b0c;
+    --card: #141416;
+    --field: #1b1b1e;
+    --line: #2b2b30;
+    --ink: #f3f2ec;
+    --muted: #9c9a92;
+    --accent-ink: #c6ff2e;
     --ok: #22c55e;
     --on-ok: #052e16;
     --ok-soft: #13261a;
     --warn: #fb923c;
     --on-warn: #2a1204;
     --warn-soft: #2a1a10;
+    --stage: #141416;
+    --stage-line: #2b2b30;
   }
+}
+
+@theme {
+  --radius-md: 3px;
+  --radius-lg: 4px;
+  --radius-xl: 6px;
+  --radius-2xl: 10px;
+  --radius-3xl: 14px;
 }
 
 @theme inline {
@@ -58,8 +70,10 @@
   --color-stage: var(--stage);
   --color-on-stage: var(--on-stage);
   --color-stage-line: var(--stage-line);
-  --font-sans: var(--font-body), var(--font-armenian), system-ui, sans-serif;
-  --font-heading: var(--font-head), var(--font-armenian), system-ui, sans-serif;
+  --font-sans: var(--font-text), var(--font-armenian), system-ui, sans-serif;
+  --font-heading: var(--font-display), var(--font-armenian), system-ui, sans-serif;
+  --font-mono: var(--font-code), ui-monospace, monospace;
+  --color-accent-ink: var(--accent-ink);
 }
 
 html {
@@ -67,9 +81,22 @@ html {
 }
 
 body {
-  background: var(--bg);
+  background-color: var(--bg);
+  /* Точки-модули QR на фоне. */
+  background-image: radial-gradient(color-mix(in oklab, var(--ink) 10%, transparent) 1px, transparent 1.3px);
+  background-size: 22px 22px;
   color: var(--ink);
   font-family: var(--font-sans);
+}
+
+:is(input, textarea, select):focus {
+  border-color: var(--ink);
+}
+/* Unbounded широкий: длинное слово («Конфиденциальность») на телефоне переносим, а не выталкиваем за экран. */
+.font-heading {
+  letter-spacing: -0.02em;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 button:not(:disabled) {
@@ -86,61 +113,6 @@ button:not(:disabled) {
   body {
     background: #fff;
   }
-}
-
-/* Новый вид — пока только главная страница (владелец, 06.10.2026): бетон, чернила и кислотный лайм,
-   широкий Unbounded в заголовках, моноширинные подписи, точки-модули QR на фоне, острые углы. */
-.x-home {
-  --bg: #edebe4;
-  --card: #f9f8f4;
-  --field: #f2f0e9;
-  --line: #d8d5ca;
-  --ink: #0b0b0c;
-  --muted: #5d5b55;
-  --accent: #c6ff2e;
-  --on-accent: #0b0b0c;
-  --accent-ink: #0b0b0c;
-  --stage: #0b0b0c;
-  --on-stage: #f3f2ec;
-  --stage-line: #2a2a2e;
-  --radius-lg: 4px;
-  --radius-xl: 6px;
-  --radius-2xl: 10px;
-  --radius-3xl: 14px;
-  --font-head: var(--font-display);
-  font-family: var(--font-text), var(--font-armenian), system-ui, sans-serif;
-  background-color: var(--bg);
-  background-image: radial-gradient(color-mix(in oklab, var(--ink) 10%, transparent) 1px, transparent 1.3px);
-  background-size: 22px 22px;
-  color: var(--ink);
-}
-
-@media (prefers-color-scheme: dark) {
-  .x-home {
-    --bg: #0b0b0c;
-    --card: #141416;
-    --field: #1b1b1e;
-    --line: #2b2b30;
-    --ink: #f3f2ec;
-    --muted: #9c9a92;
-    --accent-ink: #c6ff2e;
-    --stage: #141416;
-    --stage-line: #2b2b30;
-  }
-}
-
-/* Лайм на светлом фоне не читается как текст и рамка фокуса — там чернила. */
-.x-home .text-accent {
-  color: var(--accent-ink);
-}
-.x-home :is(input, textarea, select):focus {
-  border-color: var(--ink);
-}
-.x-home .font-heading {
-  letter-spacing: -0.02em;
-}
-.x-home .font-mono {
-  font-family: var(--font-code), ui-monospace, monospace;
 }
 
 /* Бегущая строка. */

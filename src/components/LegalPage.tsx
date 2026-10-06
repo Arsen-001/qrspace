@@ -47,7 +47,7 @@ export function LegalPage({ doc }: { doc: LegalDoc }) {
               {operator.address && <p>{operator.address}</p>}
               {operator.email && (
                 <p>
-                  <a href={`mailto:${operator.email}`} className="text-accent underline underline-offset-2">
+                  <a href={`mailto:${operator.email}`} className="text-accent-ink underline underline-offset-2">
                     {operator.email}
                   </a>
                 </p>

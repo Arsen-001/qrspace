@@ -82,14 +82,14 @@ export function SellBox({ t, code }: { t: Dict; code: CodeView }) {
   const n = Math.max(1, Math.round(Number(price) || 0));
   return (
     <section className="rounded-2xl border border-line bg-card p-4">
-      <Link href={`/cert/${code.id}`} className="mb-3 flex min-h-11 items-center justify-center rounded-xl bg-[#11131a] px-4 text-sm font-semibold text-white">
+      <Link href={`/cert/${code.id}`} className="mb-3 flex min-h-11 items-center justify-center rounded-xl bg-stage px-4 text-sm font-semibold text-on-stage">
         {t.certTitle} →
       </Link>
       <h2 className="font-heading text-base font-bold">{t.sellTitle}</h2>
       {lot ? (
         <p className="mt-2 text-sm">
           {t.onSale} ·{" "}
-          <Link href={`/market/lot/${lot.id}`} className="font-semibold text-accent underline underline-offset-2">
+          <Link href={`/market/lot/${lot.id}`} className="font-semibold text-accent-ink underline underline-offset-2">
             {t.openLot}
           </Link>
         </p>

@@ -52,7 +52,7 @@ function Inbox({ t, lang, messages, save }: { t: Dict; lang: Lang; messages: Mes
                   {messageTitle(t, m) && <div className="mt-1 font-semibold">{messageTitle(t, m)}</div>}
                   {m.text && <p className="mt-0.5 whitespace-pre-wrap break-words text-sm">{m.text}</p>}
                   {m.place && (
-                    <a href={`https://maps.google.com/?q=${m.place.lat},${m.place.lon}`} target="_blank" rel="noreferrer" className="mt-1 inline-block text-xs font-semibold text-accent underline underline-offset-2">
+                    <a href={`https://maps.google.com/?q=${m.place.lat},${m.place.lon}`} target="_blank" rel="noreferrer" className="mt-1 inline-block text-xs font-semibold text-accent-ink underline underline-offset-2">
                       📍 {t.openMap}
                     </a>
                   )}

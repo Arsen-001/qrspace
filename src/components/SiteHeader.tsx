@@ -9,15 +9,23 @@ import { Avatar, personName } from "./Avatar";
 import { Bell } from "./Bell";
 
 export function Logo() {
+  // Тот же знак, что в иконке сайта: чёрная плитка, три «глаза» с лаймом и точки.
+  const eyes = [[8, 8], [56, 8], [8, 56]];
+  const dots = [[60, 60], [78, 60], [60, 78], [78, 78]];
   return (
-    <svg viewBox="0 0 24 24" className="h-8 w-8 text-accent" aria-hidden>
-      <rect x="2" y="2" width="8" height="8" rx="2" fill="none" stroke="currentColor" strokeWidth="2" />
-      <rect x="14" y="2" width="8" height="8" rx="2" fill="none" stroke="currentColor" strokeWidth="2" />
-      <rect x="2" y="14" width="8" height="8" rx="2" fill="none" stroke="currentColor" strokeWidth="2" />
-      <circle cx="16" cy="16" r="1.6" fill="currentColor" />
-      <circle cx="20.5" cy="16" r="1.6" fill="currentColor" />
-      <circle cx="16" cy="20.5" r="1.6" fill="currentColor" />
-      <circle cx="20.5" cy="20.5" r="1.6" fill="currentColor" />
+    <svg viewBox="0 0 100 100" className="h-9 w-9 shrink-0 rounded-md border border-stage-line text-on-stage" aria-hidden>
+      <rect width="100" height="100" className="fill-stage" />
+      <g transform="translate(8 8) scale(0.84)">
+        {eyes.map(([x, y]) => (
+          <g key={`${x}${y}`}>
+            <rect x={x + 3} y={y + 3} width="30" height="30" rx="5" fill="none" stroke="currentColor" strokeWidth="6" />
+            <rect x={x + 12} y={y + 12} width="12" height="12" rx="2" className="fill-accent" />
+          </g>
+        ))}
+        {dots.map(([x, y]) => (
+          <rect key={`${x}${y}`} x={x} y={y} width="12" height="12" rx="2.5" className={x === 78 && y === 78 ? "fill-accent" : "fill-current"} />
+        ))}
+      </g>
     </svg>
   );
 }

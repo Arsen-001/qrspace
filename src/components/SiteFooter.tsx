@@ -6,7 +6,7 @@ import { legalFor } from "@/lib/legal";
 import type { Lang } from "@/lib/i18n";
 
 export function SiteFooter({ t, lang, lead }: { t: Dict; lang: Lang; lead?: string }) {
-  const link = "font-semibold text-accent";
+  const link = "font-semibold text-accent-ink";
   return (
     <footer className="mt-12 space-y-3 text-center text-xs text-muted print:hidden">
       {lead && <p className="text-sm">{lead}</p>}

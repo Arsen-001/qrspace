@@ -106,7 +106,7 @@ export function ProfilePage() {
                       {x.key.startsWith("code:") && !x.key.startsWith("code:order-") && (
                         <>
                           {" · "}
-                          <Link href={`/codes/${x.key.slice(5)}`} className="text-accent underline underline-offset-2">
+                          <Link href={`/codes/${x.key.slice(5)}`} className="text-accent-ink underline underline-offset-2">
                             {t.openCode}
                           </Link>
                         </>

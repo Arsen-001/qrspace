@@ -49,7 +49,7 @@ function DesignCard({ t, lang, d, link, sold }: { t: Dict; lang: Lang; d: Design
           <span className="min-w-0 truncate font-heading font-bold">{tr(d.name, lang)}</span>
           <span className="shrink-0 font-heading font-extrabold">${d.price}</span>
         </div>
-        {d.collab && <div className="px-1 text-xs font-semibold text-accent">QR Studio × {d.collab}</div>}
+        {d.collab && <div className="px-1 text-xs font-semibold text-accent-ink">QR Studio × {d.collab}</div>}
         <div className="mt-0.5 px-1 pb-1 text-xs">
           <EditionNote t={t} d={d} sold={sold ? (sold[d.id] ?? 0) : undefined} />
         </div>
@@ -72,9 +72,9 @@ export function MarketPage() {
       <h1 className="font-heading text-3xl font-extrabold tracking-tight sm:text-4xl">{t.marketTitle}</h1>
       <p className="mt-2 max-w-2xl text-sm text-muted">{t.marketHint}</p>
 
-      <Link href={`/market/${drop.id}`} className="mt-6 grid gap-5 overflow-hidden rounded-3xl bg-[#151a3d] p-5 text-white sm:grid-cols-[minmax(0,1fr)_minmax(0,280px)] sm:items-center sm:p-8">
+      <Link href={`/market/${drop.id}`} className="mt-6 grid gap-5 overflow-hidden rounded-3xl bg-stage p-5 text-on-stage sm:grid-cols-[minmax(0,1fr)_minmax(0,280px)] sm:items-center sm:p-8">
         <div className="min-w-0">
-          <span className="inline-block rounded-full bg-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-wider">{t.dropOfDay}</span>
+          <span className="inline-block rounded-full bg-accent px-3 py-1 text-xs font-bold uppercase tracking-wider text-on-accent">{t.dropOfDay}</span>
           <div className="mt-3 font-heading text-3xl font-extrabold sm:text-5xl">{tr(drop.name, lang)}</div>
           <p className="mt-2 max-w-md text-sm text-white/80">{tr(drop.about, lang)}</p>
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">

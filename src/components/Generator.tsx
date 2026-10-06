@@ -29,7 +29,7 @@ export function Generator() {
   const { me, base } = useMe();
 
   return (
-    <div className="x-home min-h-screen">
+    <div>
       <div className="mx-auto w-full max-w-6xl px-4 pb-16 sm:px-6">
         <SiteHeader t={t} lang={lang} />
 

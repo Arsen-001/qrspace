@@ -157,7 +157,7 @@ function Entry({ t, lang, code, block, me, onChange }: { t: Dict; lang: Lang; co
           <span className="ml-auto flex gap-1">
             {editing !== null ? (
               <>
-                <button type="button" disabled={busy} onClick={() => run(() => api.editBlock(code.id, block.id, editing))} className="min-h-9 rounded-lg px-2.5 font-semibold text-accent">
+                <button type="button" disabled={busy} onClick={() => run(() => api.editBlock(code.id, block.id, editing))} className="min-h-9 rounded-lg px-2.5 font-semibold text-accent-ink">
                   {t.save}
                 </button>
                 <button type="button" onClick={() => setEditing(null)} className="min-h-9 rounded-lg px-2.5 font-medium hover:text-ink">

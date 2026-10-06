@@ -15,7 +15,7 @@ type Check = { n: number; tier: NumberTier; price: number; free: boolean; owner:
 type Showcase = { recent: { n: number; at: string; owner: string; code: string }[]; showcase: { n: number; tier: NumberTier; price: number; free: boolean }[]; sold: number; max: number };
 
 const TIER_STYLE: Record<NumberTier, string> = {
-  legend: "bg-[#11131a] text-[#ffd36b]",
+  legend: "bg-stage text-accent ring-1 ring-accent",
   rare: "bg-[#2e1a5e] text-[#c9b8ff]",
   special: "bg-accent text-on-accent",
   nice: "bg-field text-ink",
@@ -71,11 +71,11 @@ export function NumbersPage() {
 
   return (
     <Shell t={t} lang={lang}>
-      <section className="rounded-3xl bg-[#11131a] p-6 text-white sm:p-10">
+      <section className="rounded-3xl bg-stage p-6 text-on-stage sm:p-10">
         <div className="font-mono text-xs uppercase tracking-[0.2em] text-white/60">QR Studio</div>
         <h1 className="mt-3 max-w-2xl font-heading text-3xl font-extrabold leading-tight text-balance sm:text-5xl">{t.numbersTitle}</h1>
         <p className="mt-3 max-w-xl text-sm text-white/80">{t.numbersHint}</p>
-        {data && <p className="mt-3 text-sm font-semibold text-[#9aa6ff]">{fill(t.numbersSold, { sold: fmtNumber(data.sold), max: fmtNumber(data.max) })}</p>}
+        {data && <p className="mt-3 text-sm font-semibold text-accent">{fill(t.numbersSold, { sold: fmtNumber(data.sold), max: fmtNumber(data.max) })}</p>}
         <form
           className="mt-6 flex max-w-md gap-2"
           onSubmit={(e) => {
@@ -92,7 +92,7 @@ export function NumbersPage() {
             aria-label={t.numberSearch}
             className="min-h-12 min-w-0 flex-1 rounded-xl border border-white/20 bg-white/10 px-4 font-heading text-2xl font-bold text-white outline-none placeholder:text-white/30 focus:border-white/60"
           />
-          <button type="submit" disabled={!valid} className="min-h-12 rounded-xl bg-white px-5 text-sm font-semibold text-[#11131a] disabled:opacity-40">
+          <button type="submit" disabled={!valid} className="min-h-12 rounded-xl bg-accent px-5 text-sm font-bold text-on-accent disabled:opacity-40">
             {t.numberCheck}
           </button>
         </form>
@@ -106,18 +106,18 @@ export function NumbersPage() {
               <>
                 <p className="mt-2 text-sm text-white/80">{t.numberFree}</p>
                 {!ready ? null : me ? (
-                  <button type="button" disabled={busy} onClick={() => buy(check.n)} className="mt-3 min-h-12 w-full rounded-xl bg-[#ffd36b] px-5 text-sm font-bold text-[#11131a] disabled:opacity-50">
+                  <button type="button" disabled={busy} onClick={() => buy(check.n)} className="mt-3 min-h-12 w-full rounded-xl bg-accent px-5 text-sm font-bold text-on-accent disabled:opacity-50">
                     {t.buy} — ${check.price}
                   </button>
                 ) : (
-                  <Link href="/login?next=/numbers" className="mt-3 grid min-h-12 place-items-center rounded-xl bg-[#ffd36b] px-5 text-sm font-bold text-[#11131a]">
+                  <Link href="/login?next=/numbers" className="mt-3 grid min-h-12 place-items-center rounded-xl bg-accent px-5 text-sm font-bold text-on-accent">
                     {t.loginToBuy}
                   </Link>
                 )}
                 <p className="mt-2 text-xs text-white/60">{t.buyDemo}</p>
               </>
             ) : check.owner === me ? (
-              <p className="mt-2 text-sm font-semibold text-[#ffd36b]">
+              <p className="mt-2 text-sm font-semibold text-accent">
                 ✓ {t.numberYours}{" "}
                 <Link href={`/codes/${check.code}`} className="underline underline-offset-2">
                   {t.editCode}
@@ -126,7 +126,7 @@ export function NumbersPage() {
             ) : (
               <p className="mt-2 text-sm text-white/80">
                 {fill(t.numberTaken, { who: check.owner ? personName(check.owner, lang) : "—" })}{" "}
-                <Link href="/market" className="font-semibold text-[#9aa6ff] underline underline-offset-2">
+                <Link href="/market" className="font-semibold text-accent underline underline-offset-2">
                   {t.resaleTitle}
                 </Link>
               </p>

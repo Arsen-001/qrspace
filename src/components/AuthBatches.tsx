@@ -52,7 +52,7 @@ export function AuthBatchesPage() {
       <ol className="mt-4 grid max-w-3xl gap-2 text-sm sm:grid-cols-3">
         {[t.authStep1, t.authStep2, t.authStep3].map((s, i) => (
           <li key={i} className="rounded-2xl border border-line bg-card p-4">
-            <span className="mb-1 block font-heading text-lg font-extrabold text-accent">{i + 1}</span>
+            <span className="mb-1 block font-heading text-lg font-extrabold text-accent-ink">{i + 1}</span>
             {s}
           </li>
         ))}
@@ -105,7 +105,7 @@ export function AuthBatchesPage() {
                     <span className="text-sm">
                       {fill2(t.authClaimed, b.claimed, b.count)}
                     </span>
-                    <span className="text-sm font-semibold text-accent">{t.authLabels} →</span>
+                    <span className="text-sm font-semibold text-accent-ink">{t.authLabels} →</span>
                   </Link>
                 </li>
               ))}
