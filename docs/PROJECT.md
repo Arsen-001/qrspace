@@ -30,6 +30,10 @@
 ⭐ QR Vivid — qrvivid.com (рекомендация), QR Fresco — qrfresco.com, ScanFresco — scanfresco.com,
 Qrafty — qrafty.io, Qrtisan — qrtisan.io, QR Canvas — qrcanvas.io, Nshan (арм. «знак») — nshan.io.
 Короткие .com с «QR» почти все заняты. В шапке пока «QR Studio».
+**06.10.2026 владелец: «давай другое имя»** (не QR Vivid). Новые варианты, .com свободен (whois 06.10, не гарантия):
+⭐ QR Crown — qrcrown.com (корона = бренд № 1, коллекционные коды и номера; знак — корона из точек), QR Lore —
+qrlore.com (код с историей), Lumtag — lumtag.com (без «QR» — проще зарегистрировать товарный знак), KinQR — kinqr.com
+(семья, память), Nshan QR — nshanqr.com (армянское «знак»). Заняты: почти все короткие (Qrown, Memora, Sigil, Keepsy…).
 
 ## Решения владельца
 
@@ -602,3 +606,5 @@ Next.js 16 + TypeScript + Tailwind 4, всё в браузере, сервера
 - [ ] Приложение: открытые коды видны всем без приложения, закрытые — через приложение (мой совет; подтвердить).
 - [ ] «Мои контакты»: друзья в приложении или сверка с телефонной книгой (совет: начать с друзей).
 - [ ] Фирменный стиль: какие 3–5 коллекций и какой общий знак на наших кодах (рано — обсуждать позже, много).
+
+**06.10.2026, qr+4 буквы** (whois 06.10, не гарантия). Свободны: qrlore, qrrare, qrepic, qrcult, qrmyth, qrheir, qrfolk, qrkith, qrrune, qrjade, qrruby, qraria, qrgala, qramor; ещё qrvow, qrcrown, qrrelic, qrregal, qrroyal, qrnoble. Заняты: qrmemo, qrsoul, qrlife, qrkeep, qrtale, qrmark, qrking, qrstar, qrgold, qrvibe, qrhype, qricon, qrmint, qrlove, qrsaga, qrnova, qraura и др.
