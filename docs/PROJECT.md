@@ -623,3 +623,5 @@ Next.js 16 + TypeScript + Tailwind 4, всё в браузере, сервера
 **Владелец: «вот это уже другое дело»** → вид перенесён на весь сайт: цвета в :root, радиусы и шрифты в @theme, чёрные блоки
 (дроп дня, номера, сертификат) — токены stage/on-stage, текст-ссылки — text-accent-ink (лайм как текст на светлом не читается),
 новый знак (чёрная плитка, «глаза» с лаймом) в шапке, иконках, favicon и превью ссылок.
+
+**06.10.2026, ещё 376 слов qr+слово .com** (whois): свободны ещё alpha amaze awake brook butterfly canyon cape caramel carnival cedar chief citrus cliff clover coral cotton crane creek daisy dawn delta desert dew dolphin dove drum dune dusk envy evergreen fairy feather fern ferry fig finch frost gaze ginger glacier glade grace grape grin harp hazel herb hood igloo iron jaguar jazz jelly judo juno kayak kettle lace latte lotus mercury mist moss moth mountain nectar needle night omega orca orchid palm panther pepper piano pine plum poppy puma pumpkin quartz quill rain rainbow raven reef ripple robin rose sand saturn shadow shell sierra snow sphinx spice squid swan timber torch tropic tulip tundra urban vapor vega venus vine walnut willow wind winter 
