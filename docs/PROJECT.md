@@ -608,3 +608,5 @@ Next.js 16 + TypeScript + Tailwind 4, всё в браузере, сервера
 - [ ] Фирменный стиль: какие 3–5 коллекций и какой общий знак на наших кодах (рано — обсуждать позже, много).
 
 **06.10.2026, qr+4 буквы** (whois 06.10, не гарантия). Свободны: qrlore, qrrare, qrepic, qrcult, qrmyth, qrheir, qrfolk, qrkith, qrrune, qrjade, qrruby, qraria, qrgala, qramor; ещё qrvow, qrcrown, qrrelic, qrregal, qrroyal, qrnoble. Заняты: qrmemo, qrsoul, qrlife, qrkeep, qrtale, qrmark, qrking, qrstar, qrgold, qrvibe, qrhype, qricon, qrmint, qrlove, qrsaga, qrnova, qraura и др.
+
+**06.10.2026, qr+5 букв** (whois 06.10). Свободны: qrcrown, qrrelic, qrroyal, qrregal, qrnoble, qrtotem, qrsigil, qrvivid, qrglory, qrsouls, qrlives, qrmemos, qrbonds, qraurum, qroasis, qrheirs, qrkarma, qrsaint, qraltar. Заняты: qrvault, qrstory, qrheart, qrcharm, qrbadge, qrtoken, qrspark, qrbloom, qrmagic, qrdream, qralbum, qrdiary, qrprime, qrlucky, qrshine, qrglyph, qrpulse и др.
