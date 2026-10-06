@@ -309,9 +309,10 @@ export function ScanPage({ id, invite }: { id: string; invite: string | null }) 
               </Link>
             </div>
           )}
-          {code.lost && code.kind !== "item" && <LostBanner t={t} code={code} />}
+          {code.kind === "link" && <Notice>{t.linkNotSet}</Notice>}
+          {code.lost && code.kind !== "item" && code.kind !== "link" && <LostBanner t={t} code={code} />}
           {code.auth && <AuthCard t={t} lang={lang} code={code} me={me} onChange={setCode} />}
-          {code.kind === "item" ? null : code.access === "closed" && code.kind === "memory" ? (
+          {code.kind === "item" || code.kind === "link" ? null : code.access === "closed" && code.kind === "memory" ? (
             <Closed key={me ?? ""} t={t} code={code} me={me} id={id} invite={invite} onChange={setCode} />
           ) : (
             <>

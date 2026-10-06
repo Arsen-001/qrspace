@@ -34,9 +34,9 @@ export const newId = (len = 8) => Array.from(randomBytes(len), (b) => ALPHABET[b
 
 /** С чего начинается код каждого шаблона. Машина и ключи — хозяин скрыт, память закрыта; питомец — анкета открыта. */
 export function kindDefaults(kind: Kind): Pick<CodeRecord, "kind" | "visibility" | "showOwner" | "contact" | "lost" | "reward" | "messages" | "tasks"> {
-  const contact = { enabled: kind !== "memory" && kind !== "item", phone: "", showPhone: false };
+  const contact = { enabled: kind !== "memory" && kind !== "item" && kind !== "link", phone: "", showPhone: false };
   // Вещь бренда: страница открыта всем (там «Оригинал» и регистрация), имя бренда — в самой вещи.
-  return { kind, visibility: kind === "pet" || kind === "item" ? "all" : "me", showOwner: kind === "memory", contact, lost: false, reward: "", messages: [], tasks: [] };
+  return { kind, visibility: kind === "pet" || kind === "item" || kind === "link" ? "all" : "me", showOwner: kind === "memory", contact, lost: false, reward: "", messages: [], tasks: [] };
 }
 
 const style = (p: Partial<SavedStyle>): SavedStyle => ({ ...DEFAULT_STYLE, eyeIcon: null, picture: null, ...p });
@@ -348,6 +348,28 @@ function authView(code: CodeRecord, me: string | null) {
   };
 }
 
+/** Сканы по дням за 30 дней (UTC), всего, за неделю и сколько разных людей со входом. */
+export function statsOf(visits: CodeRecord["visits"]) {
+  const DAY = 86_400_000;
+  const today = Math.floor(Date.now() / DAY);
+  const days = Array.from({ length: 30 }, () => 0);
+  for (const v of visits) {
+    const ago = today - Math.floor(Date.parse(v.at) / DAY);
+    if (ago >= 0 && ago < 30) days[29 - ago] += 1;
+  }
+  return { days, total: visits.length, week: days.slice(-7).reduce((a, b) => a + b, 0), people: new Set(visits.map((v) => v.personId).filter(Boolean)).size };
+}
+
+/** Записать скан (хозяина не считаем). Храним последние 3000. */
+export async function recordVisit(id: string, me: string | null, allowed: boolean) {
+  await mutate((db) => {
+    const c = db.codes.find((x) => x.id === id);
+    if (!c || c.owner === me) return;
+    c.visits.push({ personId: me, at: new Date().toISOString(), allowed });
+    c.visits = c.visits.slice(-3000);
+  });
+}
+
 export function viewOf(code: CodeRecord, me: string | null): CodeView {
   const access = accessOf(code, me);
   const owner = access === "owner";
@@ -383,6 +405,8 @@ export function viewOf(code: CodeRecord, me: string | null): CodeView {
       requests: code.requests,
       invite: code.invite,
       visits: code.visits.slice(-50).reverse(),
+      target: code.target ?? null,
+      stats: statsOf(code.visits),
       messages: [...code.messages].reverse(),
     }),
   };

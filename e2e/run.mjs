@@ -7,7 +7,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 const root = path.resolve(import.meta.dirname, "..");
-const ALL = ["flow", "tags", "look", "market", "designer", "tasks", "pay", "print", "brand", "resale", "shop", "auth", "cert", "live", "security", "a11y", "starters", "verify", "numbers"];
+const ALL = ["flow", "tags", "look", "market", "designer", "tasks", "pay", "print", "brand", "resale", "shop", "auth", "cert", "live", "security", "a11y", "starters", "verify", "numbers", "links"];
 // Вход через Google проверяем с подставным сервером Google (только на этом компьютере).
 const WITH_GOOGLE = ["google", "notify", "batch1"];
 const ENV = "GOOGLE_CLIENT_ID=test-client.apps.googleusercontent.com\nGOOGLE_CLIENT_SECRET=test-secret\nOAUTH_TEST_TOKEN_URL=http://127.0.0.1:3799/token\nDESIGNER_EMAILS=studio.designer@gmail.com\n";

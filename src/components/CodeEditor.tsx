@@ -11,6 +11,8 @@ import { tierOf } from "@/lib/pricing";
 import { DEFAULT_STYLE, fromSaved, toSaved } from "@/lib/qr/style";
 import { AccessPanel } from "./AccessPanel";
 import { ContactPanel } from "./ContactPanel";
+import { LinkPanel } from "./LinkPanel";
+import { ScanStats } from "./ScanStats";
 import { KindIcon } from "./KindIcon";
 import { SellBox } from "./Lots";
 import { CodeDesigner } from "./CodeDesigner";
@@ -20,7 +22,7 @@ import { Notice, Shell } from "./Shell";
 import type { StyleState } from "./StylePanel";
 import { Switch } from "./ui";
 
-type Tab = "memory" | "contact" | "access" | "look";
+type Tab = "memory" | "contact" | "access" | "look" | "link" | "stats";
 type Status = "idle" | "saving" | "saved" | "error";
 
 /** Вид кода: тот же конструктор, что в генераторе; изменения сохраняются сами через секунду. */
@@ -86,7 +88,7 @@ function DeleteCode({ t, id }: { t: Dict; id: string }) {
 
 function Editor({ t, lang, me, base, initial }: { t: Dict; lang: Lang; me: string; base: string; initial: CodeView }) {
   const [code, setCode] = useState(initial);
-  const [tab, setTab] = useState<Tab>(initial.kind === "memory" ? "memory" : "contact");
+  const [tab, setTab] = useState<Tab>(initial.kind === "memory" ? "memory" : initial.kind === "link" ? "link" : "contact");
   const [status, setStatus] = useState<Status>("idle");
   const link = linkOf(base, code);
 
@@ -106,6 +108,7 @@ function Editor({ t, lang, me, base, initial }: { t: Dict; lang: Lang; me: strin
           ...(people !== undefined && { people }),
           ...(showOwner !== undefined && { showOwner }),
           ...(compact !== undefined && { compact }),
+          ...(p.target !== undefined && { target: p.target || null }),
           ...(publicAdd !== undefined && { publicAdd }),
           ...(lost !== undefined && { lost }),
           ...(reward !== undefined && { reward }),
@@ -132,13 +135,21 @@ function Editor({ t, lang, me, base, initial }: { t: Dict; lang: Lang; me: strin
   const unread = code.messages?.filter((m) => !m.read).length ?? 0;
   // У машины, ключей и питомца главное — связь: эта вкладка первая.
   const contactTab = { id: "contact" as const, label: t.tabContact, badge: unread };
-  const tabs: { id: Tab; label: string; badge?: number }[] = [
-    ...(code.kind === "memory" ? [] : [contactTab]),
-    { id: "memory", label: t.tabMemory },
-    ...(code.kind === "memory" ? [contactTab] : []),
-    { id: "access", label: t.tabAccess, badge: requests },
-    { id: "look", label: t.tabLook },
-  ];
+  // Код-ссылке память и «кто видит» не нужны: скан сразу уходит на адрес хозяина.
+  const tabs: { id: Tab; label: string; badge?: number }[] =
+    code.kind === "link"
+      ? [
+          { id: "link", label: t.tabLink },
+          { id: "look", label: t.tabLook },
+        ]
+      : [
+          ...(code.kind === "memory" ? [] : [contactTab]),
+          { id: "memory", label: t.tabMemory },
+          ...(code.kind === "memory" ? [contactTab] : []),
+          { id: "access", label: t.tabAccess, badge: requests },
+          { id: "stats", label: t.tabStats },
+          { id: "look", label: t.tabLook },
+        ];
 
   return (
     <>
@@ -186,7 +197,14 @@ function Editor({ t, lang, me, base, initial }: { t: Dict; lang: Lang; me: strin
         ) : (
           <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
             <div className="min-w-0">
-              {tab === "memory" ? (
+              {tab === "link" ? (
+                <div className="space-y-5">
+                  <LinkPanel t={t} code={code} save={save} />
+                  {code.stats && <ScanStats t={t} lang={lang} stats={code.stats} />}
+                </div>
+              ) : tab === "stats" ? (
+                code.stats && <ScanStats t={t} lang={lang} stats={code.stats} />
+              ) : tab === "memory" ? (
                 <Memory t={t} lang={lang} code={code} me={me} onChange={setCode} />
               ) : tab === "contact" ? (
                 <ContactPanel t={t} lang={lang} code={code} save={save} />

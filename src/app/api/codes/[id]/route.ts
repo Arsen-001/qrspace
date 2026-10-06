@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { accessOf, findCode, mutate, newId, notify, viewOf } from "@/server/db";
+import { accessOf, findCode, mutate, newId, notify, viewOf, recordVisit } from "@/server/db";
 import { media } from "@/server/media";
 import { currentPerson } from "@/server/session";
 import { usable } from "@/server/users";
@@ -12,15 +12,7 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/api/codes/[id]">
   const me = await currentPerson();
   const code = await findCode(id);
   if (!code) return Response.json({ error: "not-found" }, { status: 404 });
-  if (req.nextUrl.searchParams.has("visit") && code.owner !== me) {
-    const allowed = accessOf(code, me) !== "closed";
-    await mutate((db) => {
-      const c = db.codes.find((x) => x.id === id);
-      if (!c) return;
-      c.visits.push({ personId: me, at: new Date().toISOString(), allowed });
-      c.visits = c.visits.slice(-500);
-    });
-  }
+  if (req.nextUrl.searchParams.has("visit") && code.owner !== me) await recordVisit(id, me, accessOf(code, me) !== "closed");
   return Response.json(viewOf(code, me));
 }
 
@@ -58,6 +50,12 @@ export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/codes/[id]
       c.style = style;
     }
     if ("compact" in body) c.compact = body.compact === true;
+    if ("target" in body) {
+      // Только http(s): javascript: и прочие схемы сюда не пускаем — по этому адресу уйдёт каждый, кто сканирует.
+      const t = typeof body.target === "string" ? body.target.trim().slice(0, 2000) : "";
+      if (t && !/^https?:\/\/[^\s]+$/i.test(t)) return 400;
+      c.target = t || undefined;
+    }
     if ("publicAdd" in body) c.publicAdd = body.publicAdd === true;
     if ("showOwner" in body) c.showOwner = body.showOwner === true;
     if ("contact" in body) {

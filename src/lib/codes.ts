@@ -13,7 +13,7 @@ export type Role = "view" | "edit";
 export type AccessLevel = "owner" | "edit" | "view" | "closed";
 
 /** Шаблон кода: память; машина (номер по выключателю); ключи и вещи; питомец. */
-export const KINDS = ["memory", "car", "lost", "pet", "item"] as const;
+export const KINDS = ["memory", "link", "car", "lost", "pet", "item"] as const;
 export type Kind = (typeof KINDS)[number];
 
 /** Готовые сообщения после скана — по шаблону. */
@@ -23,6 +23,7 @@ export const PRESETS: Record<Kind, string[]> = {
   lost: ["found"],
   pet: ["foundPet"],
   item: [],
+  link: [],
 };
 
 export type Grant = { personId: string; role: Role; until: string | null };
@@ -53,6 +54,8 @@ export type CodeRecord = {
   reward: string;
   messages: Message[];
   tasks: Task[];
+  /** Код-ссылка: куда переадресует скан (меняется когда угодно — код тот же). */
+  target?: string;
   /** Вещь бренда (защита от подделок): секрет под стираемым слоем, кто зарегистрировал. */
   auth?: AuthRecord;
   /** Все, кто видит и вошёл, могут добавлять записи (свадьба, праздник). */
@@ -93,6 +96,9 @@ export type CodeView = {
   compact: boolean;
   auth: AuthView | null;
   publicAdd: boolean;
+  /** Только хозяину. */
+  target?: string | null;
+  stats?: ScanStats;
   edition: { design: string; no: number; of: number | null } | null;
   access: AccessLevel;
   visibility: Visibility;
@@ -128,6 +134,9 @@ export type Batch = { batch: string; brand: string; product: string; count: numb
 export type BatchItem = { id: string; short: string; serial: number; secret: string; claimed: boolean };
 
 /** items — вещи брендов, зарегистрированные на меня (оригиналы). */
+/** Статистика сканов (только хозяину): по дням за 30 дней (от старых к сегодня, UTC), всего, за 7 дней, людей со входом. */
+export type ScanStats = { days: number[]; total: number; week: number; people: number };
+
 export type CodeList = { base: string; mine: CodeView[]; shared: CodeView[]; items: CodeView[] };
 export type MarketState = { sold: Record<string, number>; designs: Design[] };
 /** Лот с тем, что нужно показать: код (вид, номер, название) и продавец. */
@@ -153,7 +162,7 @@ async function call<T>(url: string, init?: RequestInit): Promise<T> {
 }
 const json = (method: string, body: unknown): RequestInit => ({ method, headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
 
-export type CodePatch = Partial<Pick<CodeRecord, "title" | "visibility" | "people" | "style" | "showOwner" | "contact" | "lost" | "reward" | "compact" | "publicAdd">> & {
+export type CodePatch = Partial<Pick<CodeRecord, "title" | "visibility" | "people" | "style" | "showOwner" | "contact" | "lost" | "reward" | "compact" | "publicAdd" | "target">> & {
   readMessages?: boolean;
   removeMessage?: string;
   approve?: string;
