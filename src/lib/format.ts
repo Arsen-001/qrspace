@@ -1,6 +1,6 @@
 import type { Lang } from "./i18n";
 
-const LOCALE: Record<Lang, string> = { ru: "ru-RU", en: "en-GB", hy: "hy-AM" };
+const LOCALE: Record<Lang, string> = { ru: "ru-RU", en: "en-GB", hy: "hy-AM", es: "es-ES", pt: "pt-BR", fr: "fr-FR", de: "de-DE" };
 const pad = (n: number) => String(n).padStart(2, "0");
 
 // Армянские названия месяцев и порядок даты браузеры показывают по-разному («M10», «10-05») —

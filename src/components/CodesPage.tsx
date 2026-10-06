@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api, linkOf, daysLeft, KINDS, type CodeList, type CodeView, type Kind, type Task } from "@/lib/codes";
-import type { Dict, Lang } from "@/lib/i18n";
+import { tr, type Dict, type Lang } from "@/lib/i18n";
 import { useLang } from "@/lib/lang";
 import { useMe } from "@/lib/me";
 import { DEFAULT_STYLE, toSaved } from "@/lib/qr/style";
@@ -167,17 +167,17 @@ function NewCode({ t, start }: { t: Dict; start: Kind | null }) {
                 type="button"
                 role="radio"
                 aria-checked={starter === s.id}
-                title={s.hint[lang]}
+                title={tr(s.hint, lang)}
                 onClick={() => {
                   const next = starter === s.id ? null : s.id;
                   setStarter(next);
                   // Пустое название — подставим название шаблона.
-                  if (next && !title.trim()) setTitle(s.name[lang]);
+                  if (next && !title.trim()) setTitle(tr(s.name, lang));
                 }}
                 className={`min-h-10 rounded-xl border px-3 text-left text-sm transition-colors ${starter === s.id ? "border-accent bg-accent text-on-accent" : "border-line bg-field hover:border-muted"}`}
               >
-                <span className="block font-semibold">{s.name[lang]}</span>
-                <span className={`block text-xs ${starter === s.id ? "opacity-85" : "text-muted"}`}>{s.hint[lang]}</span>
+                <span className="block font-semibold">{tr(s.name, lang)}</span>
+                <span className={`block text-xs ${starter === s.id ? "opacity-85" : "text-muted"}`}>{tr(s.hint, lang)}</span>
               </button>
             ))}
           </div>

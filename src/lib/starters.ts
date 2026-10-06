@@ -1,9 +1,9 @@
 // Готовые шаблоны: код сразу с подсказками, напоминаниями и нужной видимостью — для разных сфер.
 // Тексты — на языке, на котором человек создаёт код (их потом правят как обычные записи).
 import type { Kind, Repeat, Visibility } from "./codes";
-import type { Lang } from "./i18n";
+import type { L10n } from "./i18n";
 
-type L = Record<Lang, string>;
+type L = L10n;
 export type Starter = {
   id: string;
   kind: Kind;

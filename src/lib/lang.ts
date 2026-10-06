@@ -10,8 +10,9 @@ function readLang(): Lang {
     const saved = localStorage.getItem(LANG_KEY) as Lang | null;
     if (saved && saved in DICTS) return saved;
   } catch {}
-  const nav = navigator.language.slice(0, 2);
-  return nav === "hy" ? "hy" : nav === "en" ? "en" : "ru";
+  // Язык системы, если он у нас есть; иначе английский (рынок — весь мир).
+  const nav = navigator.language.slice(0, 2) as Lang;
+  return nav in DICTS ? nav : "en";
 }
 
 const listeners = new Set<() => void>();

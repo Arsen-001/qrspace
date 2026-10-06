@@ -2,7 +2,7 @@
 // Подвал всех страниц: полезные ссылки, юридические страницы, товарный знак QR Code.
 import Link from "next/link";
 import type { Dict } from "@/lib/i18n";
-import { LEGAL } from "@/lib/legal";
+import { legalFor } from "@/lib/legal";
 import type { Lang } from "@/lib/i18n";
 
 export function SiteFooter({ t, lang, lead }: { t: Dict; lang: Lang; lead?: string }) {
@@ -20,13 +20,13 @@ export function SiteFooter({ t, lang, lead }: { t: Dict; lang: Lang; lead?: stri
       </p>
       <p className="flex flex-wrap justify-center gap-x-4 gap-y-1">
         <Link href="/legal/terms" className="hover:text-ink">
-          {LEGAL[lang].terms.title}
+          {legalFor(lang).terms.title}
         </Link>
         <Link href="/legal/privacy" className="hover:text-ink">
-          {LEGAL[lang].privacy.title}
+          {legalFor(lang).privacy.title}
         </Link>
         <Link href="/legal/refunds" className="hover:text-ink">
-          {LEGAL[lang].refunds.title}
+          {legalFor(lang).refunds.title}
         </Link>
         <Link href="/legal/terms#contacts" className="hover:text-ink">
           {t.legalContacts}

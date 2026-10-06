@@ -1,7 +1,7 @@
 import { accessOf, allCodes, kindDefaults, mutate, newId, publicBase, viewOf } from "@/server/db";
 import { currentPerson } from "@/server/session";
 import { ymd, type CodeRecord } from "@/lib/codes";
-import type { Lang } from "@/lib/i18n";
+import { LANGS, tr, type Lang } from "@/lib/i18n";
 import { STARTERS } from "@/lib/starters";
 import { readKind, readStyle, readTitle } from "./validate";
 
@@ -47,12 +47,12 @@ export async function POST(req: Request) {
   const st = STARTERS.find((x) => x.id === (body.starter as { id?: unknown } | undefined)?.id && x.kind === code.kind);
   if (st) {
     const raw = (body.starter as { lang?: unknown }).lang;
-    const lang: Lang = raw === "hy" || raw === "en" ? raw : "ru";
+    const lang: Lang = LANGS.some((l) => l.id === raw) ? (raw as Lang) : "en";
     const at = new Date();
     code.visibility = st.visibility;
     code.publicAdd = !!st.publicAdd;
-    code.blocks = st.blocks.map((b, i) => ({ id: newId(), kind: "text" as const, text: b[lang], media: null, author: me, at: new Date(at.getTime() + i).toISOString() }));
-    code.tasks = st.tasks.map((t) => ({ id: newId(), text: t.text[lang], due: ymd(new Date(at.getTime() + t.inDays * 86_400_000)), every: t.every, done: [] }));
+    code.blocks = st.blocks.map((b, i) => ({ id: newId(), kind: "text" as const, text: tr(b, lang), media: null, author: me, at: new Date(at.getTime() + i).toISOString() }));
+    code.tasks = st.tasks.map((t) => ({ id: newId(), text: tr(t.text, lang), due: ymd(new Date(at.getTime() + t.inDays * 86_400_000)), every: t.every, done: [] }));
   }
   await mutate((db) => db.codes.push(code));
   return Response.json(viewOf(code, me));

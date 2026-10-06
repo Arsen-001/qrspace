@@ -1,8 +1,8 @@
 // Демо-люди: пока нет настоящего входа, человек выбирает, кем войти. Имена — на трёх языках.
-import type { Lang } from "./i18n";
+import type { L10n } from "./i18n";
 
 /** demo — кто это в демо-данных, чтобы было понятно, кем войти и что проверить. */
-export type Person = { id: string; name: Record<Lang, string>; color: string; demo: Record<Lang, string>; designer?: boolean; admin?: boolean };
+export type Person = { id: string; name: L10n; color: string; demo: L10n; designer?: boolean; admin?: boolean };
 
 export const PEOPLE: Person[] = [
   {

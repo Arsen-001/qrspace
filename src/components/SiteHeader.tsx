@@ -53,20 +53,25 @@ export function SiteHeader({ t, lang }: { t: Dict; lang: Lang }) {
         ))}
       </nav>
       <div className="ml-auto flex items-center gap-2">
-        <div className="flex rounded-xl border border-line bg-card p-1" role="radiogroup" aria-label="Language">
-          {LANGS.map((l) => (
-            <button
-              key={l.id}
-              type="button"
-              role="radio"
-              aria-checked={lang === l.id}
-              onClick={() => saveLang(l.id)}
-              className={`min-h-8 rounded-lg px-2 text-sm font-medium ${lang === l.id ? "bg-accent text-on-accent" : "text-muted hover:text-ink"}`}
-            >
-              {l.label}
-            </button>
-          ))}
-        </div>
+        {/* Языков семь — выпадающий список, чтобы шапка помещалась на телефоне. */}
+        <label className="relative">
+          <span className="sr-only">Language</span>
+          <select
+            value={lang}
+            onChange={(e) => saveLang(e.target.value as Lang)}
+            aria-label="Language"
+            className="min-h-10 cursor-pointer appearance-none rounded-xl border border-line bg-card py-1 pl-3 pr-8 text-sm font-medium hover:border-muted"
+          >
+            {LANGS.map((l) => (
+              <option key={l.id} value={l.id}>
+                {l.name}
+              </option>
+            ))}
+          </select>
+          <svg viewBox="0 0 24 24" className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </label>
         {ready && me && <Bell t={t} lang={lang} />}
         {ready &&
           (me ? (

@@ -3,7 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
-import { LEGAL } from "@/lib/legal";
+import { legalFor } from "@/lib/legal";
+import { tr } from "@/lib/i18n";
 import { useLang } from "@/lib/lang";
 import { signIn, useMe } from "@/lib/me";
 import { PEOPLE } from "@/lib/people";
@@ -67,11 +68,11 @@ export function LoginPage({ next, error }: { next: string | null; error: string 
         <p className="text-xs text-muted">
           {t.loginAgree}{" "}
           <Link href="/legal/terms" className="underline underline-offset-2 hover:text-ink">
-            {LEGAL[lang].terms.title}
+            {legalFor(lang).terms.title}
           </Link>{" "}
           ·{" "}
           <Link href="/legal/privacy" className="underline underline-offset-2 hover:text-ink">
-            {LEGAL[lang].privacy.title}
+            {legalFor(lang).privacy.title}
           </Link>
         </p>
         {ready && (!providers.google || !providers.apple) && <p className="text-xs text-muted">{t.providersPending}</p>}
@@ -98,8 +99,8 @@ export function LoginPage({ next, error }: { next: string | null; error: string 
                 >
                   <Avatar id={p.id} lang={lang} size={44} />
                   <span className="min-w-0">
-                    <span className="block font-semibold">{p.name[lang]}</span>
-                    <span className="block text-sm text-muted">{p.demo[lang]}</span>
+                    <span className="block font-semibold">{tr(p.name, lang)}</span>
+                    <span className="block text-sm text-muted">{tr(p.demo, lang)}</span>
                   </span>
                 </button>
               </li>

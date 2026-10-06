@@ -1,7 +1,7 @@
 // Юридические страницы: условия, конфиденциальность, возвраты. ЧЕРНОВИК по тому, как сайт работает на самом деле —
 // перед запуском показать юристу (не юридическая консультация). Данные оператора — из переменных окружения
 // (NEXT_PUBLIC_OPERATOR_NAME / _ADDRESS / _EMAIL), пока их нет — «будут указаны при запуске».
-import type { Lang } from "./i18n";
+import type { BaseLang, Lang } from "./i18n";
 
 export const LEGAL_DOCS = ["terms", "privacy", "refunds"] as const;
 export type LegalDoc = (typeof LEGAL_DOCS)[number];
@@ -151,4 +151,7 @@ const hy: Record<LegalDoc, Doc> = {
   },
 };
 
-export const LEGAL: Record<Lang, Record<LegalDoc, Doc>> = { ru, en, hy };
+const BY_LANG: Record<BaseLang, Record<LegalDoc, Doc>> = { ru, en, hy };
+/** Документы на языке человека; где перевода пока нет — английский. */
+export const legalFor = (lang: Lang) => BY_LANG[lang as BaseLang] ?? BY_LANG.en;
+export const LEGAL_RU = ru;

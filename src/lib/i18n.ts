@@ -1,10 +1,24 @@
-// Три языка с первого дня. Ключи одинаковые во всех словарях — TypeScript проверит.
+// Языки сайта. Ключи одинаковые во всех словарях — TypeScript проверит. Новые языки — в i18n-<код>.ts.
+import { de } from "./i18n-de";
+import { es } from "./i18n-es";
+import { fr } from "./i18n-fr";
+import { pt } from "./i18n-pt";
 
-export type Lang = "hy" | "ru" | "en";
-export const LANGS: { id: Lang; label: string }[] = [
-  { id: "hy", label: "Հայ" },
-  { id: "ru", label: "Рус" },
-  { id: "en", label: "Eng" },
+export type Lang = "hy" | "ru" | "en" | "es" | "pt" | "fr" | "de";
+/** Языки, на которых написаны все тексты (шаблоны, документы, встроенные дизайны); остальным — английский. */
+export type BaseLang = "hy" | "ru" | "en";
+export type L10n = Record<BaseLang, string> & Partial<Record<Lang, string>>;
+/** Текст на языке человека, а если его нет — на английском. */
+export const tr = (r: L10n, lang: Lang): string => r[lang] ?? r.en;
+
+export const LANGS: { id: Lang; label: string; name: string }[] = [
+  { id: "hy", label: "Հայ", name: "Հայերեն" },
+  { id: "ru", label: "Рус", name: "Русский" },
+  { id: "en", label: "Eng", name: "English" },
+  { id: "es", label: "Esp", name: "Español" },
+  { id: "pt", label: "Port", name: "Português" },
+  { id: "fr", label: "Fra", name: "Français" },
+  { id: "de", label: "Deu", name: "Deutsch" },
 ];
 
 const ru = {
@@ -2151,7 +2165,7 @@ const hy: Dict = {
   loginAgree: "Մուտք գործելով՝ համաձայնում եք փաստաթղթերին՝",
 };
 
-export const DICTS: Record<Lang, Dict> = { hy, ru, en };
+export const DICTS: Record<Lang, Dict> = { hy, ru, en, es, pt, fr, de };
 
 /** Подставить значения в текст: fill("Привет, {name}", { name: "Ани" }). */
 export const fill = (text: string, vars: Record<string, string | number>) => text.replace(/\{(\w+)\}/g, (_, k: string) => String(vars[k] ?? ""));

@@ -1,12 +1,12 @@
 // Маркет (демо): дизайны нашего дизайнера. Тираж — с номерами: закончился — больше не купить.
 // Цены примерные (владелец не утверждал).
-import type { Lang } from "./i18n";
+import type { L10n } from "./i18n";
 import { DEFAULT_STYLE, type SavedStyle } from "./qr/style";
 
 export type Design = {
   id: string;
-  name: Record<Lang, string>;
-  about: Record<Lang, string>;
+  name: L10n;
+  about: L10n;
   price: number;
   /** Размер тиража; null — без тиража. */
   edition: number | null;

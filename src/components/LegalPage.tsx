@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { fmtDate } from "@/lib/format";
 import { useLang } from "@/lib/lang";
-import { LEGAL, LEGAL_DOCS, LEGAL_UPDATED, operator, type LegalDoc } from "@/lib/legal";
+import { LEGAL_DOCS, LEGAL_RU, LEGAL_UPDATED, legalFor, operator, type LegalDoc } from "@/lib/legal";
 import { Shell } from "./Shell";
 
 export function LegalPage({ doc }: { doc: LegalDoc }) {
-  const { lang, t } = useLang((t) => `${LEGAL.ru[doc].title} — ${t.appName}`);
-  const d = LEGAL[lang][doc];
+  const { lang, t } = useLang((t) => `${LEGAL_RU[doc].title} — ${t.appName}`);
+  const d = legalFor(lang)[doc];
   return (
     <Shell t={t} lang={lang} narrow>
       <nav className="flex flex-wrap gap-2 text-sm" aria-label={t.legalNav}>
@@ -19,7 +19,7 @@ export function LegalPage({ doc }: { doc: LegalDoc }) {
             aria-current={x === doc ? "page" : undefined}
             className={`grid min-h-10 place-items-center rounded-xl px-3 font-medium ${x === doc ? "bg-card text-ink shadow-sm" : "text-muted hover:text-ink"}`}
           >
-            {LEGAL[lang][x].title}
+            {legalFor(lang)[x].title}
           </Link>
         ))}
       </nav>

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { fmtDate } from "@/lib/format";
-import type { Lang } from "@/lib/i18n";
+import { tr, type L10n } from "@/lib/i18n";
 import { useLang } from "@/lib/lang";
 import { useMe } from "@/lib/me";
 import type { SavedStyle } from "@/lib/qr/style";
@@ -16,7 +16,7 @@ type Cert = {
   id: string;
   style: SavedStyle | null;
   edition: { design: string; no: number; of: number | null };
-  design: { name: Record<Lang, string>; collab: string | null; by: string | null } | null;
+  design: { name: L10n; collab: string | null; by: string | null } | null;
   owner: string;
   owners: { person: string; at: string; price: number | null }[];
 };
@@ -55,7 +55,7 @@ export function CertPage({ id }: { id: string }) {
               <dl className="space-y-3 text-sm">
                 <div>
                   <dt className="text-white/60">{t.certDesign}</dt>
-                  <dd className="font-heading text-xl font-bold">{cert.design?.name[lang] ?? (cert.edition.design === "number" ? t.numberCode : cert.edition.design)}</dd>
+                  <dd className="font-heading text-xl font-bold">{(cert.design && tr(cert.design.name, lang)) ?? (cert.edition.design === "number" ? t.numberCode : cert.edition.design)}</dd>
                   {cert.design?.collab && <dd className="text-sm font-semibold text-[#9aa6ff]">QR Studio × {cert.design.collab}</dd>}
                 </div>
                 <div>
