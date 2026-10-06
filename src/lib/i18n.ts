@@ -733,6 +733,14 @@ const ru = {
   legalContacts: "Контакты",
   legalOperatorPending: "Название компании, адрес и почта для связи будут указаны при запуске сайта.",
   loginAgree: "Входя, вы соглашаетесь с документами:",
+  homeKicker: "QR-коды нового поколения",
+  homeTitleA: "QR-код,",
+  homeTitleB: "который живёт",
+  homeLead: "Под кодом — ваши фото, видео и текст. Дизайн, который точно сканируется. Номера и выпуски, которые есть только у вас.",
+  homeCta: "Создать код",
+  homeTicker: "Память под кодом · Свой дизайн · Код из фото · Номер № 1 · Лимитированные выпуски · Аукционы · Кто видит — решаете вы",
+  homeMakeTitle: "Сделайте код прямо сейчас",
+  homeWhy: "Больше, чем просто QR-код",
 };
 
 export type Dict = typeof ru;
@@ -1449,6 +1457,14 @@ const en: Dict = {
   legalContacts: "Contacts",
   legalOperatorPending: "The company name, address and contact email will be listed when the site launches.",
   loginAgree: "By signing in you agree to:",
+  homeKicker: "Next-generation QR codes",
+  homeTitleA: "The QR code",
+  homeTitleB: "that lives",
+  homeLead: "Your photos, videos and text live under the code. Designs that always scan. Numbers and editions nobody else has.",
+  homeCta: "Create a code",
+  homeTicker: "Memory under the code · Your own design · Code from a photo · Number No. 1 · Limited editions · Auctions · You decide who sees it",
+  homeMakeTitle: "Make your code right now",
+  homeWhy: "More than just a QR code",
 };
 
 const hy: Dict = {
@@ -2163,6 +2179,14 @@ const hy: Dict = {
   legalContacts: "Կոնտակտներ",
   legalOperatorPending: "Ընկերության անունը, հասցեն և կապի փոստը կնշվեն կայքի գործարկման ժամանակ։",
   loginAgree: "Մուտք գործելով՝ համաձայնում եք փաստաթղթերին՝",
+  homeKicker: "Նոր սերնդի QR կոդեր",
+  homeTitleA: "QR կոդ,",
+  homeTitleB: "որն ապրում է",
+  homeLead: "Կոդի տակ՝ ձեր լուսանկարները, տեսանյութերը և տեքստը։ Դիզայն, որը միշտ սկանավորվում է։ Համարներ և թողարկումներ, որոնք միայն ձերն են։",
+  homeCta: "Ստեղծել կոդ",
+  homeTicker: "Հիշողություն կոդի տակ · Ձեր դիզայնը · Կոդ լուսանկարից · Համար № 1 · Սահմանափակ թողարկումներ · Աճուրդներ · Ով է տեսնում՝ որոշում եք դուք",
+  homeMakeTitle: "Ստեղծեք կոդը հենց հիմա",
+  homeWhy: "Ավելին, քան պարզապես QR կոդ",
 };
 
 export const DICTS: Record<Lang, Dict> = { hy, ru, en, es, pt, fr, de };

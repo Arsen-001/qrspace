@@ -16,6 +16,9 @@
   --warn: #c2410c;
   --on-warn: #ffffff;
   --warn-soft: #fdf0e8;
+  --stage: #0b0b0c;
+  --on-stage: #f3f2ec;
+  --stage-line: #2a2a2e;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -52,6 +55,9 @@
   --color-warn: var(--warn);
   --color-on-warn: var(--on-warn);
   --color-warn-soft: var(--warn-soft);
+  --color-stage: var(--stage);
+  --color-on-stage: var(--on-stage);
+  --color-stage-line: var(--stage-line);
   --font-sans: var(--font-body), var(--font-armenian), system-ui, sans-serif;
   --font-heading: var(--font-head), var(--font-armenian), system-ui, sans-serif;
 }
@@ -79,5 +85,86 @@ button:not(:disabled) {
 @media print {
   body {
     background: #fff;
+  }
+}
+
+/* Новый вид — пока только главная страница (владелец, 06.10.2026): бетон, чернила и кислотный лайм,
+   широкий Unbounded в заголовках, моноширинные подписи, точки-модули QR на фоне, острые углы. */
+.x-home {
+  --bg: #edebe4;
+  --card: #f9f8f4;
+  --field: #f2f0e9;
+  --line: #d8d5ca;
+  --ink: #0b0b0c;
+  --muted: #5d5b55;
+  --accent: #c6ff2e;
+  --on-accent: #0b0b0c;
+  --accent-ink: #0b0b0c;
+  --stage: #0b0b0c;
+  --on-stage: #f3f2ec;
+  --stage-line: #2a2a2e;
+  --radius-lg: 4px;
+  --radius-xl: 6px;
+  --radius-2xl: 10px;
+  --radius-3xl: 14px;
+  --font-head: var(--font-display);
+  font-family: var(--font-text), var(--font-armenian), system-ui, sans-serif;
+  background-color: var(--bg);
+  background-image: radial-gradient(color-mix(in oklab, var(--ink) 10%, transparent) 1px, transparent 1.3px);
+  background-size: 22px 22px;
+  color: var(--ink);
+}
+
+@media (prefers-color-scheme: dark) {
+  .x-home {
+    --bg: #0b0b0c;
+    --card: #141416;
+    --field: #1b1b1e;
+    --line: #2b2b30;
+    --ink: #f3f2ec;
+    --muted: #9c9a92;
+    --accent-ink: #c6ff2e;
+    --stage: #141416;
+    --stage-line: #2b2b30;
+  }
+}
+
+/* Лайм на светлом фоне не читается как текст и рамка фокуса — там чернила. */
+.x-home .text-accent {
+  color: var(--accent-ink);
+}
+.x-home :is(input, textarea, select):focus {
+  border-color: var(--ink);
+}
+.x-home .font-heading {
+  letter-spacing: -0.02em;
+}
+.x-home .font-mono {
+  font-family: var(--font-code), ui-monospace, monospace;
+}
+
+/* Бегущая строка. */
+@keyframes x-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.x-marquee {
+  animation: x-marquee 40s linear infinite;
+}
+
+/* Мигающие модули большого кода на первом экране. */
+@keyframes x-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.12; }
+}
+.x-blink {
+  animation: x-blink 3.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .x-marquee,
+  .x-blink {
+    animation: none;
   }
 }

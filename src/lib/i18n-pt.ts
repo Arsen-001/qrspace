@@ -713,4 +713,12 @@ export const pt: Dict = {
   legalContacts: "Contato",
   legalOperatorPending: "O nome da empresa, o endereço e o e-mail de contato serão informados no lançamento do site.",
   loginAgree: "Ao entrar você concorda com:",
+  homeKicker: "Códigos QR de nova geração",
+  homeTitleA: "O código QR",
+  homeTitleB: "que vive",
+  homeLead: "Suas fotos, vídeos e textos vivem sob o código. Designs que sempre escaneiam. Números e edições que ninguém mais tem.",
+  homeCta: "Criar um código",
+  homeTicker: "Memória sob o código · Seu próprio design · Código a partir de uma foto · Número nº 1 · Edições limitadas · Leilões · Você decide quem vê",
+  homeMakeTitle: "Crie seu código agora mesmo",
+  homeWhy: "Mais do que um simples código QR",
 };
