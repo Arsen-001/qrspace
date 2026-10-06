@@ -450,6 +450,11 @@ Next.js 16 + TypeScript + Tailwind 4, всё в браузере, сервера
   подключении хранилища. Список: `vercel env ls` в папке проекта.
 - **Пока сайт — демо**: `DEMO_LOGIN` не задан (= включён), шапка честно пишет, что покупки ненастоящие. Когда будут
   ключи Google/Apple — `DEMO_LOGIN=off` и очистить базу от демо-людей.
+- **Домен** qrspace.co и www.qrspace.co добавлены в проект Vercel (www → qrspace.co, `vercel.json`). Домен куплен у
+  **Cloudflare Registrar** — серверы имён там менять нельзя, поэтому записи ставятся в Cloudflare → qrspace.co → DNS,
+  обе с **серым облаком (DNS only)**, иначе Vercel не выпустит сертификат: `A  @  76.76.21.21` и
+  `CNAME  www  cname.vercel-dns.com`. Проверка: `vercel domains inspect qrspace.co`.
+- Пресет Next.js задан в `vercel.json`: проект, созданный через `vercel project add`, получил пресет «Other» и отдавал 404.
 - Превью-сборки (другие ветки) базы не получают — чтобы не писать в настоящую базу.
 - Бэкапы: на Hobby у Railway снимков нет; пока данные демо — не нужны. До настоящих покупок — завести выгрузку, как в BookTime.
 

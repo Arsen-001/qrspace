@@ -47,7 +47,9 @@ function pgStore(url: string): DocStore {
   const g = globalThis as { __qrPg?: Promise<import("pg").Pool> };
   const pool = (g.__qrPg ??= import("pg").then(async ({ default: pg }) => {
     const p = new pg.Pool({ connectionString: url, max: 5, ssl: /sslmode=require|neon\.tech|supabase|rlwy\.net/.test(url) ? { rejectUnauthorized: false } : undefined });
-    await p.query("create table if not exists qr_doc (id int primary key, version int not null, data jsonb not null, updated_at timestamptz not null default now())");
+    // Несколько процессов могут создавать таблицу одновременно (сборка, первые запросы) — «уже есть» не ошибка.
+    await p.query("create table if not exists qr_doc (id int primary key, version int not null, data jsonb not null, updated_at timestamptz not null default now())")
+      .catch((e: { code?: string }) => { if (e.code !== "23505" && e.code !== "42P07") throw e; });
     return p;
   }));
   return {
