@@ -10,6 +10,7 @@ import { isDesigner } from "@/lib/people";
 import { CodeDesigner } from "./CodeDesigner";
 import { ContentForm } from "./ContentForm";
 import { PublishBox } from "./PublishBox";
+import { SiteFooter } from "./SiteFooter";
 import { SiteHeader } from "./SiteHeader";
 import type { StyleState } from "./StylePanel";
 
@@ -73,15 +74,7 @@ export function Generator() {
         }
       />
 
-      <footer className="mt-12 space-y-2 text-center text-sm text-muted">
-        <p>{t.footer}</p>
-        <p>
-          <Link href="/how" className="font-semibold text-accent">
-            {t.howTitle}
-          </Link>
-        </p>
-        <p className="text-xs">{t.trademark}</p>
-      </footer>
+      <SiteFooter t={t} lang={lang} lead={t.footer} />
     </div>
   );
 }

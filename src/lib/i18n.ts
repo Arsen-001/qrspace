@@ -714,6 +714,11 @@ const ru = {
   blockedHint: "Мы заблокировали этот код по жалобе. Если вам предлагают что-то по нему — будьте осторожны.",
   blockedOwner: "Код заблокирован администратором по жалобе: скан ничего не показывает и никуда не ведёт. Напишите в поддержку, если это ошибка.",
   "notice.codeBlocked": "Код «{title}» заблокирован по жалобе",
+  legalNav: "Документы",
+  legalUpdated: "Обновлено",
+  legalContacts: "Контакты",
+  legalOperatorPending: "Название компании, адрес и почта для связи будут указаны при запуске сайта.",
+  loginAgree: "Входя, вы соглашаетесь с документами:",
 };
 
 export type Dict = typeof ru;
@@ -1425,6 +1430,11 @@ const en: Dict = {
   blockedHint: "We blocked this code after a report. If someone offers you something through it, be careful.",
   blockedOwner: "The code was blocked by an administrator after a report: a scan shows nothing and leads nowhere. Contact support if this is a mistake.",
   "notice.codeBlocked": "The code “{title}” was blocked after a report",
+  legalNav: "Documents",
+  legalUpdated: "Updated",
+  legalContacts: "Contacts",
+  legalOperatorPending: "The company name, address and contact email will be listed when the site launches.",
+  loginAgree: "By signing in you agree to:",
 };
 
 const hy: Dict = {
@@ -2134,6 +2144,11 @@ const hy: Dict = {
   blockedHint: "Մենք արգելափակել ենք այս կոդը բողոքի հիման վրա։ Եթե դրանով ձեզ ինչ-որ բան են առաջարկում, զգույշ եղեք։",
   blockedOwner: "Կոդն արգելափակված է ադմինիստրատորի կողմից բողոքի հիման վրա. սկանը ոչինչ ցույց չի տալիս և ոչ մի տեղ չի տանում։ Գրեք աջակցությանը, եթե սա սխալ է։",
   "notice.codeBlocked": "«{title}» կոդն արգելափակվել է բողոքի հիման վրա",
+  legalNav: "Փաստաթղթեր",
+  legalUpdated: "Թարմացված է",
+  legalContacts: "Կոնտակտներ",
+  legalOperatorPending: "Ընկերության անունը, հասցեն և կապի փոստը կնշվեն կայքի գործարկման ժամանակ։",
+  loginAgree: "Մուտք գործելով՝ համաձայնում եք փաստաթղթերին՝",
 };
 
 export const DICTS: Record<Lang, Dict> = { hy, ru, en };

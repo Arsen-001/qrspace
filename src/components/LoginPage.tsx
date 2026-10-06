@@ -2,6 +2,8 @@
 // Вход только через Google или Apple. Демо-люди — пока не выключены (DEMO_LOGIN=off), для проверки.
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import Link from "next/link";
+import { LEGAL } from "@/lib/legal";
 import { useLang } from "@/lib/lang";
 import { signIn, useMe } from "@/lib/me";
 import { PEOPLE } from "@/lib/people";
@@ -62,6 +64,16 @@ export function LoginPage({ next, error }: { next: string | null; error: string 
           <AppleIcon />
           {t.withApple}
         </a>
+        <p className="text-xs text-muted">
+          {t.loginAgree}{" "}
+          <Link href="/legal/terms" className="underline underline-offset-2 hover:text-ink">
+            {LEGAL[lang].terms.title}
+          </Link>{" "}
+          ·{" "}
+          <Link href="/legal/privacy" className="underline underline-offset-2 hover:text-ink">
+            {LEGAL[lang].privacy.title}
+          </Link>
+        </p>
         {ready && (!providers.google || !providers.apple) && <p className="text-xs text-muted">{t.providersPending}</p>}
       </div>
 
