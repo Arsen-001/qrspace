@@ -346,6 +346,8 @@ const ru = {
   editionLimited: "С номерами",
   editionCount: "Сколько штук в тираже",
   makeDrop: "Сделать дропом дня",
+  firstOnAuction: "№ 1 — на аукцион",
+  firstOnAuctionHint: "Первый номер тиража сразу выставим на аукцион на сутки, старт — тройная цена",
   publish: "Опубликовать",
   publishing: "Проверяем и публикуем…",
   publishBad: "Код плохо читается — поправьте оформление и попробуйте снова",
@@ -679,6 +681,9 @@ const ru = {
   statsChart: "Сканы по дням за 30 дней",
   statsScans: "Сканов",
   statsTable: "Таблица по дням",
+  linkPromoTitle: "Адрес может поменяться?",
+  linkPromoText: "Этот код навсегда ведёт на один адрес. Код-ссылка ведёт туда, куда скажете, — меняйте адрес без перепечатки и смотрите, сколько раз сканировали.",
+  linkPromoCta: "Сделать код-ссылку",
 };
 
 export type Dict = typeof ru;
@@ -1022,6 +1027,8 @@ const en: Dict = {
   editionLimited: "Numbered",
   editionCount: "How many in the edition",
   makeDrop: "Make it the drop of the day",
+  firstOnAuction: "No. 1 — to auction",
+  firstOnAuctionHint: "The edition’s first number goes straight to a 24-hour auction, starting at triple the price",
   publish: "Publish",
   publishing: "Checking and publishing…",
   publishBad: "The code scans poorly — adjust the style and try again",
@@ -1355,6 +1362,9 @@ const en: Dict = {
   statsChart: "Scans per day over 30 days",
   statsScans: "Scans",
   statsTable: "Table by day",
+  linkPromoTitle: "Might the address change?",
+  linkPromoText: "This code always leads to one address. A link code leads wherever you say — change the address without reprinting and see how often it’s scanned.",
+  linkPromoCta: "Make a link code",
 };
 
 const hy: Dict = {
@@ -1696,6 +1706,8 @@ const hy: Dict = {
   editionLimited: "Համարներով",
   editionCount: "Քանի հատ թողարկման մեջ",
   makeDrop: "Դարձնել օրվա դրոպ",
+  firstOnAuction: "№ 1 — աճուրդի",
+  firstOnAuctionHint: "Թողարկման առաջին համարը միանգամից կհանենք աճուրդի մեկ օրով, մեկնարկը՝ եռապատիկ գին",
   publish: "Հրապարակել",
   publishing: "Ստուգում և հրապարակում ենք…",
   publishBad: "Կոդը վատ է կարդացվում — ուղղեք ձևավորումը և փորձեք կրկին",
@@ -2029,6 +2041,9 @@ const hy: Dict = {
   statsChart: "Սկաններն ըստ օրերի՝ 30 օրում",
   statsScans: "Սկաններ",
   statsTable: "Աղյուսակ ըստ օրերի",
+  linkPromoTitle: "Հասցեն կարո՞ղ է փոխվել",
+  linkPromoText: "Այս կոդը միշտ տանում է մեկ հասցե։ Կոդ-հղումը տանում է այնտեղ, ուր ասեք — փոխեք հասցեն առանց վերատպման և տեսեք, քանի անգամ են սկանավորել։",
+  linkPromoCta: "Ստեղծել կոդ-հղում",
 };
 
 export const DICTS: Record<Lang, Dict> = { hy, ru, en };

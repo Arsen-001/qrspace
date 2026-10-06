@@ -204,7 +204,7 @@ export const api = {
   claimItem: (id: string, secret: string) => call<CodeView>(`/api/codes/${id}/claim`, json("POST", { secret })),
   releaseItem: (id: string) => call<{ secret: string; view: CodeView }>(`/api/codes/${id}/claim`, { method: "DELETE" }),
   market: () => call<MarketState>("/api/market"),
-  publish: (d: { name: string; nameHy: string; nameEn: string; about: string; collab: string; price: number; edition: number | null; drop: boolean; style: SavedStyle }) =>
+  publish: (d: { name: string; nameHy: string; nameEn: string; about: string; collab: string; price: number; edition: number | null; drop: boolean; firstOnAuction: boolean; style: SavedStyle }) =>
     call<Design>("/api/market", json("POST", d)),
   unpublish: (design: string) => call<{ ok: true }>(`/api/market/${design}`, { method: "DELETE" }),
   buy: (design: string) => call<CodeView>(`/api/market/${design}`, { method: "POST" }),

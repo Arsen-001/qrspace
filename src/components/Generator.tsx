@@ -53,6 +53,16 @@ export function Generator() {
             <PublishBox t={t} style={style} base={base} />
           ) : (
             <section className="rounded-2xl border border-line bg-card p-5">
+              {type === "url" && (
+                // Обычный код со ссылкой не поменять после печати — предлагаем код-ссылку.
+                <div className="mb-4 border-b border-line pb-4">
+                  <h2 className="font-heading text-base font-bold">{t.linkPromoTitle}</h2>
+                  <p className="mt-1 text-sm text-muted">{t.linkPromoText}</p>
+                  <Link href="/codes?new=link" className="mt-3 inline-grid min-h-11 place-items-center rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent">
+                    {t.linkPromoCta}
+                  </Link>
+                </div>
+              )}
               <h2 className="font-heading text-base font-bold">{t.memoryPromoTitle}</h2>
               <p className="mt-1 text-sm text-muted">{t.memoryPromoText}</p>
               <Link href="/codes" className="mt-3 inline-grid min-h-11 place-items-center rounded-xl border border-line bg-field px-4 text-sm font-semibold hover:border-muted">

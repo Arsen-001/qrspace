@@ -100,11 +100,11 @@ function Upcoming({ t, lang, codes, onDone }: { t: Dict; lang: Lang; codes: Code
   );
 }
 
-function NewCode({ t }: { t: Dict }) {
+function NewCode({ t, start }: { t: Dict; start: Kind | null }) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(!!start);
   const [title, setTitle] = useState("");
-  const [kind, setKind] = useState<Kind>("memory");
+  const [kind, setKind] = useState<Kind>(start ?? "memory");
   const [starter, setStarter] = useState<string | null>(null);
   const { lang } = useLang();
   const [busy, setBusy] = useState(false);
@@ -207,7 +207,7 @@ function NewCode({ t }: { t: Dict }) {
   );
 }
 
-export function CodesPage() {
+export function CodesPage({ startNew = null }: { startNew?: Kind | null }) {
   const { lang, t } = useLang((t) => `${t.navCodes} — ${t.appName}`);
   const { ready, me } = useMe();
   const [data, setData] = useState<{ me: string; list: CodeList } | null>(null);
@@ -239,7 +239,7 @@ export function CodesPage() {
             <Link href="/codes/print" className="grid min-h-11 place-items-center rounded-xl border border-line bg-card px-4 text-sm font-semibold hover:border-muted">
               🖨 {t.printTitle}
             </Link>
-            <NewCode t={t} />
+            <NewCode t={t} start={startNew} />
           </div>
         )}
       </div>

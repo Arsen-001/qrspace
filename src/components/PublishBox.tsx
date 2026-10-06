@@ -23,6 +23,7 @@ export function PublishBox({ t, style, base }: { t: Dict; style: StyleState; bas
   const [limited, setLimited] = useState<"no" | "yes">("no");
   const [count, setCount] = useState("100");
   const [drop, setDrop] = useState(false);
+  const [first, setFirst] = useState(false);
   const [state, setState] = useState<"idle" | "busy" | "bad" | "error">("idle");
   const [done, setDone] = useState<string | null>(null);
 
@@ -36,7 +37,7 @@ export function PublishBox({ t, style, base }: { t: Dict; style: StyleState; bas
         setState("bad");
         return;
       }
-      const d = await api.publish({ name, nameHy, nameEn, about, collab, price: Number(price), edition: limited === "yes" ? Math.round(Number(count)) : null, drop, style: toSaved(style) });
+      const d = await api.publish({ name, nameHy, nameEn, about, collab, price: Number(price), edition: limited === "yes" ? Math.round(Number(count)) : null, drop, firstOnAuction: limited === "yes" && first, style: toSaved(style) });
       setDone(d.id);
       setState("idle");
       setName("");
@@ -94,6 +95,15 @@ export function PublishBox({ t, style, base }: { t: Dict; style: StyleState; bas
           <label className="block">
             <span className="mb-1.5 block text-sm font-medium text-muted">{t.editionCount}</span>
             <input type="number" min={1} max={100000} inputMode="numeric" value={count} onChange={(e) => setCount(e.target.value)} className={field} />
+          </label>
+        )}
+        {limited === "yes" && (
+          <label className="flex cursor-pointer items-start gap-2 text-sm">
+            <input type="checkbox" checked={first} onChange={(e) => setFirst(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[var(--accent)]" />
+            <span>
+              {t.firstOnAuction}
+              <span className="block text-xs text-muted">{t.firstOnAuctionHint}</span>
+            </span>
           </label>
         )}
         <label className="flex cursor-pointer items-center gap-2 text-sm">

@@ -1,5 +1,6 @@
-import { market, mutate, newId, isDesignerId } from "@/server/db";
+import { market, mutate, newId, isDesignerId, kindDefaults } from "@/server/db";
 import { currentPerson } from "@/server/session";
+import type { CodeRecord } from "@/lib/codes";
 import type { Design } from "@/lib/market";
 import { readShort, readStyle, readText } from "../codes/validate";
 
@@ -36,10 +37,44 @@ export async function POST(req: Request) {
     createdAt: new Date().toISOString(),
     style,
   };
+  // «№ 1 — на аукцион» (только у тиража): первый номер сразу у дизайнера и на аукционе на сутки, старт — 3 цены.
+  const firstOnAuction = body.firstOnAuction === true && edition !== null;
   await mutate((db) => {
     // Дроп дня один: новый дроп снимает отметку со старых.
     if (design.drop) db.designs.forEach((d) => (d.drop = false));
     db.designs.push(design);
+    if (!firstOnAuction) return;
+    const at = design.createdAt ?? new Date().toISOString();
+    const code: CodeRecord = {
+      ...kindDefaults("memory"),
+      id: newId(),
+      owner: me!,
+      title: design.name.ru,
+      people: [],
+      requests: [],
+      invite: newId(12),
+      blocks: [],
+      style,
+      visits: [],
+      createdAt: at,
+      edition: { design: design.id, no: 1, of: edition },
+      owners: [{ person: me!, at, price: null }],
+    };
+    db.codes.push(code);
+    db.sales[design.id] = 1;
+    db.listings.push({
+      id: newId(),
+      code: code.id,
+      seller: me!,
+      mode: "auction",
+      price: design.price * 3,
+      endsAt: new Date(Date.parse(at) + 24 * 3_600_000).toISOString(),
+      bids: [],
+      status: "open",
+      buyer: null,
+      final: null,
+      createdAt: at,
+    });
   });
   return Response.json(design);
 }

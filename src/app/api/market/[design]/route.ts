@@ -41,7 +41,7 @@ export async function POST(_req: NextRequest, ctx: RouteContext<"/api/market/[de
   return typeof result === "number" ? Response.json({ error: result }, { status: result }) : Response.json(result);
 }
 
-/** Снять с продажи — только дизайнер, который выложил. Купленные коды у людей остаются. */
+/** Снять с продажи — только дизайнер, который выложил. Купленные коды у людей остаются; аукцион № 1 без ставок закрывается. */
 export async function DELETE(_req: NextRequest, ctx: RouteContext<"/api/market/[design]">) {
   const { design } = await ctx.params;
   const me = await currentPerson();
@@ -49,6 +49,11 @@ export async function DELETE(_req: NextRequest, ctx: RouteContext<"/api/market/[
     const i = db.designs.findIndex((d) => d.id === design && d.by === me);
     if (i < 0) return false;
     db.designs.splice(i, 1);
+    // Аукцион № 1 этого дизайна без ставок снимаем вместе с ним; со ставками — доигрывается (люди уже торгуются).
+    for (const l of db.listings) {
+      const c = db.codes.find((x) => x.id === l.code);
+      if (l.status === "open" && l.seller === me && !l.bids.length && c?.edition?.design === design) l.status = "cancelled";
+    }
     return true;
   });
   return ok ? Response.json({ ok: true }) : Response.json({ error: "forbidden" }, { status: 403 });

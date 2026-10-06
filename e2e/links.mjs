@@ -21,9 +21,11 @@ const ok = (c, m) => { console.log(c ? "  ✓" : "  ✗", m); if (!c) errors.pus
 const login = async (p, who, next) => { await p.goto(`${B}/login?next=${encodeURIComponent(next)}`); await p.getByRole("button", { name: new RegExp(who) }).click(); await p.waitForURL((u) => !u.pathname.startsWith("/login")); };
 
 const a = await mk(1280);
-await login(a, "Арман", "/codes");
-await a.getByRole("button", { name: /Новый код/ }).click();
-await a.getByRole("radio", { name: /^Ссылка/ }).click();
+// Из генератора: обычный код со ссылкой → «Сделать код-ссылку» → сразу форма с этим шаблоном
+await login(a, "Арман", "/");
+await a.getByRole("link", { name: "Сделать код-ссылку" }).click();
+await a.waitForURL(/\/codes\?new=link/);
+ok((await a.getByRole("radio", { name: /^Ссылка/ }).getAttribute("aria-checked")) === "true", "generator → link code form opens with «Link» chosen");
 await a.getByLabel("Название кода").fill("Меню кафе");
 await a.getByRole("button", { name: "Создать" }).click();
 await a.waitForURL(/\/codes\/\w+/);
