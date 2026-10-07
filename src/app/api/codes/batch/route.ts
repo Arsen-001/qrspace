@@ -1,4 +1,4 @@
-import { kindDefaults, mutate, newId, viewOf } from "@/server/db";
+import { kindDefaults, mutate, newId, overDailyLimit, viewOf } from "@/server/db";
 import { currentPerson } from "@/server/session";
 import type { CodeRecord } from "@/lib/codes";
 import { readKind, readShort, readStyle } from "../validate";
@@ -28,6 +28,11 @@ export async function POST(req: Request) {
     // Порядок в списке — как номера: «Метка 1» первой.
     createdAt: new Date(now - i).toISOString(),
   }));
-  await mutate((db) => db.codes.push(...codes));
+  const ok = await mutate((db) => {
+    if (overDailyLimit(db, me, codes.length)) return false;
+    db.codes.push(...codes);
+    return true;
+  });
+  if (!ok) return Response.json({ error: "limit" }, { status: 429 });
   return Response.json(codes.map((c) => viewOf(c, me)));
 }

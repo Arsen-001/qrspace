@@ -1,4 +1,4 @@
-import { kindDefaults, linkBase, mutate, newId, newShort, takenShorts } from "@/server/db";
+import { kindDefaults, linkBase, mutate, newId, newShort, overDailyLimit, takenShorts } from "@/server/db";
 import { currentPerson } from "@/server/session";
 import { linkOf, validTarget, type CodeRecord } from "@/lib/codes";
 import { readStyle, readText } from "../validate";
@@ -32,6 +32,7 @@ export async function POST(req: Request) {
       if (style) same.style = style;
       return same;
     }
+    if (overDailyLimit(db, me, 1)) return null;
     const c: CodeRecord = {
       ...kindDefaults(target ? "link" : "memory"),
       id: newId(),
@@ -51,5 +52,6 @@ export async function POST(req: Request) {
     db.codes.push(c);
     return c;
   });
+  if (!code) return Response.json({ error: "limit" }, { status: 429 });
   return Response.json({ id: code.id, link: linkOf(linkBase(req), code) });
 }

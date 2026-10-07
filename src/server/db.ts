@@ -21,6 +21,15 @@ const ALPHABET = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const SHORT = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 /** Секрет под стираемым слоем бирки: 8 знаков без похожих букв. */
 export const newSecret = () => Array.from(randomBytes(8), (b) => SHORT[b % SHORT.length]).join("");
+/**
+ * Предел новых кодов на человека за сутки (свои коды, генератор, наборы меток): все данные — один документ, и скрипт,
+ * создающий коды без конца, замедлил бы сайт всем. Купленные коды и номера не считаются.
+ */
+export const DAILY_NEW_CODES = 500;
+export const overDailyLimit = (db: Db, me: string, adding: number) => {
+  const since = Date.now() - 86_400_000;
+  return db.codes.filter((c) => c.owner === me && Date.parse(c.createdAt) > since).length + adding > DAILY_NEW_CODES;
+};
 export const takenShorts = (db: Db) => new Set(db.codes.map((c) => c.short).filter((x): x is string => !!x));
 export const newShort = (taken: Set<string>) => {
   for (;;) {

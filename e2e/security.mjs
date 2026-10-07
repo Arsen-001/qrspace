@@ -46,6 +46,15 @@ await p.evaluate((id) => fetch("/api/purchases", { method: "POST", headers: { "c
 const [dl] = await Promise.all([p.waitForEvent("download"), p.getByRole("button", { name: /Скачать SVG/ }).click()]);
 const svg = (await import("node:fs")).readFileSync(await dl.path(), "utf8");
 ok(svg.includes("data:image/jpeg;base64,") && !svg.includes("/api/asset/"), "downloaded SVG embeds the photo");
+// предел новых кодов в сутки (скрипт не раздует данные): наборы по 100, пока не откажут; потом и одиночный, и генератор
+const post = (u, b) => p.evaluate(([u, b]) => fetch(u, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(b) }).then((r) => r.status), [u, b]);
+const statuses = [];
+for (let i = 0; i < 6; i++) statuses.push(await post("/api/codes/batch", { count: 100, prefix: "Спам", kind: "memory" }));
+ok(statuses.includes(429) && statuses.indexOf(429) <= 5, `batches stop at the daily limit (${statuses.join(",")})`);
+let singles = 0;
+while (singles < 100 && (await post("/api/codes", { title: "Ещё", kind: "memory" })) === 200) singles++;
+ok(singles < 100, `single codes fill the rest of the limit, then refused (${singles} more)`);
+ok((await post("/api/codes/quick", { target: "https://example.org/spam", style: {} })) === 429, "generator code refused after the limit");
 await p.goto(B + "/market", { waitUntil: "networkidle" });
 ok(!alerted, "no script ran anywhere");
 console.log("errors:", errors.length ? errors : "none");

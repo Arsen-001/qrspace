@@ -1,4 +1,4 @@
-import { accessOf, allCodes, kindDefaults, linkBase, mutate, newId, viewOf } from "@/server/db";
+import { accessOf, allCodes, kindDefaults, linkBase, mutate, newId, overDailyLimit, viewOf } from "@/server/db";
 import { currentPerson } from "@/server/session";
 import { ymd, type CodeRecord } from "@/lib/codes";
 import { LANGS, tr, type Lang } from "@/lib/i18n";
@@ -54,6 +54,11 @@ export async function POST(req: Request) {
     code.blocks = st.blocks.map((b, i) => ({ id: newId(), kind: "text" as const, text: tr(b, lang), media: null, author: me, at: new Date(at.getTime() + i).toISOString() }));
     code.tasks = st.tasks.map((t) => ({ id: newId(), text: tr(t.text, lang), due: ymd(new Date(at.getTime() + t.inDays * 86_400_000)), every: t.every, done: [] }));
   }
-  await mutate((db) => db.codes.push(code));
+  const ok = await mutate((db) => {
+    if (overDailyLimit(db, me, 1)) return false;
+    db.codes.push(code);
+    return true;
+  });
+  if (!ok) return Response.json({ error: "limit" }, { status: 429 });
   return Response.json(viewOf(code, me));
 }
