@@ -152,6 +152,9 @@ export type Lot = Listing & { view: Pick<CodeView, "title" | "style" | "edition"
 
 export const MAX_PHOTO_PX = 1600;
 export const MAX_VIDEO_MB = 50;
+export const VIDEO_TYPES: Record<string, string> = { "video/mp4": "mp4", "video/quicktime": "mov", "video/webm": "webm" };
+/** Имя видео, которое браузер кладёт прямо в хранилище: «<код>_<12 букв/цифр>.<mp4|mov|webm>». */
+export const uploadedName = (id: string, name: string) => name.startsWith(`${id}_`) && /^[A-Za-z0-9]+_[A-Za-z0-9]{12}\.(mp4|mov|webm)$/.test(name);
 
 export const codeLink = (base: string, id: string) => `${base}/c/${id}`;
 

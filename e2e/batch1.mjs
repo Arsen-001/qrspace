@@ -2,7 +2,7 @@ import http from "node:http";
 import { chromium } from "playwright";
 const out = new URL("./out/", import.meta.url).pathname;
 const B = "http://localhost:3720";
-const mock = http.createServer((req, res) => { let body = ""; req.on("data", (c) => (body += c)); req.on("end", () => { const info = JSON.parse(Buffer.from(new URLSearchParams(body).get("code"), "base64url").toString()); const b64 = (o) => Buffer.from(JSON.stringify(o)).toString("base64url"); res.writeHead(200, { "content-type": "application/json" }); res.end(JSON.stringify({ id_token: `${b64({})}.${b64({ iss: "https://accounts.google.com", aud: "test-client.apps.googleusercontent.com", sub: info.sub, exp: Math.floor(Date.now() / 1000) + 600, nonce: info.nonce, email: info.email, email_verified: true, name: info.name })}.x` })); }); }).listen(3799);
+const mock = http.createServer((req, res) => { let body = ""; req.on("data", (c) => (body += c)); req.on("end", () => { const info = JSON.parse(Buffer.from(new URLSearchParams(body).get("code"), "base64url").toString()); const b64 = (o) => Buffer.from(JSON.stringify(o)).toString("base64url"); res.writeHead(200, { "content-type": "application/json" }); res.end(JSON.stringify({ id_token: `${b64({})}.${b64({ iss: "https://accounts.google.com", aud: "test-client.apps.googleusercontent.com", sub: info.sub, exp: Math.floor(Date.now() / 1000) + 600, nonce: info.nonce, email: info.email, email_verified: true, name: info.name })}.x` })); }); }).listen(3729);
 const browser = await chromium.launch();
 const errors = [];
 const ok = (c, m) => { console.log(c ? "  ✓" : "  ✗", m); if (!c) errors.push(m); };

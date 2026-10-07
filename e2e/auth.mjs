@@ -17,7 +17,7 @@ await brand.waitForSelector("text=Зарегистрировано 0 из 3");
 await brand.getByRole("link", { name: /Ararat Wear/ }).click();
 await brand.waitForSelector("text=№ 3");
 await shot(brand, "a-labels");
-const secrets = await brand.locator(".font-mono").allInnerTexts();
+const secrets = await brand.locator("main .font-mono").allInnerTexts(); // в шапке — метка «DEMO» тем же шрифтом
 ok(secrets.length === 3 && secrets.every((s) => /^[A-Z2-9]{8}$/.test(s)), "3 tags with 8-char secrets");
 const items = await brand.evaluate(() => fetch(location.pathname.replace("/brand/auth/", "/api/batches/")).then((r) => r.json()).then((d) => d.items));
 const scan = `${B}/K/${items[0].short}`;

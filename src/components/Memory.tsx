@@ -1,7 +1,7 @@
 "use client";
 // Память под кодом: записи (текст, фото, видео) и форма «дописать». Одна и та же в настройках и после скана.
 import { useRef, useState } from "react";
-import { api, MAX_PHOTO_PX, MAX_VIDEO_MB, mediaUrl, type Block, type CodeView } from "@/lib/codes";
+import { api, MAX_PHOTO_PX, MAX_VIDEO_MB, mediaUrl, VIDEO_TYPES, type Block, type CodeView } from "@/lib/codes";
 import { fmtDateTime } from "@/lib/format";
 import type { Dict, Lang } from "@/lib/i18n";
 import { prepareImage } from "@/lib/qr/raster";
@@ -19,11 +19,30 @@ async function shrinkPhoto(file: File): Promise<Blob> {
   return (await fetch(url)).blob();
 }
 
+/** Видео на выкладке грузим прямо в хранилище (сервер Vercel не принимает больше 4,5 МБ); имя файла — в форму. */
+async function uploadVideo(codeId: string, file: File, onProgress: (pct: number) => void): Promise<string | null> {
+  const { direct } = (await fetch(`/api/codes/${codeId}/upload`).then((r) => r.json())) as { direct: boolean };
+  if (!direct) return null;
+  const abc = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const rand = Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => abc[b % abc.length]).join("");
+  const name = `${codeId}_${rand}.${VIDEO_TYPES[file.type]}`;
+  const { upload } = await import("@vercel/blob/client");
+  await upload(name, file, {
+    access: "private",
+    handleUploadUrl: `/api/codes/${codeId}/upload`,
+    contentType: file.type,
+    multipart: file.size > 8 * 1024 * 1024,
+    onUploadProgress: (e) => onProgress(Math.round(e.percentage)),
+  });
+  return name;
+}
+
 function Composer({ t, code, onChange }: { t: Dict; code: CodeView; onChange: (v: CodeView) => void }) {
   const [kind, setKind] = useState<Kind>("text");
   const [text, setText] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const input = useRef<HTMLInputElement>(null);
 
@@ -43,7 +62,12 @@ function Composer({ t, code, onChange }: { t: Dict; code: CodeView; onChange: (v
       const form = new FormData();
       form.set("text", sentText);
       if (sentFile && kind === "photo") form.set("file", await shrinkPhoto(sentFile), "photo.jpg");
-      if (sentFile && kind === "video") form.set("file", sentFile);
+      if (sentFile && kind === "video") {
+        if (!VIDEO_TYPES[sentFile.type]) throw new Error("type");
+        const uploaded = await uploadVideo(code.id, sentFile, setProgress);
+        if (uploaded) form.set("uploaded", uploaded);
+        else form.set("file", sentFile);
+      }
       onChange(await api.addBlock(code.id, form));
       setText((t) => (t === sentText ? "" : t));
       setFile((f) => (f === sentFile ? null : f));
@@ -51,6 +75,7 @@ function Composer({ t, code, onChange }: { t: Dict; code: CodeView; onChange: (v
       setError(t.uploadError);
     } finally {
       setBusy(false);
+      setProgress(null);
     }
   };
 
@@ -106,7 +131,7 @@ function Composer({ t, code, onChange }: { t: Dict; code: CodeView; onChange: (v
       />
       {error && <p className="text-sm text-warn">{error}</p>}
       <button type="submit" disabled={!ready || busy} className="min-h-11 rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent disabled:opacity-40">
-        {busy ? t.uploading : t.save}
+        {busy ? (progress !== null && progress < 100 ? `${t.uploading} ${progress}%` : t.uploading) : t.save}
       </button>
     </form>
   );

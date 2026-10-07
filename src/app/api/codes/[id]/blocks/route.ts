@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { accessOf, mutate, newId, viewOf } from "@/server/db";
 import { media as files } from "@/server/media";
 import { currentPerson } from "@/server/session";
-import { MAX_VIDEO_MB, type Block } from "@/lib/codes";
+import { MAX_VIDEO_MB, uploadedName, type Block } from "@/lib/codes";
 import { readText } from "../../validate";
 
 const TYPES: Record<string, { kind: "photo" | "video"; ext: string }> = {
@@ -28,6 +28,13 @@ export async function POST(req: NextRequest, ctx: RouteContext<"/api/codes/[id]/
     if (!t || file.size > MAX_VIDEO_MB * 1024 * 1024) return Response.json({ error: "file" }, { status: 400 });
     media = { name: `${id}_${newId(12)}.${t.ext}`, kind: t.kind };
   }
+  // Видео, которое браузер уже положил прямо в хранилище (/api/codes/<id>/upload) — проверяем, что оно есть и не больше нормы.
+  const uploaded = form.get("uploaded");
+  if (!media && typeof uploaded === "string" && uploaded) {
+    const f = uploadedName(id, uploaded) && (await files.open(uploaded, { start: 0, end: 0 }));
+    if (!f || f.size > MAX_VIDEO_MB * 1024 * 1024) return Response.json({ error: "file" }, { status: 400 });
+    media = { name: uploaded, kind: "video" };
+  }
   if (!text && !media) return Response.json({ error: "empty" }, { status: 400 });
 
   // Файл кладём до записи в данные (запись может повториться — файл грузить второй раз не нужно);
@@ -38,6 +45,7 @@ export async function POST(req: NextRequest, ctx: RouteContext<"/api/codes/[id]/
     if (!c) return 404;
     const level = accessOf(c, me);
     if (level !== "owner" && level !== "edit") return 403;
+    if (media && c.blocks.some((b) => b.media === media!.name)) return 409;
     const block: Block = { id: newId(), kind: media?.kind ?? "text", text, media: media?.name ?? null, author: me, at: new Date().toISOString() };
     c.blocks.push(block);
     return viewOf(c, me);

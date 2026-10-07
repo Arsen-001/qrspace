@@ -25,7 +25,9 @@ const evil = [
   { ...before, dot: "<img src=x onerror=alert(1)>" },
 ];
 for (const s of evil) ok((await api("PATCH", { style: s })).status === 400, `rejected: ${JSON.stringify(s).match(/(logo|rotate|fg|dot)[^,]{0,40}/)?.[0]}`);
-ok(JSON.stringify((await api("GET")).json.style) === JSON.stringify(before), "stored style unchanged");
+// Postgres (jsonb) хранит ключи в своём порядке — сравниваем без учёта порядка.
+const canon = (v) => (Array.isArray(v) ? v.map(canon) : v && typeof v === "object" ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, canon(v[k])])) : v);
+ok(JSON.stringify(canon((await api("GET")).json.style)) === JSON.stringify(canon(before)), "stored style unchanged");
 // настоящее оформление с фото
 await p.getByRole("tab", { name: /Вид кода/ }).click();
 await p.locator('input[type=file][multiple]').setInputFiles(new URL("./photo.jpg", import.meta.url).pathname);
