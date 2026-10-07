@@ -3,7 +3,7 @@ import { accessOf, findCode, mutate, newId, notify, viewOf, recordVisit } from "
 import { media } from "@/server/media";
 import { currentPerson } from "@/server/session";
 import { usable } from "@/server/users";
-import type { CodePatch } from "@/lib/codes";
+import { validTarget, type CodePatch } from "@/lib/codes";
 import { readContact, readPeople, readShort, readStyle, readTitle, readVisibility } from "../validate";
 
 /** Код глазами текущего человека; ?visit=1 — это скан, пишем в историю (кроме хозяина). */
@@ -51,9 +51,9 @@ export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/codes/[id]
     }
     if ("compact" in body) c.compact = body.compact === true;
     if ("target" in body) {
-      // Только http(s): javascript: и прочие схемы сюда не пускаем — по этому адресу уйдёт каждый, кто сканирует.
-      const t = typeof body.target === "string" ? body.target.trim().slice(0, 2000) : "";
-      if (t && !/^https?:\/\/[^\s]+$/i.test(t)) return 400;
+      // Сайт, звонок, почта, SMS, Viber (validTarget): javascript: и прочее не пускаем — туда уйдёт каждый, кто сканирует.
+      const t = typeof body.target === "string" ? body.target.trim() : "";
+      if (t && !validTarget(t)) return 400;
       c.target = t || undefined;
     }
     if ("publicAdd" in body) c.publicAdd = body.publicAdd === true;

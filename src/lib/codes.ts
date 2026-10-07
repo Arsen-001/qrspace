@@ -156,6 +156,10 @@ export const VIDEO_TYPES: Record<string, string> = { "video/mp4": "mp4", "video/
 /** Имя видео, которое браузер кладёт прямо в хранилище: «<код>_<12 букв/цифр>.<mp4|mov|webm>». */
 export const uploadedName = (id: string, name: string) => name.startsWith(`${id}_`) && /^[A-Za-z0-9]+_[A-Za-z0-9]{12}\.(mp4|mov|webm)$/.test(name);
 
+/** Куда может вести код-ссылка: сайт, звонок, почта, SMS, Viber. javascript: и прочее — нельзя. */
+export const validTarget = (t: string) =>
+  t.length <= 2000 && /^(https?:\/\/[^\s]+|tel:\+?\d{3,20}|mailto:[^\s@]+@[^\s]+|sms:\+?\d{3,20}(\?body=[^\s]*)?|viber:\/\/chat\?number=[^\s]+)$/i.test(t);
+
 export const codeLink = (base: string, id: string) => `${base}/c/${id}`;
 
 /**
@@ -227,6 +231,8 @@ export const api = {
   get: (id: string, opts: { visit?: boolean } = {}) => call<CodeView>(`/api/codes/${id}${opts.visit ? "?visit=1" : ""}`),
   patch: (id: string, patch: CodePatch) => call<CodeView>(`/api/codes/${id}`, json("PATCH", patch)),
   remove: (id: string) => call<{ ok: true }>(`/api/codes/${id}`, { method: "DELETE" }),
+  /** Код из генератора: адрес (код-ссылка) или текст → короткая ссылка для самого кода. */
+  quick: (body: { target?: string; text?: string; style: unknown }) => call<{ id: string; link: string }>("/api/codes/quick", json("POST", body)),
   addBlock: (id: string, form: FormData) => call<CodeView>(`/api/codes/${id}/blocks`, { method: "POST", body: form }),
   editBlock: (id: string, blockId: string, text: string) => call<CodeView>(`/api/codes/${id}/blocks/${blockId}`, json("PATCH", { text })),
   removeBlock: (id: string, blockId: string) => call<CodeView>(`/api/codes/${id}/blocks/${blockId}`, { method: "DELETE" }),

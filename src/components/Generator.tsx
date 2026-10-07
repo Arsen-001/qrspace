@@ -1,9 +1,11 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
-import { buildPayload, CONTENT_TYPES, type ContentType, type Fields } from "@/lib/qr/payload";
+import { api } from "@/lib/codes";
+import { buildPayload, CONTENT_TYPES, isDirect, linkTarget, type ContentType, type Fields } from "@/lib/qr/payload";
+import { buildDrawing } from "@/lib/qr/render";
 import { codeKey, tierOf } from "@/lib/pricing";
-import { DEFAULT_STYLE, toSaved } from "@/lib/qr/style";
+import { DEFAULT_STYLE, toQrStyle, toSaved } from "@/lib/qr/style";
 import { useLang } from "@/lib/lang";
 import { useMe } from "@/lib/me";
 import { isDesigner } from "@/lib/people";
@@ -25,8 +27,14 @@ export function Generator() {
     return f;
   });
   const [style, setStyle] = useState<StyleState>(DEFAULT_STYLE);
-  const payload = buildPayload(type, fields[type]);
+  const raw = buildPayload(type, fields[type]);
   const { me, base } = useMe();
+  // Наш красивый код ведёт только через нашу короткую ссылку: в предпросмотре — образец той же длины, настоящая
+  // создаётся при скачивании (код появляется в «Мои коды»). Wi-Fi, контакт и событие — прямо в коде, только простые.
+  const direct = isDirect(type);
+  const sample = `${(base || "https://qrspace.co").toUpperCase()}/K/XXXXXX`;
+  const payload = !raw || direct ? raw : sample;
+  const tier = tierOf(style);
 
   return (
     <div>
@@ -53,8 +61,16 @@ export function Generator() {
           style={style}
           setStyle={setStyle}
           gate={{
-            tier: tierOf(style),
-            key: () => codeKey(payload, toSaved(style)),
+            tier,
+            key: () => codeKey(raw, toSaved(style)),
+            blocked: direct && tier === "styled" ? t.directBlocked : undefined,
+            finalize: direct
+              ? undefined
+              : async () => {
+                  const target = linkTarget(type, raw);
+                  const { link } = await api.quick(target ? { target, style: toSaved(style) } : { text: raw, style: toSaved(style) });
+                  return { drawing: buildDrawing(link, toQrStyle(style)), payload: link };
+                },
           }}
           top={
             <ContentForm
@@ -69,19 +85,15 @@ export function Generator() {
             isDesigner(me) ? (
               <PublishBox t={t} style={style} base={base} />
             ) : (
-              type === "url" && (
-                // Обычный код со ссылкой не поменять после печати — предлагаем код-ссылку.
-                <section className="rounded-2xl border border-line bg-card p-5">
-                  <h2 className="font-heading text-base font-bold">{t.linkPromoTitle}</h2>
-                  <p className="mt-1 text-sm text-muted">{t.linkPromoText}</p>
-                  <Link
-                    href="/codes?new=link"
-                    className="mt-3 inline-grid min-h-11 place-items-center rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent"
-                  >
-                    {t.linkPromoCta}
+              <section className="rounded-2xl border border-line bg-card p-5">
+                <h2 className="font-heading text-base font-bold">{direct ? t.directTitle : t.viaTitle}</h2>
+                <p className="mt-1 text-sm text-muted">{direct ? t.directText : t.viaText}</p>
+                {!direct && me && (
+                  <Link href="/codes" className="mt-3 inline-grid min-h-11 place-items-center rounded-xl border border-line bg-field px-4 text-sm font-semibold hover:border-muted">
+                    {t.viaCta}
                   </Link>
-                </section>
-              )
+                )}
+              </section>
             )
           }
         />

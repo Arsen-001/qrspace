@@ -16,7 +16,7 @@ const shot = async (p, name) => { await p.waitForTimeout(300); await p.screensho
 let guestScans = 1; // первый — гость увидел «не настроено»
 const where = async (p, path) => {
   const r = await p.request.get(B + path, { maxRedirects: 0 });
-  if (path.startsWith("/c/")) guestScans += 1; // каждый переход гостя по /c — это скан
+  if (/^\/(c|K)\//.test(path)) guestScans += 1; // каждый переход гостя по /c и /K — это скан
   return r.status() === 307 || r.status() === 308 ? r.headers()["location"] : `${r.status()}`;
 };
 // Ждём, пока сервер сохранит адрес: интерфейс показывает новый адрес сразу, ещё до ответа сервера.
@@ -32,11 +32,10 @@ const ok = (c, m) => { console.log(c ? "  ✓" : "  ✗", m); if (!c) errors.pus
 const login = async (p, who, next) => { await p.goto(`${B}/login?next=${encodeURIComponent(next)}`); await p.getByRole("button", { name: new RegExp(who) }).click(); await p.waitForURL((u) => !u.pathname.startsWith("/login")); };
 
 const a = await mk(1280);
-// Из генератора: обычный код со ссылкой → «Сделать код-ссылку» → сразу форма с этим шаблоном
-await login(a, "Арман", "/");
-await a.getByRole("link", { name: "Сделать код-ссылку" }).click();
+// /codes?new=link — сразу форма с шаблоном «Ссылка» (генератор теперь сам делает код-ссылку — e2e/redirect.mjs)
+await login(a, "Арман", "/codes?new=link");
 await a.waitForURL(/\/codes\?new=link/);
-ok((await a.getByRole("radio", { name: /^Ссылка/ }).getAttribute("aria-checked")) === "true", "generator → link code form opens with «Link» chosen");
+ok((await a.getByRole("radio", { name: /^Ссылка/ }).getAttribute("aria-checked")) === "true", "/codes?new=link opens with «Link» chosen");
 await a.getByLabel("Название кода").fill("Меню кафе");
 await a.getByRole("button", { name: "Создать" }).click();
 await a.waitForURL(/\/codes\/\w+/);
@@ -54,7 +53,7 @@ await a.waitForSelector("text=Сейчас ведёт на");
 ok((await whereSoon(g, `/c/${id}`, "https://menu.example.com/autumn")) === "https://menu.example.com/autumn", "scan redirects to the owner's address");
 // Короткая ссылка тоже
 const short = await a.evaluate((i) => fetch(`/api/codes/${i}`).then((r) => r.json()).then((c) => c.short), id);
-ok((await where(g, `/K/${short}`)) === `/c/${id}`, "short /K link goes to the code page");
+ok((await where(g, `/K/${short}`)) === "https://menu.example.com/autumn", "short /K link goes straight to the owner's address (one hop)");
 // Меняем адрес — тот же код ведёт на новый
 await a.getByLabel("Куда ведёт код").fill("https://promo.example.com/");
 await a.getByRole("button", { name: "Сохранить" }).click();

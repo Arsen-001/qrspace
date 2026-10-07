@@ -12,13 +12,18 @@ import { downloadLive, downloadPng, downloadSvg } from "@/lib/qr/raster";
 
 export type ScanState = "idle" | "checking" | "ok" | "bad";
 
-/** Оплата при скачивании: tier — простой или красивый, key — какой это код (считается только по нажатию). */
-export type Gate = { tier: Tier; key: () => string };
+/**
+ * Оплата при скачивании: tier — простой или красивый, key — какой это код (считается только по нажатию).
+ * finalize — перед сохранением получить настоящий код (генератор: короткая ссылка вместо образца);
+ * blocked — скачать нельзя, вместо кнопок — объяснение.
+ */
+export type Gate = { tier: Tier; key: () => string; finalize?: () => Promise<{ drawing: Drawing; payload: string }>; blocked?: string };
 type Format = "png" | "svg" | "live";
 
 export function Preview({ t, drawing, scan, error, name = "qr-code", gate, payload }: { t: Dict; drawing: Drawing | null; scan: ScanState; error: string | null; name?: string; gate?: Gate | null; payload?: string }) {
   const [forced, setForced] = useState(false);
-  const canDownload = !!drawing && (scan === "ok" || (scan === "bad" && forced));
+  const canDownload = !!drawing && !gate?.blocked && (scan === "ok" || (scan === "bad" && forced));
+  const [failed, setFailed] = useState(false);
   const { me } = useMe();
   const path = usePathname();
   const [pay, setPay] = useState<{ format: Format; quote: Quote | null; key: string } | null>(null);
@@ -29,11 +34,19 @@ export function Preview({ t, drawing, scan, error, name = "qr-code", gate, paylo
   const canRecord = useInBrowser() && typeof MediaRecorder !== "undefined";
   const save = async (format: Format) => {
     if (!drawing) return;
-    if (format === "png") return downloadPng(drawing, 2048, name);
-    if (format === "svg") return downloadSvg(drawing, name);
+    let d = drawing;
+    let text = payload ?? "";
+    if (gate?.finalize) {
+      setFailed(false);
+      const f = await gate.finalize().catch(() => null);
+      if (!f) return setFailed(true);
+      ({ drawing: d, payload: text } = f);
+    }
+    if (format === "png") return downloadPng(d, 2048, name);
+    if (format === "svg") return downloadSvg(d, name);
     // Живой код пишется в реальном времени (4 с) — показываем, сколько осталось.
     setLive(0);
-    const ok = await downloadLive(drawing, payload ?? "", name, (p) => setLive(p)).catch(() => false);
+    const ok = await downloadLive(d, text, name, (p) => setLive(p)).catch(() => false);
     setLive(ok ? null : "bad");
   };
   const download = async (format: Format) => {
@@ -45,7 +58,7 @@ export function Preview({ t, drawing, scan, error, name = "qr-code", gate, paylo
       const q = await api.quote(key, gate.tier);
       if (q.paid) {
         setPay(null);
-        save(format);
+        await save(format);
       } else setPay({ format, quote: q, key });
     } finally {
       setBusy(false);
@@ -56,7 +69,7 @@ export function Preview({ t, drawing, scan, error, name = "qr-code", gate, paylo
     setBusy(true);
     try {
       await api.pay(pay.key, gate.tier);
-      save(pay.format);
+      await save(pay.format);
       setPay(null);
     } finally {
       setBusy(false);
@@ -100,6 +113,7 @@ export function Preview({ t, drawing, scan, error, name = "qr-code", gate, paylo
         )}
       </div>
 
+      {gate?.blocked && <p className="mt-3 rounded-xl bg-warn-soft p-3 text-sm">{gate.blocked}</p>}
       <div className="mt-3 grid grid-cols-2 gap-2">
         <button
           type="button"
@@ -136,7 +150,8 @@ export function Preview({ t, drawing, scan, error, name = "qr-code", gate, paylo
         </button>
       )}
       {live === "bad" && <p className="mt-2 text-xs text-warn">{t.liveBad}</p>}
-      {gate && (
+      {failed && <p className="mt-2 text-xs text-warn">{t.saveError}</p>}
+      {gate && !gate.blocked && (
         <p className="mt-3 text-center text-xs text-muted">
           {gate.tier === "simple" ? t.tierSimple : t.tierStyled} · {t.priceFrom} ${PRICES[gate.tier]}
           <span className="block">{t.firstFree}</span>

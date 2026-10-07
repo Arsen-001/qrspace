@@ -1,4 +1,4 @@
-import { accessOf, allCodes, kindDefaults, mutate, newId, publicBase, viewOf } from "@/server/db";
+import { accessOf, allCodes, kindDefaults, linkBase, mutate, newId, viewOf } from "@/server/db";
 import { currentPerson } from "@/server/session";
 import { ymd, type CodeRecord } from "@/lib/codes";
 import { LANGS, tr, type Lang } from "@/lib/i18n";
@@ -12,7 +12,7 @@ export async function GET(req: Request) {
   const codes = await allCodes();
   const newest = (a: CodeRecord, b: CodeRecord) => b.createdAt.localeCompare(a.createdAt);
   return Response.json({
-    base: publicBase(req),
+    base: linkBase(req),
     // Вещи партий (защита от подделок) — не в общем списке, а в «Защите от подделок».
     mine: codes.filter((c) => c.owner === me && c.kind !== "item").sort(newest).map((c) => viewOf(c, me)),
     items: codes.filter((c) => c.auth?.holder === me).map((c) => viewOf(c, me)),

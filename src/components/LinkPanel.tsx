@@ -1,7 +1,7 @@
 "use client";
 // Код-ссылка: куда ведёт скан. Адрес меняется когда угодно — напечатанный код остаётся тем же.
 import { useState } from "react";
-import type { CodePatch, CodeView } from "@/lib/codes";
+import { validTarget, type CodePatch, type CodeView } from "@/lib/codes";
 import type { Dict } from "@/lib/i18n";
 import { Card } from "./ui";
 
@@ -10,8 +10,9 @@ export function LinkPanel({ t, code, save }: { t: Dict; code: CodeView; save: (p
   const [bad, setBad] = useState(false);
   const commit = () => {
     let v = target.trim();
-    if (v && !/^https?:\/\//i.test(v)) v = `https://${v}`;
-    if (v && !/^https?:\/\/[^\s]+\.[^\s]+/i.test(v)) return setBad(true);
+    // Без схемы — это сайт; звонок, почта, SMS (из генератора) оставляем как есть.
+    if (v && !/^[a-z][a-z0-9+.-]*:/i.test(v)) v = `https://${v}`;
+    if (v && !(validTarget(v) && (!/^https?:/i.test(v) || /^https?:\/\/[^\s]+\.[^\s]+/i.test(v)))) return setBad(true);
     setBad(false);
     setTarget(v);
     if (v !== (code.target ?? "")) save({ target: v });

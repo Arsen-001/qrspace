@@ -149,3 +149,16 @@ export function buildPayload(type: ContentType, f: Fields): string {
     }
   }
 }
+
+/** Wi-Fi, контакт и событие телефон понимает только из самого кода — их не провести через нашу ссылку. */
+export const DIRECT_TYPES: readonly ContentType[] = ["wifi", "contact", "event"];
+export const isDirect = (type: ContentType) => DIRECT_TYPES.includes(type);
+
+/** Куда переадресует наша короткая ссылка (готовая строка → адрес). Текст переадресовать некуда — он на странице кода. */
+export function linkTarget(type: ContentType, payload: string): string | null {
+  if (!payload || type === "text" || isDirect(type)) return null;
+  // «SMSTO:номер:текст» понимают только камеры; браузеру нужен sms:номер?body=текст.
+  const sms = /^SMSTO:([^:]*):([\s\S]*)$/.exec(payload);
+  if (sms) return `sms:${sms[1]}${sms[2] ? `?body=${encodeURIComponent(sms[2])}` : ""}`;
+  return payload;
+}

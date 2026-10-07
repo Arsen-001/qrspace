@@ -464,6 +464,12 @@ export const isAdminId = async (id: string | null) => !!id && !!(await findUser(
 
 export const isDesignerId = async (id: string | null) => !!id && !!(await findUser(id))?.designer;
 
+/** Адрес в самом коде: на выкладке — постоянный адрес сайта (APP_URL), даже если открыли через *.vercel.app. */
+export function linkBase(req: Request): string {
+  const app = process.env.APP_URL?.replace(/\/$/, "");
+  return app && process.env.NODE_ENV === "production" ? app : publicBase(req);
+}
+
 /** Адрес для ссылки в коде: с localhost телефон не откроет — подставляем адрес компьютера в сети. */
 export function publicBase(req: Request): string {
   const url = new URL(req.url);
