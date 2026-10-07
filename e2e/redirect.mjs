@@ -17,10 +17,12 @@ const ready = () => p.waitForFunction(() => /Код читается/.test(docum
 const decode = async (file) => {
   const img = await p.evaluate(async (b64) => {
     const bmp = await createImageBitmap(await (await fetch(`data:image/png;base64,${b64}`)).blob());
-    const c = new OffscreenCanvas(bmp.width, bmp.height);
+    // 2048 точек массивом — 16 млн чисел, тест вис; для чтения кода хватает 600.
+    const n = Math.min(600, bmp.width);
+    const c = new OffscreenCanvas(n, n);
     const g = c.getContext("2d");
-    g.drawImage(bmp, 0, 0);
-    return { w: bmp.width, h: bmp.height, data: Array.from(g.getImageData(0, 0, bmp.width, bmp.height).data) };
+    g.drawImage(bmp, 0, 0, n, n);
+    return { w: n, h: n, data: Array.from(g.getImageData(0, 0, n, n).data) };
   }, fs.readFileSync(file).toString("base64"));
   const [r] = await readBarcodes({ data: Uint8ClampedArray.from(img.data), width: img.w, height: img.h, colorSpace: "srgb" }, { formats: ["QRCode"] });
   return r?.text ?? null;

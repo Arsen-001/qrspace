@@ -1,5 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono, Noto_Sans_Armenian, Onest, Unbounded } from "next/font/google";
+import { DICTS } from "@/lib/i18n";
+import { LangProvider } from "@/lib/lang";
+import { serverLang } from "@/lib/lang-server";
 import "./globals.css";
 
 const armenian = Noto_Sans_Armenian({ variable: "--font-armenian", subsets: ["armenian"] });
@@ -8,14 +11,18 @@ const display = Unbounded({ variable: "--font-display", subsets: ["latin", "cyri
 const text = Onest({ variable: "--font-text", subsets: ["latin", "cyrillic"] });
 const mono = JetBrains_Mono({ variable: "--font-code", subsets: ["latin", "cyrillic"] });
 
-export const metadata: Metadata = {
-  // Полные адреса для превью ссылок: APP_URL при выкладке, на этом компьютере — localhost.
-  metadataBase: new URL(process.env.APP_URL || "http://localhost:3720"),
-  title: { default: "QR Space — QR-код из ссылки, Wi-Fi, контакта или вашей фотографии", template: "%s — QR Space" },
-  description: "Генератор QR-кодов: свои цвета, логотип, QR-картинка из фото, проверка чтения и коды с памятью. Первый простой код — бесплатно.",
-  openGraph: { siteName: "QR Space", type: "website" },
-  twitter: { card: "summary_large_image" },
-};
+// Название и описание — на языке страницы (поисковики и превью ссылок видят свой язык).
+export async function generateMetadata(): Promise<Metadata> {
+  const t = DICTS[await serverLang()];
+  return {
+    // Полные адреса для превью ссылок: APP_URL при выкладке, на этом компьютере — localhost.
+    metadataBase: new URL(process.env.APP_URL || "http://localhost:3720"),
+    title: { default: `${t.appName} — ${t.tagline}`, template: `%s — ${t.appName}` },
+    description: t.homeLead,
+    openGraph: { siteName: t.appName, type: "website" },
+    twitter: { card: "summary_large_image" },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: [
@@ -24,10 +31,13 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const lang = await serverLang();
   return (
-    <html lang="ru" className={`${armenian.variable} ${display.variable} ${text.variable} ${mono.variable} h-full antialiased`}>
-      <body className="min-h-full">{children}</body>
+    <html lang={lang} className={`${armenian.variable} ${display.variable} ${text.variable} ${mono.variable} h-full antialiased`}>
+      <body className="min-h-full">
+        <LangProvider lang={lang}>{children}</LangProvider>
+      </body>
     </html>
   );
 }

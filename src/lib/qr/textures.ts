@@ -57,12 +57,14 @@ function makeNoise(seed: number) {
 
 const hexRgb = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
 
-const cache = new Map<TextureId, string>();
+const cache = new Map<string, string>();
 
-export function textureSrc(id: TextureId): string {
-  const hit = cache.get(id);
+/** size — сторона в пикселях: под кодом 512, для образца в списке хватает 64 (в 64 раза меньше счёта при открытии страницы). */
+export function textureSrc(id: TextureId, size = 512): string {
+  const key = `${id}:${size}`;
+  const hit = cache.get(key);
   if (hit) return hit;
-  const S = 512;
+  const S = size;
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = S;
   const ctx = canvas.getContext("2d")!;
@@ -129,6 +131,6 @@ export function textureSrc(id: TextureId): string {
   }
   ctx.putImageData(img, 0, 0);
   const src = canvas.toDataURL("image/jpeg", 0.88);
-  cache.set(id, src);
+  cache.set(key, src);
   return src;
 }

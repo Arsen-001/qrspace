@@ -1,18 +1,26 @@
 "use client";
-// Язык сайта живёт в localStorage; на сервере — русский, в браузере сразу сохранённый или язык системы.
-import { useEffect, useSyncExternalStore } from "react";
+// Язык сайта: выбранный на сайте (localStorage + cookie «lang», чтобы сервер сразу отдал страницу на нём), иначе —
+// тот, что сервер взял из языка браузера (src/lib/lang-server.ts) и передал через LangProvider.
+import { createContext, createElement, useContext, useEffect, useSyncExternalStore, type ReactNode } from "react";
 import { DICTS, type Dict, type Lang } from "./i18n";
 
 const LANG_KEY = "qr-studio.lang";
 
-function readLang(): Lang {
+function savedLang(): Lang | null {
   try {
     const saved = localStorage.getItem(LANG_KEY) as Lang | null;
     if (saved && saved in DICTS) return saved;
   } catch {}
-  // Язык системы, если он у нас есть; иначе английский (рынок — весь мир).
-  const nav = navigator.language.slice(0, 2) as Lang;
-  return nav in DICTS ? nav : "en";
+  return null;
+}
+
+function writeCookie(l: Lang) {
+  document.cookie = `lang=${l}; path=/; max-age=31536000; samesite=lax`;
+}
+
+const InitialLang = createContext<Lang>("en");
+export function LangProvider({ lang, children }: { lang: Lang; children: ReactNode }) {
+  return createElement(InitialLang.Provider, { value: lang }, children);
 }
 
 const listeners = new Set<() => void>();
@@ -29,17 +37,21 @@ export function saveLang(l: Lang) {
   try {
     localStorage.setItem(LANG_KEY, l);
   } catch {}
+  writeCookie(l);
   listeners.forEach((cb) => cb());
 }
 
 /** Текущий язык и словарь; заголовок вкладки — `title`, если передан. */
 export function useLang(title?: (t: Dict) => string): { lang: Lang; t: Dict } {
-  const lang = useSyncExternalStore(subscribe, readLang, () => "ru" as Lang);
+  const initial = useContext(InitialLang);
+  const lang = useSyncExternalStore(subscribe, () => savedLang() ?? initial, () => initial);
   const t = DICTS[lang];
   const docTitle = title?.(t);
   useEffect(() => {
     document.documentElement.lang = lang;
+    // Выбрали язык до cookie (или cookie стёрли) — пусть и сервер знает.
+    if (lang !== initial && savedLang() === lang) writeCookie(lang);
     if (docTitle) document.title = docTitle;
-  }, [lang, docTitle]);
+  }, [lang, initial, docTitle]);
   return { lang, t };
 }

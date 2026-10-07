@@ -60,7 +60,7 @@ const noSubscribe = () => () => {};
 
 /** Образец текстуры: рисуется только в браузере (на сервере — просто цвет). */
 function TextureSwatch({ id }: { id: TextureId }) {
-  const src = useSyncExternalStore(noSubscribe, () => textureSrc(id), () => "");
+  const src = useSyncExternalStore(noSubscribe, () => textureSrc(id, 64), () => "");
   return (
     <span
       className="block h-10 w-10 rounded-lg border border-line bg-cover"
