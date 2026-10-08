@@ -13,7 +13,7 @@ import { isDesigner } from "@/lib/people";
 import { prepareImage } from "@/lib/qr/raster";
 import { personName } from "./Avatar";
 import { Notice, Shell } from "./Shell";
-import { UploadButton } from "./ui";
+import { UploadButton, StepBadge } from "./ui";
 
 const field = "w-full rounded-xl border border-line bg-field px-3.5 py-2.5 text-base outline-none transition-colors focus:border-accent";
 
@@ -21,6 +21,8 @@ export function StatusChip({ t, status }: { t: Dict; status: OrderStatus }) {
   const cls = status === "done" ? "bg-ok-soft text-ok" : status === "review" ? "bg-accent text-on-accent" : status === "new" ? "bg-warn-soft text-warn" : "bg-field text-ink";
   return <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${cls}`}>{t[`status.${status}`]}</span>;
 }
+
+const stepH = "flex items-center gap-3 font-heading text-base font-bold";
 
 function OrderForm({ t }: { t: Dict }) {
   const router = useRouter();
@@ -38,7 +40,7 @@ function OrderForm({ t }: { t: Dict }) {
 
   return (
     <form
-      className="space-y-4 rounded-2xl border border-line bg-card p-5 sm:p-6"
+      className="space-y-5 rounded-2xl border border-line bg-card p-5 sm:p-6"
       onSubmit={async (e) => {
         e.preventDefault();
         if (!ready) return;
@@ -54,6 +56,10 @@ function OrderForm({ t }: { t: Dict }) {
       }}
     >
       <h2 className="font-heading text-xl font-bold">{t.orderFormTitle}</h2>
+      <h3 className={stepH}>
+        <StepBadge n={1} />
+        {t.brandStep1}
+      </h3>
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="block">
           <span className="mb-1.5 block text-sm font-medium text-muted">{t.brandName}</span>
@@ -63,6 +69,12 @@ function OrderForm({ t }: { t: Dict }) {
           <span className="mb-1.5 block text-sm font-medium text-muted">{t.brandContact}</span>
           <input value={contact} maxLength={100} onChange={(e) => setContact(e.target.value)} className={field} autoComplete="email" />
         </label>
+      </div>
+      <h3 className={`${stepH} border-t border-line pt-5`}>
+        <StepBadge n={2} />
+        {t.brandStep2}
+      </h3>
+      <div className="grid gap-3 sm:grid-cols-2">
         <label className="block">
           <span className="mb-1.5 block text-sm font-medium text-muted">{t.brandNeed}</span>
           <select value={need} onChange={(e) => setNeed(e.target.value as Need)} className={field}>
@@ -94,6 +106,10 @@ function OrderForm({ t }: { t: Dict }) {
         <span className="mb-1.5 block text-sm font-medium text-muted">{t.brandNotes}</span>
         <textarea value={notes} rows={3} maxLength={2000} placeholder={t.brandNotesPlaceholder} onChange={(e) => setNotes(e.target.value)} className={`${field} resize-y`} />
       </label>
+      <h3 className={`${stepH} border-t border-line pt-5`}>
+        <StepBadge n={3} />
+        {t.brandStep3}
+      </h3>
       <div role="radiogroup" aria-label={t.packageLabel} className="grid gap-2 sm:grid-cols-2">
         {(Object.keys(PACKAGES) as Pkg[]).map((k) => (
           <button

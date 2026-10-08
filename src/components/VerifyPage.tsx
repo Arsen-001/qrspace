@@ -10,6 +10,7 @@ import { readQr } from "@/lib/qr/raster";
 import { KindIcon } from "./KindIcon";
 import { ReportBox } from "./ReportBox";
 import { Shell } from "./Shell";
+import { StepBadge } from "./ui";
 
 type Result = { result: "ours"; id: string; kind: Kind; title: string | null } | { result: "foreign"; host: string } | { result: "missing" | "site" | "text" };
 
@@ -108,15 +109,32 @@ export function VerifyPage() {
               <video ref={video} muted playsInline className="aspect-square w-full object-cover" />
             </div>
           ) : (
-            <button type="button" onClick={() => setOn(true)} className="min-h-12 w-full rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent">
-              📷 {t.verifyCamera}
-            </button>
+            <div className="rounded-2xl bg-stage p-5 text-on-stage sm:p-6">
+              {/* Рамка сканера с бегущим лучом — сразу понятно, что тут наводят камеру. */}
+              <div aria-hidden className="relative mx-auto aspect-square w-full max-w-[220px] overflow-hidden rounded-xl">
+                {["left-0 top-0 border-l-4 border-t-4", "right-0 top-0 border-r-4 border-t-4", "bottom-0 left-0 border-b-4 border-l-4", "bottom-0 right-0 border-b-4 border-r-4"].map((c) => (
+                  <span key={c} className={`absolute h-10 w-10 rounded-sm border-accent ${c}`} />
+                ))}
+                <div className="x-scan" />
+              </div>
+              <button type="button" onClick={() => setOn(true)} className="mt-5 min-h-12 w-full rounded-xl bg-accent px-5 font-heading text-sm font-bold text-on-accent">
+                📷 {t.verifyCamera}
+              </button>
+            </div>
           )}
           <label className="flex min-h-12 w-full cursor-pointer items-center justify-center rounded-xl border border-line bg-card px-5 text-sm font-semibold hover:border-muted">
             {t.verifyPhoto}
             <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && fromPhoto(e.target.files[0])} />
           </label>
           {error && <p className="text-sm text-warn">{error}</p>}
+          <ol className="grid gap-2 pt-3 sm:grid-cols-3">
+            {[t.verifyHow1, t.verifyHow2, t.verifyHow3].map((x, i) => (
+              <li key={x} className="flex items-start gap-3 rounded-xl border border-line bg-card p-3 text-sm">
+                <StepBadge n={i + 1} />
+                <span className="pt-1">{x}</span>
+              </li>
+            ))}
+          </ol>
         </div>
       )}
 
