@@ -14,6 +14,7 @@ import { KindIcon } from "./KindIcon";
 import { QrThumb } from "./QrThumb";
 import { DueNote } from "./Tasks";
 import { Notice, Shell } from "./Shell";
+import { DoneCheck } from "./ui";
 import { VisBadge } from "./VisBadge";
 
 function CodeCard({ t, lang, base, code, shared }: { t: Dict; lang: Lang; base: string; code: CodeView; shared?: boolean }) {
@@ -79,8 +80,9 @@ function Upcoming({ t, lang, codes, onDone }: { t: Dict; lang: Lang; codes: Code
       <p className="mt-0.5 text-xs text-muted">{t.upcomingHint}</p>
       <ul className="mt-1 divide-y divide-line">
         {items.map(({ c, task }) => (
-          <li key={task.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 py-3">
-            <div className="min-w-0 flex-1 basis-56">
+          <li key={task.id} className="flex items-start gap-3 py-3">
+            <DoneCheck label={`${t.markDone}: ${task.text}`} busy={busy === task.id} onClick={() => done(c, task)} />
+            <div className="min-w-0 flex-1 pt-1.5">
               <div className="font-medium">{task.text}</div>
               <div className="mt-0.5 text-xs">
                 <DueNote t={t} lang={lang} due={task.due} />
@@ -90,9 +92,6 @@ function Upcoming({ t, lang, codes, onDone }: { t: Dict; lang: Lang; codes: Code
                 </Link>
               </div>
             </div>
-            <button type="button" disabled={busy === task.id} onClick={() => done(c, task)} className="min-h-10 rounded-xl bg-ok px-4 text-sm font-semibold text-on-ok disabled:opacity-50">
-              ✓ {t.markDone}
-            </button>
           </li>
         ))}
       </ul>

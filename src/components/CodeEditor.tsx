@@ -43,6 +43,23 @@ function LookTab({ t, code, link, save }: { t: Dict; code: CodeView; link: strin
     } side={<p className="px-1 text-sm text-muted">{t.changeAnytime}</p>} />;
 }
 
+const TAB_ICON: Record<Tab, string> = {
+  memory: "M5 4h14v16H5zM8.5 8.5h7M8.5 12h7M8.5 15.5h4",
+  contact: "M4 5h16v11H9l-5 4zM8 10.5h.01M12 10.5h.01M16 10.5h.01",
+  access: "M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM3 20c.8-3.4 3-5 6-5s5.2 1.6 6 5M16 4.5a3.5 3.5 0 0 1 0 6.5M18 15c1.6.6 2.6 2.2 3 5",
+  stats: "M4 20V10M10 20V4M16 20v-7M22 20H2",
+  look: "M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 18h2v2h-2zM14 18h2M18 14h2",
+  link: "M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1",
+};
+
+function TabIcon({ id, active }: { id: Tab; active: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" className={`h-4 w-4 shrink-0 ${active ? "text-accent" : ""}`} fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d={TAB_ICON[id]} />
+    </svg>
+  );
+}
+
 function TitleField({ t, value, save }: { t: Dict; value: string; save: (p: CodePatch) => Promise<void> }) {
   const [title, setTitle] = useState(value);
   const commit = () => {
@@ -50,15 +67,22 @@ function TitleField({ t, value, save }: { t: Dict; value: string; save: (p: Code
     if (v && v !== value) save({ title: v });
     else setTitle(value);
   };
+  // Длинное название на телефоне переносится, а не уезжает за экран (поле растёт по тексту).
   return (
-    <input
+    <textarea
       aria-label={t.titleLabel}
       value={title}
       maxLength={80}
-      onChange={(e) => setTitle(e.target.value)}
+      rows={1}
+      onChange={(e) => setTitle(e.target.value.replace(/\n/g, " "))}
       onBlur={commit}
-      onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-      className="w-full min-w-0 rounded-xl border border-transparent bg-transparent px-2 py-1 font-heading text-2xl font-extrabold tracking-tight outline-none hover:border-line focus:border-accent focus:bg-field sm:text-3xl"
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          e.currentTarget.blur();
+        }
+      }}
+      className="w-full min-w-0 resize-none overflow-hidden rounded-xl border border-transparent bg-transparent px-2 py-1 font-heading text-2xl leading-tight font-extrabold tracking-tight outline-none [field-sizing:content] hover:border-line focus:border-accent focus:bg-field sm:text-4xl"
     />
   );
 }
@@ -88,7 +112,10 @@ function DeleteCode({ t, id }: { t: Dict; id: string }) {
 
 function Editor({ t, lang, me, base, initial }: { t: Dict; lang: Lang; me: string; base: string; initial: CodeView }) {
   const [code, setCode] = useState(initial);
-  const [tab, setTab] = useState<Tab>(initial.kind === "memory" ? "memory" : initial.kind === "link" ? "link" : "contact");
+  // «Скачать» из профиля ведёт сюда с #look — сразу на вкладку «Вид кода» (редактор рисуется только в браузере).
+  const [tab, setTab] = useState<Tab>(() =>
+    typeof window !== "undefined" && window.location.hash === "#look" ? "look" : initial.kind === "memory" ? "memory" : initial.kind === "link" ? "link" : "contact",
+  );
   const [status, setStatus] = useState<Status>("idle");
   const link = linkOf(base, code);
 
@@ -177,7 +204,7 @@ function Editor({ t, lang, me, base, initial }: { t: Dict; lang: Lang; me: strin
 
       {code.blocked && <p className="mt-3 rounded-2xl bg-warn-soft p-4 text-sm font-medium text-warn">⛔ {t.blockedOwner}</p>}
 
-      <div role="tablist" className="mt-4 flex gap-1 overflow-x-auto border-b border-line">
+      <div role="tablist" className="-mx-4 mt-4 flex gap-1.5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
         {tabs.map((x) => (
           <button
             key={x.id}
@@ -185,8 +212,11 @@ function Editor({ t, lang, me, base, initial }: { t: Dict; lang: Lang; me: strin
             role="tab"
             aria-selected={tab === x.id}
             onClick={() => setTab(x.id)}
-            className={`-mb-px flex min-h-11 shrink-0 items-center gap-2 border-b-2 px-3 text-sm font-semibold ${tab === x.id ? "border-accent text-ink" : "border-transparent text-muted hover:text-ink"}`}
+            className={`flex min-h-11 shrink-0 items-center gap-2 rounded-xl border px-3.5 text-sm font-semibold transition-colors ${
+              tab === x.id ? "border-stage bg-stage text-on-stage" : "border-line bg-card text-muted hover:border-muted hover:text-ink"
+            }`}
           >
+            <TabIcon id={x.id} active={tab === x.id} />
             {x.label}
             {!!x.badge && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-warn px-1 text-[11px] text-on-warn">{x.badge}</span>}
           </button>

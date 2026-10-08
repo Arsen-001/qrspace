@@ -5,6 +5,7 @@ import { api, daysLeft, REPEATS, todayYmd, type CodeView, type Repeat, type Task
 import { fmtDate, fmtDateTime, fmtDays } from "@/lib/format";
 import type { Dict, Lang } from "@/lib/i18n";
 import { personName } from "./Avatar";
+import { DoneCheck } from "./ui";
 
 const field = "w-full min-w-0 rounded-xl border border-line bg-field px-3.5 py-2.5 text-base outline-none transition-colors focus:border-accent";
 
@@ -34,8 +35,9 @@ function Row({ t, lang, me, code, task, canEdit, onChange }: { t: Dict; lang: La
     }
   };
   return (
-    <li className="flex flex-wrap items-center gap-x-3 gap-y-2 py-3">
-      <div className="min-w-0 flex-1 basis-56">
+    <li className="flex items-start gap-3 py-3">
+      {canEdit && <DoneCheck label={`${t.markDone}: ${task.text}`} busy={busy} onClick={() => run(() => api.doneTask(code.id, task.id))} />}
+      <div className="min-w-0 flex-1 pt-1.5">
         <div className="font-medium">{task.text}</div>
         <div className="mt-0.5 text-xs">
           <DueNote t={t} lang={lang} due={task.due} />
@@ -50,9 +52,6 @@ function Row({ t, lang, me, code, task, canEdit, onChange }: { t: Dict; lang: La
       </div>
       {canEdit && (
         <div className="flex gap-1">
-          <button type="button" disabled={busy} onClick={() => run(() => api.doneTask(code.id, task.id))} className="min-h-10 rounded-xl bg-ok px-4 text-sm font-semibold text-on-ok disabled:opacity-50">
-            ✓ {t.markDone}
-          </button>
           <button type="button" disabled={busy} onClick={() => run(() => api.removeTask(code.id, task.id))} aria-label={`${t.delete}: ${task.text}`} className="min-h-10 rounded-xl px-2.5 text-sm text-muted hover:text-warn">
             ×
           </button>

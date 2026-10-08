@@ -9,6 +9,17 @@ import { Avatar, personName } from "./Avatar";
 import { Tasks } from "./Tasks";
 import { Segmented } from "./ui";
 
+function KindLabel({ d, text }: { d: string; text: string }) {
+  return (
+    <span className="inline-flex items-center justify-center gap-2">
+      <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <path d={d} />
+      </svg>
+      {text}
+    </span>
+  );
+}
+
 type Kind = Block["kind"];
 
 const field = "w-full rounded-xl border border-line bg-field px-3.5 py-2.5 text-base outline-none transition-colors focus:border-accent";
@@ -82,19 +93,23 @@ function Composer({ t, code, onChange }: { t: Dict; code: CodeView; onChange: (v
   const ready = kind === "text" ? !!text.trim() : !!file;
   return (
     <form
-      className="space-y-3 rounded-2xl border border-line bg-card p-4 sm:p-5"
+      className="space-y-3 rounded-2xl border-2 border-dashed border-line bg-card p-4 sm:p-5"
       onSubmit={(e) => {
         e.preventDefault();
         if (ready) submit();
       }}
     >
+      <h3 className="flex items-center gap-2.5 font-heading text-base font-bold">
+        <span aria-hidden className="grid h-7 w-7 place-items-center rounded-lg bg-accent text-on-accent">+</span>
+        {t.composerTitle}
+      </h3>
       <Segmented<Kind>
         value={kind}
         onChange={pickKind}
         options={[
-          { id: "text", label: t.addText },
-          { id: "photo", label: t.addPhoto },
-          { id: "video", label: t.addVideo },
+          { id: "text", label: <KindLabel d="M5 6h14M5 10h14M5 14h9M5 18h6" text={t.addText} /> },
+          { id: "photo", label: <KindLabel d="M4 7h3l2-2.5h6L17 7h3v12H4zM12 16.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" text={t.addPhoto} /> },
+          { id: "video", label: <KindLabel d="M3 6.5h12v11H3zM15 10.5l6-3.5v10l-6-3.5" text={t.addVideo} /> },
         ]}
       />
       {kind !== "text" && (

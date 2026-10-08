@@ -203,3 +203,21 @@ export function Switch({ label, hint, checked, disabled, onChange }: { label: Re
     </label>
   );
 }
+
+/** Круглая галочка «Сделано» — как в списке дел: не занимает строку, видна сразу. */
+export function DoneCheck({ label, busy, onClick }: { label: string; busy?: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      disabled={busy}
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      className="group grid h-10 w-10 shrink-0 place-items-center rounded-full border-2 border-ok/50 text-ok transition-colors hover:border-ok hover:bg-ok hover:text-on-ok disabled:opacity-50"
+    >
+      <svg viewBox="0 0 24 24" className="h-5 w-5 opacity-40 transition-opacity group-hover:opacity-100" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <path d="m5 12.5 4.5 4.5L19 7.5" />
+      </svg>
+    </button>
+  );
+}
