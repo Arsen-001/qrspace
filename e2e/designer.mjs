@@ -59,6 +59,7 @@ const a = await mk(390);
 await a.goto(B + "/login?next=/market");
 await a.getByRole("button", { name: /Арман/ }).click();
 await a.waitForURL(/market/);
+await dropBox(a).getByText("Бетон и звёзды").first().waitFor(); // дроп дня подгружается после входа
 await a.goto(B + (await dropBox(a).getByRole("link", { name: "Подробнее" }).getAttribute("href")), { waitUntil: "networkidle" });
 await a.getByRole("button", { name: /Купить — \$6/ }).click();
 await a.waitForSelector("text=№ 2 / 20");
