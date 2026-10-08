@@ -16,11 +16,12 @@ type AdminData = {
   newUsers: { id: string; name: string; provider: string; at: string }[];
 };
 
-function Tile({ label, value }: { label: string; value: string | number }) {
+/** Цифра кабинета; main — главная (тёмная, лаймом), чтобы глаз сразу находил оборот. */
+function Tile({ label, value, main }: { label: string; value: string | number; main?: boolean }) {
   return (
-    <div className="rounded-2xl border border-line bg-card p-4">
-      <div className="text-xs text-muted">{label}</div>
-      <div className="mt-1 font-heading text-2xl font-extrabold">{value}</div>
+    <div className={`rounded-2xl p-4 ${main ? "bg-stage text-on-stage" : "border border-line bg-card"}`}>
+      <div className={`text-xs ${main ? "text-on-stage/60" : "text-muted"}`}>{label}</div>
+      <div className={`mt-1 font-heading text-2xl font-extrabold ${main ? "text-accent" : ""}`}>{value}</div>
     </div>
   );
 }
@@ -60,7 +61,7 @@ export function AdminPage() {
             <Tile label={t.adminCodes} value={data.totals.codes} />
             <Tile label={t.adminScans} value={data.totals.scans} />
             <Tile label={t.statsWeek} value={data.totals.scansWeek} />
-            <Tile label={t.adminRevenue} value={`$${data.totals.revenue}`} />
+            <Tile label={t.adminRevenue} value={`$${data.totals.revenue}`} main />
             <Tile label={t.adminBlocked} value={data.totals.blocked} />
           </section>
           <p className="-mt-5 text-xs text-muted">

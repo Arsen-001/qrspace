@@ -17,7 +17,7 @@ function Row({ id, lang, children, sub }: { id: string | null; lang: Lang; child
   return (
     <li className="flex flex-wrap items-center gap-3 py-3">
       <Avatar id={id} lang={lang} size={36} />
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 basis-40">
         <div className="font-medium">{personName(id, lang)}</div>
         {sub && <div className="text-xs text-muted">{sub}</div>}
       </div>
@@ -84,7 +84,12 @@ export function AccessPanel({ t, lang, code, base, save }: { t: Dict; lang: Lang
       {code.visibility === "contacts" && <ContactsBox t={t} lang={lang} />}
 
       {requests.length > 0 && (
-        <Card title={t.requestsTitle}>
+        // Ждёт ответа хозяина — выделено лаймовой рамкой и числом, чтобы не потерялось среди настроек.
+        <section className="rounded-2xl border-2 border-accent bg-card p-5 sm:p-6">
+          <h2 className="mb-2 flex items-center gap-2.5 font-heading text-lg font-bold">
+            {t.requestsTitle}
+            <span className="grid h-6 min-w-6 place-items-center rounded-full bg-warn px-1.5 text-xs text-on-warn">{requests.length}</span>
+          </h2>
           <ul className="divide-y divide-line">
             {requests.map((r) => (
               <Row key={r.personId} id={r.personId} lang={lang} sub={fmtDateTime(r.at, lang)}>
@@ -99,7 +104,7 @@ export function AccessPanel({ t, lang, code, base, save }: { t: Dict; lang: Lang
               </Row>
             ))}
           </ul>
-        </Card>
+        </section>
       )}
 
       <Card title={t.peopleTitle}>

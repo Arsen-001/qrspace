@@ -22,13 +22,26 @@ export function ScanStats({ t, lang, stats }: { t: Dict; lang: Lang; stats: Stat
           [t.statsTotal, stats.total],
           [t.statsWeek, stats.week],
           [t.statsPeople, stats.people],
-        ].map(([label, n]) => (
-          <div key={label} className="rounded-xl bg-field p-3">
-            <dt className="text-xs text-muted">{label}</dt>
-            <dd className="font-heading text-2xl font-extrabold">{n}</dd>
+        ].map(([label, n], i) => (
+          <div key={label} className={`rounded-xl p-3 ${i === 0 ? "bg-stage text-on-stage" : "bg-field"}`}>
+            <dt className={`text-xs ${i === 0 ? "text-on-stage/60" : "text-muted"}`}>{label}</dt>
+            <dd className={`font-heading text-2xl font-extrabold ${i === 0 ? "text-accent" : ""}`}>{n}</dd>
           </div>
         ))}
       </dl>
+      {/* Сканов ещё нет — вместо пустого графика подсказка, что делать. */}
+      {stats.total === 0 ? (
+        <div className="mt-4 flex items-start gap-3 rounded-xl border border-dashed border-line p-4">
+          <svg viewBox="0 0 24 24" className="h-6 w-6 shrink-0 text-muted" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden>
+            <path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M4 12h16" />
+          </svg>
+          <div className="text-sm">
+            <div className="font-semibold">{t.historyEmpty}</div>
+            <div className="mt-0.5 text-muted">{t.statsEmptyHint}</div>
+          </div>
+        </div>
+      ) : (
+      <>
       <div className="relative mt-4">
         <svg viewBox={`0 0 ${W} ${H + 1}`} className="h-28 w-full" role="img" aria-label={t.statsChart} onMouseLeave={() => setHover(null)}>
           <line x1="0" y1={H + 0.5} x2={W} y2={H + 0.5} className="stroke-line" strokeWidth="1" />
@@ -73,6 +86,8 @@ export function ScanStats({ t, lang, stats }: { t: Dict; lang: Lang; stats: Stat
           </tbody>
         </table>
       </details>
+      </>
+      )}
     </Card>
   );
 }
