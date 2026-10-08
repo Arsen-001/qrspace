@@ -156,7 +156,10 @@ export function UploadButton({ label, onFile, onFiles, multiple }: { label: stri
   const ref = useRef<HTMLInputElement>(null);
   return (
     <>
-      <button type="button" onClick={() => ref.current?.click()} className="min-h-10 rounded-xl border border-line bg-field px-4 text-sm font-medium hover:border-muted">
+      <button type="button" onClick={() => ref.current?.click()} className="flex min-h-11 items-center gap-2 rounded-xl border border-dashed border-ink/25 bg-card px-4 text-sm font-bold transition-colors hover:border-ink hover:bg-field">
+        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 20h14" />
+        </svg>
         {label}
       </button>
       <input

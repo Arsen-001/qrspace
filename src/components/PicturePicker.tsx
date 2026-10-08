@@ -3,7 +3,7 @@
 import { useEffect, useMemo } from "react";
 import type { Dict } from "@/lib/i18n";
 import { LAYOUTS, MAX_PHOTOS, type CollageLayout } from "@/lib/qr/collage";
-import { GhostButton, Label, Slider, UploadButton } from "./ui";
+import { GhostButton, Slider, UploadButton } from "./ui";
 
 import type { Tones } from "@/lib/qr/render";
 
@@ -87,7 +87,10 @@ export function PicturePicker({
   const layouts = LAYOUTS[files.length] ?? [];
   return (
     <div>
-      <Label hint={t.pictureHint}>{t.picture}</Label>
+      <div className="mb-3">
+        <div className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em]">{t.picture}</div>
+        <div className="mt-1 text-xs leading-relaxed text-muted">{t.pictureHint}</div>
+      </div>
       {picture && files.length === 0 && (
         // Сохранённый код: исходных фото нет, есть готовый коллаж — его можно убрать или заменить.
         <div className="mb-3">

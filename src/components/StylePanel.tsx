@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useId, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { Dict } from "@/lib/i18n";
 import { ballSample, DOT_STYLES, dotSample, EFFECTS, EYE_BALLS, EYE_STYLES, eyeSample, type EyeBall, type DotStyle, type Effect, type EyeStyle, type IconMask, type Rotation } from "@/lib/qr/render";
 import { buildDrawing, CAPTION_MAX, toSvg } from "@/lib/qr/render";
@@ -9,7 +9,7 @@ import { TEXTURE_INK, TEXTURES, textureSrc, type TextureId } from "@/lib/qr/text
 import { useMe } from "@/lib/me";
 import { LogoPicker, logoFile } from "./LogoPicker";
 import type { PictureState } from "./PicturePicker";
-import { Card, ColorField, GhostButton, Label, Segmented, Slider, UploadButton } from "./ui";
+import { Card, GhostButton, Label, Slider, UploadButton } from "./ui";
 
 type Tab = "colors" | "shape" | "bg" | "media";
 
@@ -43,10 +43,58 @@ const PRESETS: [string, string][] = [
   ["#0b5132", "#e6f4ea"], // «зелёная плата» — к стилю «Микросхема»
 ];
 
-/** Плитки выбора формы: образец рисуется тем же кодом, что и сам QR. */
+/** Плитки выбора формы: образец рисуется тем же кодом, что и сам QR. Выбранная — тёмная, с лаймом (как карточки маркета). */
 function ShapeTiles<T extends string>({ label, value, options, onChange }: { label: string; value: T; options: { id: T; name: string; icon: ReactNode }[]; onChange: (v: T) => void }) {
   return (
-    <div role="radiogroup" aria-label={label} className="grid grid-cols-3 gap-1.5 sm:grid-cols-[repeat(auto-fill,minmax(88px,1fr))]">
+    <div role="radiogroup" aria-label={label} className="grid grid-cols-3 gap-2 sm:grid-cols-[repeat(auto-fill,minmax(92px,1fr))]">
+      {options.map((o) => {
+        const on = value === o.id;
+        return (
+          <button
+            key={o.id}
+            type="button"
+            role="radio"
+            aria-checked={on}
+            onClick={() => onChange(o.id)}
+            className={`relative flex min-w-0 flex-col items-center gap-2 rounded-2xl border px-1 pb-2.5 pt-3 text-xs font-semibold leading-tight transition-all ${
+              on ? "border-accent/70 bg-stage text-on-stage shadow-lg shadow-black/15" : "border-line bg-card hover:-translate-y-0.5 hover:border-ink/25 hover:shadow-md"
+            }`}
+          >
+            {on && <Tick />}
+            <span className={`grid h-11 w-11 place-items-center rounded-xl ${on ? "bg-white/10 text-accent" : "bg-field text-ink"}`}>{o.icon}</span>
+            <span className="max-w-full truncate px-0.5">{o.name}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Лаймовая галочка в углу выбранного. */
+function Tick() {
+  return (
+    <span aria-hidden className="absolute right-1.5 top-1.5 grid h-4 w-4 place-items-center rounded-full bg-accent text-on-accent">
+      <svg viewBox="0 0 12 12" className="h-2.5 w-2.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="m2.5 6.3 2.3 2.2 4.7-5" />
+      </svg>
+    </span>
+  );
+}
+
+/** Заголовок раздела в тонкой настройке — моноширинный, как надписи на первом экране. */
+function Head({ children, hint }: { children: ReactNode; hint?: string }) {
+  return (
+    <div className="mb-3">
+      <div className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-ink">{children}</div>
+      {hint && <div className="mt-1 text-xs leading-relaxed text-muted">{hint}</div>}
+    </div>
+  );
+}
+
+/** Выбор из нескольких: дорожка, выбранное — тёмная таблетка. */
+function Pills<T extends string>({ value, options, onChange }: { value: T; options: { id: T; label: ReactNode }[]; onChange: (v: T) => void }) {
+  return (
+    <div role="radiogroup" className="flex gap-1 rounded-2xl border border-line bg-field p-1">
       {options.map((o) => (
         <button
           key={o.id}
@@ -54,17 +102,72 @@ function ShapeTiles<T extends string>({ label, value, options, onChange }: { lab
           role="radio"
           aria-checked={value === o.id}
           onClick={() => onChange(o.id)}
-          className={`flex min-w-0 flex-col items-center gap-1.5 rounded-xl border px-1 py-2.5 text-xs font-medium leading-tight transition-colors ${
-            value === o.id ? "border-accent bg-accent text-on-accent" : "border-line bg-field hover:border-muted"
+          className={`min-h-10 min-w-0 flex-1 rounded-xl px-2 text-sm font-semibold leading-tight transition-all ${
+            value === o.id ? "bg-stage text-on-stage shadow-md shadow-black/15 ring-1 ring-accent/60" : "text-muted hover:bg-card hover:text-ink"
           }`}
         >
-          {o.icon}
-          <span className="max-w-full truncate">{o.name}</span>
+          {o.label}
         </button>
       ))}
     </div>
   );
 }
+
+/** Пара цветов кружком: фон — круг, цвет точек — квадратик в нём (как маленький код). */
+function ColorPair({ fg, bg, on, label, onClick }: { fg: string; bg: string; on: boolean; label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      aria-pressed={on}
+      onClick={onClick}
+      className={`relative grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line shadow-sm transition-all hover:scale-105 ${on ? "ring-2 ring-accent ring-offset-2 ring-offset-[var(--card)]" : ""}`}
+      style={{ background: bg }}
+    >
+      <span className="grid grid-cols-2 gap-[2px]">
+        {[1, 0, 1, 1].map((v, i) => (
+          <span key={i} className="h-[7px] w-[7px] rounded-[2px]" style={{ background: v ? fg : "transparent" }} />
+        ))}
+      </span>
+    </button>
+  );
+}
+
+/** Свой цвет: большой кружок (нажал — палитра) и код цвета. */
+function ColorPick({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  const id = useId();
+  return (
+    <label htmlFor={id} className="group flex min-w-0 cursor-pointer items-center gap-3 rounded-2xl border border-line bg-card p-2.5 transition-colors hover:border-ink/25">
+      <span className="relative h-10 w-10 shrink-0 rounded-full border border-line shadow-inner" style={{ background: value }}>
+        <input id={id} type="color" value={value} onChange={(e) => onChange(e.target.value)} className="absolute inset-0 h-full w-full cursor-pointer rounded-full opacity-0" />
+      </span>
+      <span className="min-w-0">
+        <span className="block truncate text-xs font-semibold">{label}</span>
+        <span className="block font-mono text-[11px] uppercase text-muted">{value}</span>
+      </span>
+    </label>
+  );
+}
+
+/** Переключатель «вкл/выкл» в нашем стиле вместо галочки. */
+function Toggle({ label, on, onChange }: { label: string; on: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button type="button" role="switch" aria-checked={on} onClick={() => onChange(!on)} className="flex min-h-11 w-full items-center justify-between gap-3 rounded-2xl border border-line bg-card px-3.5 text-sm font-semibold hover:border-ink/25">
+      {label}
+      <span className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${on ? "bg-stage" : "bg-line"}`}>
+        <span className={`absolute top-0.5 h-5 w-5 rounded-full shadow transition-all ${on ? "left-[1.375rem] bg-accent" : "left-0.5 bg-white"}`} />
+      </span>
+    </button>
+  );
+}
+
+/** Иконки вкладок тонкой настройки. */
+const TAB_ICON: Record<Tab, ReactNode> = {
+  colors: <path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.6-.9 1.2-1.8-.5-1-.1-2.2 1.1-2.2H17a4 4 0 0 0 4-4c0-5.5-4-10-9-10ZM7.5 11.5h.01M10 7.5h.01M15 7.5h.01" />,
+  shape: <path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM15 15h4v4h-4z" />,
+  bg: <path d="m12 3 9 5-9 5-9-5 9-5ZM3 13l9 5 9-5" />,
+  media: <path d="M4 5h16v14H4zM4 15l4.5-4.5L13 15m-1.5-1.5L14 11l6 6M15.5 8.5h.01" />,
+};
 
 const noSubscribe = () => () => {};
 
@@ -188,7 +291,7 @@ export function StylePanel({
     { id: "media", label: t.tabMedia },
   ];
   // Неактивные вкладки не убираем, а прячем: загруженные файлы и выбранное остаются на месте.
-  const panel = (id: Tab) => ({ role: "tabpanel", id: `style-${id}`, "aria-labelledby": `style-tab-${id}`, hidden: tab !== id, className: "space-y-6 pt-5" }) as const;
+  const panel = (id: Tab) => ({ role: "tabpanel", id: `style-${id}`, "aria-labelledby": `style-tab-${id}`, hidden: tab !== id, className: "space-y-7 pt-6" }) as const;
   return (
     <Card title={t.step2} step={step}>
       <Label hint={t.styleReadyHint}>{t.styleReady}</Label>
@@ -238,9 +341,14 @@ export function StylePanel({
         </div>
       </div>
 
-      <div className="mt-6 border-t border-line pt-5">
-        <div className="mb-2 text-sm font-semibold">{t.moreSettings}</div>
-        <div role="tablist" aria-label={t.moreSettings} className="grid grid-cols-2 gap-1 rounded-xl border border-line bg-field p-1 sm:grid-cols-4">
+      <div className="mt-7 border-t border-line pt-6">
+        <div className="mb-3 flex items-baseline justify-between gap-3">
+          <h3 className="font-heading text-lg font-extrabold">{t.moreSettings}</h3>
+          <span aria-hidden className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
+            {tabs.findIndex((x) => x.id === tab) + 1} / {tabs.length}
+          </span>
+        </div>
+        <div role="tablist" aria-label={t.moreSettings} className="grid grid-cols-4 gap-1 rounded-2xl bg-stage p-1.5">
           {tabs.map((x) => (
             <button
               key={x.id}
@@ -250,93 +358,82 @@ export function StylePanel({
               aria-selected={tab === x.id}
               aria-controls={`style-${x.id}`}
               onClick={() => setTab(x.id)}
-              className={`min-h-10 rounded-lg px-2 text-sm font-semibold transition-colors ${tab === x.id ? "bg-stage text-on-stage" : "text-muted hover:text-ink"}`}
+              className={`flex min-h-14 min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-1 py-1.5 text-[11px] font-bold leading-tight transition-all sm:min-h-11 sm:flex-row sm:gap-2 sm:text-sm ${
+                tab === x.id ? "bg-accent text-on-accent shadow-[0_0_20px_rgba(198,255,46,0.35)]" : "text-on-stage/60 hover:bg-white/5 hover:text-on-stage"
+              }`}
             >
-              {x.label}
+              <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                {TAB_ICON[x.id]}
+              </svg>
+              <span className="max-w-full text-center sm:truncate">{x.label}</span>
             </button>
           ))}
         </div>
 
         <div {...panel("colors")}>
-          <div>
-            {colors.length > 0 && (
-            <div className="mb-3">
-              <div className="mb-1.5 text-xs font-semibold text-muted">{t.recentColors}</div>
-              <div className="flex flex-wrap gap-2">
-                {colors.map(({ fg, bg }) => {
-                  const on = s.fg === fg && s.bg === bg;
-                  return (
-                    <button
-                      key={fg + bg}
-                      type="button"
-                      aria-label={`${t.recentColors}: ${fg} / ${bg}`}
-                      aria-pressed={on}
-                      onClick={() => set({ fg, bg, eyeColor: fg, eyeBallColor: fg, texture: null })}
-                      className={`grid h-10 w-10 place-items-center rounded-xl border-2 ${on ? "border-accent" : "border-line"}`}
-                      style={{ background: bg }}
-                    >
-                      <span className="h-4 w-4 rounded" style={{ background: fg }} />
-                    </button>
-                  );
-                })}
+          {colors.length > 0 && (
+            <div>
+              <Head>{t.recentColors}</Head>
+              <div className="flex flex-wrap gap-2.5">
+                {colors.map(({ fg, bg }) => (
+                  <ColorPair
+                    key={fg + bg}
+                    fg={fg}
+                    bg={bg}
+                    on={s.fg === fg && s.bg === bg}
+                    label={`${t.recentColors}: ${fg} / ${bg}`}
+                    onClick={() => set({ fg, bg, eyeColor: fg, eyeBallColor: fg, texture: null })}
+                  />
+                ))}
               </div>
             </div>
           )}
-          <div className="mb-3 flex flex-wrap gap-2" aria-label={t.presets}>
-              {PRESETS.map(([fg, bg]) => {
-                const on = s.fg === fg && s.bg === bg;
-                return (
-                  <button
-                    key={fg + bg}
-                    type="button"
-                    aria-label={`${fg} / ${bg}`}
-                    aria-pressed={on}
-                    onClick={() => set({ fg, bg, eyeColor: fg, eyeBallColor: fg })}
-                    className={`grid h-10 w-10 place-items-center rounded-xl border-2 ${on ? "border-accent" : "border-line"}`}
-                    style={{ background: bg }}
-                  >
-                    <span className="h-4 w-4 rounded" style={{ background: fg }} />
-                  </button>
-                );
-              })}
+          <div>
+            <Head>{t.presets}</Head>
+            <div className="flex flex-wrap gap-2.5" aria-label={t.presets}>
+              {PRESETS.map(([fg, bg]) => (
+                <ColorPair key={fg + bg} fg={fg} bg={bg} on={s.fg === fg && s.bg === bg} label={`${fg} / ${bg}`} onClick={() => set({ fg, bg, eyeColor: fg, eyeBallColor: fg })} />
+              ))}
+            </div>
+          </div>
+          <div>
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <Head>{t.colors}</Head>
+              <button
+                type="button"
+                onClick={() => set({ fg: s.bg, bg: s.fg, eyeColor: s.bg, eyeBallColor: s.bg })}
+                className="-mt-3 flex min-h-9 items-center gap-1.5 rounded-full border border-line bg-card px-3 text-xs font-bold hover:border-ink/25"
+              >
+                <span aria-hidden>⇄</span> {t.swap}
+              </button>
             </div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <ColorField
+              <ColorPick
                 label={t.fg}
                 value={s.fg}
                 onChange={(fg) => set({ fg, eyeColor: s.eyeColor === s.fg ? fg : s.eyeColor, eyeBallColor: s.eyeBallColor === s.eyeColor ? (s.eyeColor === s.fg ? fg : s.eyeColor) : s.eyeBallColor })}
               />
-              <ColorField label={t.bg} value={s.bg} onChange={(bg) => set({ bg })} />
-              <ColorField label={t.eyeColor} value={s.eyeColor} onChange={(eyeColor) => set({ eyeColor, eyeBallColor: s.eyeBallColor === s.eyeColor ? eyeColor : s.eyeBallColor })} />
-              <ColorField label={t.eyeBallColor} value={s.eyeBallColor} onChange={(eyeBallColor) => set({ eyeBallColor })} />
+              <ColorPick label={t.bg} value={s.bg} onChange={(bg) => set({ bg })} />
+              <ColorPick label={t.eyeColor} value={s.eyeColor} onChange={(eyeColor) => set({ eyeColor, eyeBallColor: s.eyeBallColor === s.eyeColor ? eyeColor : s.eyeBallColor })} />
+              <ColorPick label={t.eyeBallColor} value={s.eyeBallColor} onChange={(eyeBallColor) => set({ eyeBallColor })} />
             </div>
-            <div className="mt-2 flex items-center justify-between gap-2">
-              <GhostButton onClick={() => set({ fg: s.bg, bg: s.fg, eyeColor: s.bg, eyeBallColor: s.bg })}>⇄ {t.swap}</GhostButton>
-            </div>
-            {lowContrast && <p className="mt-1 text-sm text-warn">{t.lowContrast}</p>}
-            <label className="mt-3 flex cursor-pointer items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={!!s.gradient}
-                onChange={(e) => set({ gradient: e.target.checked ? { to: "#2e3fd6", angle: 45 } : null })}
-                className="h-4 w-4 accent-[var(--accent)]"
-              />
-              {t.gradient}
-            </label>
+            {lowContrast && <p className="mt-2 rounded-xl bg-warn/10 px-3 py-2 text-sm font-medium text-warn">{t.lowContrast}</p>}
+          </div>
+          <div className="space-y-3">
+            <Toggle label={t.gradient} on={!!s.gradient} onChange={(v) => set({ gradient: v ? { to: "#2e3fd6", angle: 45 } : null })} />
             {s.gradient && (
-              <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,180px)_1fr] sm:items-end">
-                <ColorField label={t.gradientTo} value={s.gradient.to} onChange={(to) => s.gradient && set({ gradient: { ...s.gradient, to } })} />
+              <div className="grid gap-3 rounded-2xl border border-line bg-field p-3 sm:grid-cols-[minmax(0,200px)_1fr] sm:items-center">
+                <ColorPick label={t.gradientTo} value={s.gradient.to} onChange={(to) => s.gradient && set({ gradient: { ...s.gradient, to } })} />
                 <Slider label={`${t.gradientAngle}: ${s.gradient.angle}°`} value={s.gradient.angle} min={0} max={345} step={15} onChange={(angle) => s.gradient && set({ gradient: { ...s.gradient, angle } })} />
               </div>
             )}
           </div>
-
         </div>
 
         <div {...panel("bg")}>
           {!s.picture && (
             <div>
-              <Label hint={t.textureHint}>{t.texture}</Label>
+              <Head hint={t.textureHint}>{t.texture}</Head>
               <ShapeTiles<"none" | TextureId>
                 label={t.texture}
                 value={s.texture ?? "none"}
@@ -354,23 +451,23 @@ export function StylePanel({
           )}
 
           <div>
-            <Label hint={t.effectHint}>{t.effect}</Label>
-            <Segmented value={s.effect} onChange={(effect) => set({ effect })} options={EFFECTS.map((id) => ({ id, label: t[`effect.${id}`] }))} />
+            <Head hint={t.effectHint}>{t.effect}</Head>
+            <Pills value={s.effect} onChange={(effect) => set({ effect })} options={EFFECTS.map((id) => ({ id, label: t[`effect.${id}`] }))} />
           </div>
 
         </div>
 
         <div {...panel("shape")}>
           <div>
-            <Label>{t.dots}</Label>
+            <Head>{t.dots}</Head>
             <ShapeTiles label={t.dots} value={s.dot} onChange={(dot) => set({ dot })} options={DOT_STYLES.map((id) => ({ id, name: t[`dot.${id}`], icon: <DotIcon kind={id} /> }))} />
           </div>
 
           <div>
-            <Label>{t.eyes}</Label>
+            <Head>{t.eyes}</Head>
             <ShapeTiles label={t.eyes} value={s.eye} onChange={(eye) => set({ eye })} options={EYE_STYLES.map((id) => ({ id, name: t[`eye.${id}`], icon: <EyeIcon kind={id} dot={s.dot} /> }))} />
-            <div className="mt-4">
-              <Label>{t.eyeBall}</Label>
+            <div className="mt-6">
+              <Head>{t.eyeBall}</Head>
               <ShapeTiles
                 label={t.eyeBall}
                 value={s.eyeBall}
@@ -382,8 +479,8 @@ export function StylePanel({
                 }))}
               />
             </div>
-            <div className="mt-4">
-              <Label hint={t.eyeIconHint}>{t.eyeIcon}</Label>
+            <div className="mt-6">
+              <Head hint={t.eyeIconHint}>{t.eyeIcon}</Head>
               <div className="flex flex-wrap items-center gap-2">
                 {s.eyeIcon && (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -405,14 +502,13 @@ export function StylePanel({
                 </div>
               )}
             </div>
-            <div className="mt-4">
-              <div className="mb-1.5 text-sm font-medium">{t.rotate}</div>
-              <Segmented
+            <div className="mt-6">
+              <Head hint={t.rotateHint}>{t.rotate}</Head>
+              <Pills
                 value={String(s.rotate)}
                 onChange={(v) => set({ rotate: Number(v) as Rotation })}
                 options={["0", "90", "180", "270"].map((id) => ({ id, label: `${id}°` }))}
               />
-              <div className="mt-1 text-xs text-muted">{t.rotateHint}</div>
             </div>
           </div>
 
@@ -421,10 +517,11 @@ export function StylePanel({
         <div {...panel("media")}>
           {picturePicker}
           <div>
-            <Label hint={t.logoQuickHint}>{t.logo}</Label>
+            <Head hint={t.logoQuickHint}>{t.logo}</Head>
             <LogoPicker {...logoProps} mode="all" />
-            <div className="mb-2 mt-5 text-sm font-semibold">{t.logoOwn}</div>
-            <div className="mb-2 text-xs text-muted">{t.logoHint}</div>
+            <div className="mt-6">
+              <Head hint={t.logoHint}>{t.logoOwn}</Head>
+            </div>
             <div className="flex flex-wrap items-center gap-2">
               {s.logo && picked === "own" && (
                 // eslint-disable-next-line @next/next/no-img-element
