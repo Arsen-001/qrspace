@@ -74,12 +74,20 @@ export function HomeHero({ t }: { t: Dict }) {
           </p>
           {/* Выключатель — рядом с заголовком (владелец 08.10.2026): открывает, что под большим кодом. */}
           <div className="mt-6 flex items-center gap-4 sm:gap-6">
-            <h1 className="min-w-0 flex-1 font-heading text-[1.95rem] leading-[1.1] font-extrabold text-balance [hyphens:manual] sm:text-6xl lg:text-[4.25rem]">
+            <h1 className="min-w-0 flex-1 font-heading text-[2.5rem] leading-[1.1] font-extrabold text-balance [hyphens:manual] sm:text-6xl lg:text-[4.25rem]">
               {t.homeTitleA} <span className="box-decoration-clone rounded-md bg-accent px-2 text-on-accent">{t.homeTitleB}</span>
             </h1>
-            <HeroSwitch t={t} open={reveal.open} toggle={reveal.toggle} />
+            <div className="hidden sm:block">
+              <HeroSwitch t={t} open={reveal.open} toggle={reveal.toggle} />
+            </div>
           </div>
-          <p className="mt-6 max-w-xl text-base leading-relaxed text-on-stage/70 sm:text-lg">{t.homeLead}</p>
+          {/* На телефоне заголовок — во всю ширину, выключатель — рядом с текстом под ним. */}
+          <div className="mt-6 flex items-center gap-4">
+            <p className="min-w-0 flex-1 max-w-xl text-base leading-relaxed text-on-stage/70 sm:text-lg">{t.homeLead}</p>
+            <div className="sm:hidden">
+              <HeroSwitch t={t} open={reveal.open} toggle={reveal.toggle} />
+            </div>
+          </div>
           <div className="mt-8 flex flex-wrap gap-2 sm:gap-3">
             <a href="#make" className="group inline-flex min-h-13 items-center gap-3 rounded-xl bg-accent px-5 sm:px-6 font-heading text-sm font-bold text-on-accent">
               {t.homeCta}
