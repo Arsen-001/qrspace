@@ -19,6 +19,7 @@ await p.getByRole("button", { name: /Наре/ }).click();
 await p.waitForURL(B + "/");
 await p.waitForSelector("text=Опубликовать в маркет");
 // нечитаемое сочетание — публикация не проходит
+await p.getByRole("tab", { name: "Форма", exact: true }).click();
 await p.getByRole("radiogroup", { name: "Углы: рамка" }).getByRole("radio", { name: "Как точки" }).click();
 await p.getByRole("radiogroup", { name: "Углы: центр" }).getByRole("radio", { name: "Звезда" }).click();
 await p.getByLabel("Название дизайна", { exact: true }).fill("Плохой");
@@ -28,7 +29,9 @@ ok(true, "unreadable design rejected");
 // хорошее оформление
 await p.getByRole("radiogroup", { name: "Углы: рамка" }).getByRole("radio", { name: "Круг", exact: true }).click();
 await p.getByRole("radiogroup", { name: "Углы: центр" }).getByRole("radio", { name: "В пару" }).click();
+await p.getByRole("tab", { name: "Фон", exact: true }).click();
 await p.getByRole("radio", { name: "Бетон", exact: true }).click();
+await p.getByRole("tab", { name: "Форма", exact: true }).click();
 await p.getByRole("radio", { name: "Звёзды", exact: true }).click();
 await p.getByLabel("Название дизайна", { exact: true }).fill("Бетон и звёзды");
 await p.getByLabel("Описание (необязательно)").fill("Серый бетон и звёзды — для мастерских и лофтов.");

@@ -42,7 +42,9 @@ await n.getByLabel("Сообщение").fill("Здравствуйте! Бер�
 await n.getByRole("button", { name: "Отправить", exact: true }).click();
 await n.waitForSelector("text=Беру заказ");
 ok(await n.locator("text=В работе").count() > 0, "reply moves order to In progress");
+await n.getByRole("tab", { name: "Фон", exact: true }).click();
 await n.getByRole("radio", { name: "Крафт", exact: true }).click();
+await n.getByRole("tab", { name: "Форма", exact: true }).click();
 await n.getByRole("radio", { name: "Мягкие", exact: true }).click();
 await n.waitForFunction(() => /Код читается/.test(document.body.innerText), null, { timeout: 30000 });
 await n.getByLabel("Пара слов к дизайну").fill("Крафт и мягкие точки — как упаковка пекарни. Логотип в центре.");

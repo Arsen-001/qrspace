@@ -33,7 +33,8 @@ export function Generator() {
   // создаётся при скачивании (код появляется в «Мои коды»). Wi-Fi, контакт и событие — прямо в коде, только простые.
   const direct = isDirect(type);
   const sample = `${(base || "https://qrspace.co").toUpperCase()}/K/XXXXXX`;
-  const payload = !raw || direct ? raw : sample;
+  // Пока ничего не ввели — в предпросмотре пример с нашей ссылкой: видно, как меняется вид, скачать нельзя.
+  const payload = direct && raw ? raw : sample;
   const tier = tierOf(style);
 
   return (
@@ -61,6 +62,8 @@ export function Generator() {
           payload={payload}
           style={style}
           setStyle={setStyle}
+          sample={!raw}
+          steps
           gate={{
             tier,
             key: () => codeKey(raw, toSaved(style)),
@@ -76,6 +79,7 @@ export function Generator() {
           top={
             <ContentForm
               t={t}
+              step={1}
               type={type}
               fields={fields[type]}
               onType={setType}

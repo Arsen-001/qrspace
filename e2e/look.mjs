@@ -11,14 +11,16 @@ await p.getByRole("button", { name: /Арман/ }).click();
 await p.waitForSelector("text=Wi");
 await p.getByRole("link", { name: /Wi/ }).click();
 await p.getByRole("tab", { name: /Вид кода/ }).click();
-await p.waitForSelector("text=Код читается", { timeout: 30000 });
+await p.waitForSelector('text="Код читается"', { timeout: 30000 });
 console.log("scan ok in look tab");
+await p.getByRole("tab", { name: "Форма", exact: true }).click();
 await p.getByRole("radio", { name: "Круги" }).click();
 await p.waitForSelector("text=Сохранено", { timeout: 10000 });
 await p.reload();
 await p.getByRole("tab", { name: /Вид кода/ }).click();
+await p.getByRole("tab", { name: "Форма", exact: true }).click();
 console.log("dots persisted:", await p.getByRole("radio", { name: "Круги" }).getAttribute("aria-checked"));
-await p.waitForSelector("text=Код читается", { timeout: 30000 });
+await p.waitForSelector('text="Код читается"', { timeout: 30000 });
 console.log("still reads");
 // армянский, телефон
 const m = await browser.newContext({ viewport: { width: 390, height: 800 }, locale: "hy-AM" });

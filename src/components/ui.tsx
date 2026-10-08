@@ -2,13 +2,21 @@
 // Мелкие элементы формы — один вид на всём сайте.
 import { useId, useRef, type ReactNode } from "react";
 
-export function Card({ title, children }: { title: string; children: ReactNode }) {
+/** step — номер шага в генераторе (кружок перед заголовком). */
+export function Card({ title, step, children }: { title: string; step?: number; children: ReactNode }) {
   return (
     <section className="rounded-2xl border border-line bg-card p-5 sm:p-6">
-      <h2 className="mb-4 font-heading text-lg font-bold">{title}</h2>
+      <h2 className="mb-4 flex items-center gap-3 font-heading text-lg font-bold">
+        {step && <StepBadge n={step} />}
+        {title}
+      </h2>
       {children}
     </section>
   );
+}
+
+export function StepBadge({ n }: { n: number }) {
+  return <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-stage font-mono text-sm font-bold text-accent">{n}</span>;
 }
 
 export function Label({ children, hint }: { children: ReactNode; hint?: string }) {

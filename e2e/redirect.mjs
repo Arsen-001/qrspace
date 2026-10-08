@@ -84,6 +84,7 @@ await ready();
 ok(await p.locator("text=Напрямую в телефон").count() === 1, "wifi note: straight to the phone");
 const wifi = await download();
 ok(wifi === "WIFI:T:WPA;S:Dacha;P:secret123;;", `wifi stays in the code: ${wifi}`);
+await p.getByRole("tab", { name: "Форма", exact: true }).click();
 await p.getByRole("radio", { name: "Звёзды", exact: true }).click();
 await p.waitForSelector("text=только в простом виде. Выберите");
 ok(await p.getByRole("button", { name: /Скачать PNG/ }).isDisabled(), "styled wifi cannot be downloaded");

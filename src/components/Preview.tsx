@@ -9,6 +9,7 @@ import { PRICES, type Quote, type Tier } from "@/lib/pricing";
 import { useInBrowser } from "./QrThumb";
 import { type Drawing, toSvg } from "@/lib/qr/render";
 import { downloadLive, downloadPng, downloadSvg } from "@/lib/qr/raster";
+import { StepBadge } from "./ui";
 
 export type ScanState = "idle" | "checking" | "ok" | "bad";
 
@@ -20,9 +21,30 @@ export type ScanState = "idle" | "checking" | "ok" | "bad";
 export type Gate = { tier: Tier; key: () => string; finalize?: () => Promise<{ drawing: Drawing; payload: string }>; blocked?: string };
 type Format = "png" | "svg" | "live";
 
-export function Preview({ t, drawing, scan, error, name = "qr-code", gate, payload }: { t: Dict; drawing: Drawing | null; scan: ScanState; error: string | null; name?: string; gate?: Gate | null; payload?: string }) {
+/** sample — показываем пример (человек ещё ничего не ввёл): видно оформление, скачать нельзя. step — номер шага в генераторе. */
+export function Preview({
+  t,
+  drawing,
+  scan,
+  error,
+  name = "qr-code",
+  gate,
+  payload,
+  sample,
+  step,
+}: {
+  t: Dict;
+  drawing: Drawing | null;
+  scan: ScanState;
+  error: string | null;
+  name?: string;
+  gate?: Gate | null;
+  payload?: string;
+  sample?: boolean;
+  step?: number;
+}) {
   const [forced, setForced] = useState(false);
-  const canDownload = !!drawing && !gate?.blocked && (scan === "ok" || (scan === "bad" && forced));
+  const canDownload = !!drawing && !sample && !gate?.blocked && (scan === "ok" || (scan === "bad" && forced));
   const [failed, setFailed] = useState(false);
   const { me } = useMe();
   const path = usePathname();
@@ -78,17 +100,27 @@ export function Preview({ t, drawing, scan, error, name = "qr-code", gate, paylo
 
   return (
     <section className="rounded-2xl border border-line bg-card p-5 sm:p-6">
-      <div className="mx-auto aspect-square w-full max-w-[420px] overflow-hidden rounded-xl border border-line bg-field">
+      {step && (
+        <h2 className="mb-4 flex items-center gap-3 font-heading text-lg font-bold">
+          <StepBadge n={step} />
+          {t.step3}
+        </h2>
+      )}
+      <div className="relative mx-auto aspect-square w-full max-w-[420px] overflow-hidden rounded-xl border border-line bg-field">
         {drawing ? (
-          <div className="h-full w-full [&>svg]:h-full [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: toSvg(drawing, 420) }} />
+          <>
+            <div className={`h-full w-full transition-opacity [&>svg]:h-full [&>svg]:w-full ${sample ? "opacity-85" : ""}`} dangerouslySetInnerHTML={{ __html: toSvg(drawing, 420) }} />
+            {sample && <span className="absolute left-3 top-3 rounded-md bg-stage px-2.5 py-1 font-mono text-xs font-bold uppercase tracking-wider text-accent">{t.sampleBadge}</span>}
+          </>
         ) : (
           <div className="grid h-full place-items-center p-8 text-center text-sm text-muted">{error ?? t.previewEmpty}</div>
         )}
       </div>
 
       <div className="mt-4 min-h-14" aria-live="polite">
-        {drawing && scan === "checking" && <p className="text-sm text-muted">{t.checking}</p>}
-        {drawing && scan === "ok" && (
+        {drawing && sample && <p className="rounded-xl border border-dashed border-line p-3 text-sm text-muted">{t.sampleHint}</p>}
+        {drawing && !sample && scan === "checking" && <p className="text-sm text-muted">{t.checking}</p>}
+        {drawing && !sample && scan === "ok" && (
           <div className="flex items-start gap-2.5 rounded-xl bg-ok-soft p-3">
             <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-ok text-xs text-on-ok">✓</span>
             <div>
@@ -97,7 +129,7 @@ export function Preview({ t, drawing, scan, error, name = "qr-code", gate, paylo
             </div>
           </div>
         )}
-        {drawing && scan === "bad" && (
+        {drawing && !sample && scan === "bad" && (
           <div className="flex items-start gap-2.5 rounded-xl bg-warn-soft p-3">
             <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-warn text-xs text-on-warn">!</span>
             <div>

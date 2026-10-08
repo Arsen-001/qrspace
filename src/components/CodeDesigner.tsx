@@ -2,7 +2,7 @@
 // Оформление кода + предпросмотр с проверкой чтения. Один и тот же блок в генераторе и в коде с памятью.
 import { useEffect, useMemo, useRef, useState, type Dispatch, type ReactNode, type SetStateAction } from "react";
 import type { Dict } from "@/lib/i18n";
-import { buildDrawing, type Drawing } from "@/lib/qr/render";
+import { buildDrawing, toSvg, type Drawing } from "@/lib/qr/render";
 import { layoutFor, MAX_PHOTOS } from "@/lib/qr/collage";
 import { toQrStyle } from "@/lib/qr/style";
 import { checkScan, composeCollage, iconMask, prepareImage } from "@/lib/qr/raster";
@@ -42,6 +42,8 @@ export function CodeDesigner({
   side,
   fileName,
   gate,
+  sample,
+  steps,
 }: {
   t: Dict;
   payload: string;
@@ -53,6 +55,9 @@ export function CodeDesigner({
   side?: ReactNode;
   fileName?: string;
   gate?: Gate | null;
+  /** Генератор: пример вместо пустого предпросмотра и номера шагов 2 и 3. */
+  sample?: boolean;
+  steps?: boolean;
 }) {
   const [imageError, setImageError] = useState(false);
   const patchStyle = (p: Partial<StyleState>) => setStyle((s) => ({ ...s, ...p }));
@@ -130,11 +135,31 @@ export function CodeDesigner({
 
   const lowContrast = !style.picture && contrast(style.fg, style.bg) < 3;
 
+  // Телефон: предпросмотр — под оформлением. Пока человек в шаге 2, а код не виден — маленький код в углу,
+  // нажал — прокрутка к шагу 3.
+  const styleRef = useRef<HTMLDivElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
+  const [seen, setSeen] = useState({ style: false, preview: true });
+  useEffect(() => {
+    if (!steps || !styleRef.current || !previewRef.current) return;
+    const io = new IntersectionObserver((entries) => {
+      setSeen((v) => {
+        const next = { ...v };
+        for (const e of entries) next[e.target === styleRef.current ? "style" : "preview"] = e.isIntersecting;
+        return next;
+      });
+    });
+    io.observe(styleRef.current);
+    io.observe(previewRef.current);
+    return () => io.disconnect();
+  }, [steps]);
+  const mini = steps && drawing && seen.style && !seen.preview;
+
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[minmax(0,1fr)_400px] lg:items-start">
       <div className="contents lg:block lg:space-y-5">
         {top && <div className="order-1 min-w-0">{top}</div>}
-        <div className="order-3 min-w-0">
+        <div ref={styleRef} className={`min-w-0 ${steps ? "order-2" : "order-3"}`}>
           <StylePanel
             t={t}
             s={style}
@@ -162,14 +187,39 @@ export function CodeDesigner({
               />
             }
             lowContrast={lowContrast}
+            step={steps ? 2 : undefined}
           />
           {imageError && <p className="mt-2 text-sm text-warn">{t.imageError}</p>}
         </div>
       </div>
-      <div className="order-2 min-w-0 space-y-4 lg:sticky lg:top-4">
-        <Preview key={payload} t={t} drawing={drawing} scan={scan} error={tooLong ? t.tooLong : null} name={fileName} gate={gate} payload={payload} />
+      {/* В генераторе шаги идут по порядку и на телефоне: 1, 2, 3. */}
+      <div ref={previewRef} className={`min-w-0 space-y-4 lg:sticky lg:top-4 ${steps ? "order-3" : "order-2"}`}>
+        <Preview
+          key={payload}
+          t={t}
+          drawing={drawing}
+          scan={scan}
+          error={tooLong ? t.tooLong : null}
+          name={fileName}
+          gate={gate}
+          payload={payload}
+          sample={sample}
+          step={steps ? 3 : undefined}
+        />
         {side}
       </div>
+      {mini && (
+        <button
+          type="button"
+          onClick={() => previewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+          className="fixed bottom-4 right-4 z-30 flex items-center gap-3 rounded-2xl border border-stage-line bg-stage p-2 pr-4 text-on-stage shadow-[0_12px_30px_-10px_rgba(0,0,0,0.6)] lg:hidden"
+        >
+          <span aria-hidden className="block h-14 w-14 overflow-hidden rounded-lg [&>svg]:h-full [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: toSvg(drawing, 56) }} />
+          <span className="font-heading text-sm font-bold">
+            {t.step3} <span className="text-accent">↓</span>
+          </span>
+        </button>
+      )}
     </div>
   );
 }
