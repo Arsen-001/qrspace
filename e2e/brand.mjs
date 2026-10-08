@@ -38,7 +38,7 @@ await n.goto(B + "/login?next=/brand");
 await n.getByRole("button", { name: /Наре/ }).click();
 await n.waitForSelector("text=Заказы брендов");
 await n.getByRole("link", { name: /Ani Bakery/ }).click();
-await n.getByLabel("Сообщение").fill("Здравствуйте! Беру заказ, к вечеру пришлю варианты.");
+await n.getByPlaceholder("Сообщение", { exact: true }).fill("Здравствуйте! Беру заказ, к вечеру пришлю варианты.");
 await n.getByRole("button", { name: "Отправить", exact: true }).click();
 await n.waitForSelector("text=Беру заказ");
 ok(await n.locator("text=В работе").count() > 0, "reply moves order to In progress");

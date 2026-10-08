@@ -148,7 +148,7 @@ export function NumbersPage() {
                   className={`flex h-full w-full flex-col items-start gap-2 rounded-2xl border border-line bg-card p-4 text-left transition-colors hover:border-muted ${s.free ? "" : "opacity-60"}`}
                 >
                   {/* Длинный номер («1 000 000») — мельче, чтобы не переносился. */}
-                  <span className={`whitespace-nowrap font-heading font-extrabold ${fmtNumber(s.n).length > 7 ? "text-lg" : "text-2xl"}`}>№ {fmtNumber(s.n)}</span>
+                  <span className={`whitespace-nowrap font-heading font-extrabold ${fmtNumber(s.n).length >= 7 ? "text-lg sm:text-xl" : fmtNumber(s.n).length === 6 ? "text-xl sm:text-2xl" : "text-2xl"}`}>№ {fmtNumber(s.n)}</span>
                   <TierBadge t={t} tier={s.tier} />
                   <span className="text-sm font-semibold">{s.free ? `$${s.price}` : t.numberTakenShort}</span>
                 </button>

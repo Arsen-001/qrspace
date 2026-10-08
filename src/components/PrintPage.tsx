@@ -11,7 +11,7 @@ import { buildDrawing, toSvg } from "@/lib/qr/render";
 import { DEFAULT_STYLE, fromSaved, toQrStyle, toSaved } from "@/lib/qr/style";
 import { useInBrowser } from "./QrThumb";
 import { Notice, Shell } from "./Shell";
-import { Segmented } from "./ui";
+import { Segmented, StepBadge } from "./ui";
 
 // A4 в миллиметрах; поля 10 мм, между наклейками 4 мм (место для ножниц).
 const PAGE = { w: 210, h: 297, margin: 10, gap: 4 };
@@ -153,8 +153,9 @@ export function PrintPage() {
         </div>
       ) : (
         <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[340px_minmax(0,1fr)] lg:items-start print:m-0 print:block">
-          <div className="space-y-5 print:hidden">
-            <section className="rounded-2xl border border-line bg-card p-5">
+          <div className="flex flex-col gap-5 print:hidden">
+            {/* Набор пустых меток — дополнительная возможность: внизу, после главных шагов. */}
+            <section className="order-last rounded-2xl border-2 border-dashed border-line p-5">
               <h2 className="font-heading font-bold">{t.newSet}</h2>
               <p className="mt-1 text-xs text-muted">{t.newSetHint}</p>
               <div className="mt-3 flex gap-2">
@@ -171,7 +172,10 @@ export function PrintPage() {
               </div>
             </section>
             <section className="rounded-2xl border border-line bg-card p-5">
-              <h2 className="font-heading font-bold">{t.whichCodes}</h2>
+              <h2 className="flex items-center gap-3 font-heading font-bold">
+                <StepBadge n={1} />
+                {t.whichCodes}
+              </h2>
               <ul className="mt-2 max-h-72 space-y-1 overflow-y-auto">
                 {list.map((c) => (
                   <li key={c.id}>
@@ -184,6 +188,10 @@ export function PrintPage() {
               </ul>
             </section>
             <section className="space-y-4 rounded-2xl border border-line bg-card p-5">
+              <h2 className="flex items-center gap-3 font-heading font-bold">
+                <StepBadge n={2} />
+                {t.printStep2}
+              </h2>
               <div>
                 <div className="mb-1.5 text-sm font-semibold">{t.stickerSize}</div>
                 <Segmented<Size> value={size} onChange={setSize} options={SIZES.map((s) => ({ id: s, label: `${Number(s) / 10} ${t.cm}` }))} />
