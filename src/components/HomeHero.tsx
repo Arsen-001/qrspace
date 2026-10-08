@@ -1,8 +1,9 @@
 "use client";
 // Первый экран, бегущая строка и «больше, чем QR-код» на главной .
 import Link from "next/link";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { Dict } from "@/lib/i18n";
+import { BASIC_LOGOS, LINKEDIN, logoSvg, type BrandLogo } from "@/lib/qr/logo-art";
 import { HeroCode, HeroSwitch, useReveal } from "./HeroReveal";
 
 /**
@@ -194,23 +195,33 @@ export function HomeBackdrop() {
   );
 }
 
+/**
+ * Бегущая лента — логотипы, которые можно поставить в центр кода (владелец 09.10.2026: «вместо этих текстов пусть
+ * крутятся все нижние лого»). Сначала основные значки, остальные бренды (Simple Icons) догружаются, когда браузер свободен.
+ */
 export function HomeTicker({ t }: { t: Dict }) {
-  const items = t.homeTicker.split(" · ");
+  const [logos, setLogos] = useState<BrandLogo[]>(() => [...BASIC_LOGOS, LINKEDIN]);
+  useEffect(() => {
+    const load = () => import("@/lib/qr/logos").then((m) => setLogos([...m.BRAND_LOGOS, LINKEDIN, ...BASIC_LOGOS]));
+    const w = window as Window & { requestIdleCallback?: (cb: () => void) => number };
+    if (w.requestIdleCallback) w.requestIdleCallback(load);
+    else setTimeout(load, 1500);
+  }, []);
   const row = (hidden: boolean) => (
-    <div className="flex shrink-0 items-center" aria-hidden={hidden || undefined}>
-      {items.map((s, i) => (
-        <span key={i} className="flex items-center whitespace-nowrap">
-          <span className="px-5 font-heading text-sm font-bold uppercase sm:text-base">{s}</span>
-          <span aria-hidden>✦</span>
-        </span>
+    <div className="flex shrink-0 items-center gap-3 pr-3" aria-hidden={hidden || undefined}>
+      {logos.map((l) => (
+        <span key={l.id} title={l.title} className="block h-10 w-10 shrink-0 rounded-[11px] shadow-[0_2px_0_rgba(0,0,0,0.25)] sm:h-12 sm:w-12 [&>svg]:h-full [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: logoSvg(l, 48) }} />
       ))}
     </div>
   );
   return (
-    <div className="-mx-4 my-8 -rotate-1 overflow-hidden border-y border-ink bg-accent py-3 text-on-accent sm:-mx-6">
-      <div className="x-marquee flex w-max">
-        {row(false)}
-        {row(true)}
+    // На телефоне наклонная лента шире экрана — обрезаем её ровной рамкой, чтобы страница не уезжала вбок.
+    <div className="-mx-4 my-8 overflow-hidden py-2 sm:-mx-6 sm:overflow-visible" role="img" aria-label={t.logoQuick}>
+      <div className="-mx-4 -rotate-1 overflow-hidden border-y border-ink bg-accent py-3 sm:mx-0">
+        <div className="x-marquee flex w-max" style={{ animationDuration: `${logos.length * 1.4}s` }}>
+          {row(false)}
+          {row(true)}
+        </div>
       </div>
     </div>
   );
