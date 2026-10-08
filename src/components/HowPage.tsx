@@ -15,8 +15,6 @@ export function HowPage() {
     { icon: <KindIcon kind="car" className="h-6 w-6" />, title: t.how4, text: t.how4Text, href: "/codes", cta: t.newCode },
     { icon: <span className="text-xl">◆</span>, title: t.how5, text: t.how5Text, href: "/market", cta: t.navMarket },
     { icon: <span className="font-heading text-lg font-extrabold">№</span>, title: t.numbersTitle, text: t.numbersTeaser, href: "/numbers", cta: t.numbersTitle },
-    { icon: <KindIcon kind="item" className="h-6 w-6" />, title: t.how6, text: t.how6Text, href: "/brand", cta: t.navBrand },
-    { icon: <span className="text-xl">🖨</span>, title: t.how7, text: t.how7Text, href: "/shop", cta: t.navShop },
   ];
   return (
     <Shell t={t} lang={lang}>

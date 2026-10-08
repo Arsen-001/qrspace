@@ -65,7 +65,7 @@ export function AdminPage() {
             <Tile label={t.adminBlocked} value={data.totals.blocked} />
           </section>
           <p className="-mt-5 text-xs text-muted">
-            {t.adminRevenueNote} · {t.brandTitle}: {data.totals.brandOrders} · {t.shopTitle}: {data.totals.shopOrders} · {t.resaleTitle}: {data.totals.openLots}
+            {t.adminRevenueNote} · {t.resaleTitle}: {data.totals.openLots}
           </p>
 
           <section>

@@ -2,8 +2,6 @@
 import type { Design } from "./market";
 import type { Listing } from "./listings";
 import type { Person } from "./people";
-import type { Need, Order, OrderStatus, Pkg } from "./orders";
-import type { ProductId, ShopOrder } from "./shop";
 import type { Pack } from "./packs";
 import type { Quote, Tier } from "./pricing";
 import type { Content } from "./qr/payload";
@@ -247,28 +245,15 @@ export const api = {
   quote: (key: string, tier: Tier) => call<Quote>(`/api/purchases?key=${encodeURIComponent(key)}&tier=${tier}`),
   pay: (key: string, tier: Tier) => call<{ ok: true; price: number }>("/api/purchases", json("POST", { key, tier })),
   batch: (count: number, prefix: string, style: SavedStyle) => call<CodeView[]>("/api/codes/batch", json("POST", { count, prefix, kind: "memory", style })),
-  orders: () => call<Order[]>("/api/orders"),
-  order: (id: string) => call<Order>(`/api/orders/${id}`),
-  createOrder: (o: { brand: string; contact: string; need: Need; qty: number; pkg: Pkg; deadline: string | null; notes: string; logo: string | null }) =>
-    call<Order>("/api/orders", json("POST", o)),
-  patchOrder: (id: string, p: { status?: OrderStatus; design?: { style: SavedStyle; note: string }; accept?: boolean }) => call<Order>(`/api/orders/${id}`, json("PATCH", p)),
-  orderMessage: (id: string, text: string) => call<Order>(`/api/orders/${id}/messages`, json("POST", { text })),
-  claim: (id: string) => call<CodeView>(`/api/orders/${id}/claim`, { method: "POST" }),
   lots: () => call<Lot[]>("/api/listings"),
   lot: (id: string) => call<Lot>(`/api/listings/${id}`),
   sell: (code: string, mode: "fixed" | "auction", price: number, hours: number) => call<Lot>("/api/listings", json("POST", { code, mode, price, hours })),
   lotAction: (id: string, action: "buy" | "bid" | "cancel" | "finish", amount?: number) => call<Lot>(`/api/listings/${id}`, json("POST", { action, amount })),
-  shopOrders: (all = false) => call<ShopOrder[]>(`/api/shop${all ? "?all=1" : ""}`),
-  shopStatus: (id: string, status: ShopOrder["status"]) => call<ShopOrder>(`/api/shop/${id}`, json("PATCH", { status })),
-  shopOrder: (o: { product: ProductId; variant: string; code: string; qty: number; address: ShopOrder["address"] }) => call<ShopOrder>("/api/shop", json("POST", o)),
   notices: () => call<Notices>("/api/notifications"),
   readNotices: () => call<{ ok: true }>("/api/notifications", { method: "POST" }),
   contacts: () => call<string[]>("/api/contacts"),
   addContact: (email: string) => call<string[]>("/api/contacts", json("POST", { email })),
   removeContact: (id: string) => call<string[]>(`/api/contacts?id=${encodeURIComponent(id)}`, { method: "DELETE" }),
-  authBatches: () => call<Batch[]>("/api/batches"),
-  authBatch: (id: string) => call<{ batch: Batch; items: BatchItem[] }>(`/api/batches/${id}`),
-  makeAuthBatch: (b: { brand: string; product: string; count: number }) => call<Batch>("/api/batches", json("POST", b)),
   claimItem: (id: string, secret: string) => call<CodeView>(`/api/codes/${id}/claim`, json("POST", { secret })),
   releaseItem: (id: string) => call<{ secret: string; view: CodeView }>(`/api/codes/${id}/claim`, { method: "DELETE" }),
   report: (id: string, reason: ReportReason, text: string) => call<{ ok: true }>(`/api/codes/${id}/report`, json("POST", { reason, text })),

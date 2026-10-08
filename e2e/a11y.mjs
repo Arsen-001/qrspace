@@ -19,7 +19,7 @@ async function scan(p, name) {
 for (const scheme of ["light", "dark"]) {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 }, locale: "ru-RU", colorScheme: scheme });
   const p = await ctx.newPage();
-  for (const path of ["/", "/market", "/market/nebula", "/how", "/login", "/brand", "/brand/auth", "/shop"]) {
+  for (const path of ["/", "/market", "/market/nebula", "/how", "/login"]) {
     await p.goto(B + path, { waitUntil: "networkidle" });
     await scan(p, `${scheme} ${path}`);
   }
