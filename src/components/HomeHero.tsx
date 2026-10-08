@@ -1,7 +1,8 @@
+"use client";
 // Первый экран, бегущая строка и «больше, чем QR-код» на главной .
 import Link from "next/link";
 import type { Dict } from "@/lib/i18n";
-import { HeroReveal } from "./HeroReveal";
+import { HeroCode, HeroSwitch, useReveal } from "./HeroReveal";
 
 const N = 25;
 
@@ -58,6 +59,7 @@ function BigCode() {
 }
 
 export function HomeHero({ t }: { t: Dict }) {
+  const reveal = useReveal();
   return (
     <section className="relative overflow-hidden rounded-3xl border border-stage-line bg-stage text-on-stage">
       <div aria-hidden className="pointer-events-none absolute inset-0">
@@ -70,9 +72,13 @@ export function HomeHero({ t }: { t: Dict }) {
             <span className="x-blink h-2 w-2 rounded-full bg-accent" />
             {t.homeKicker}
           </p>
-          <h1 className="mt-6 font-heading text-[2.5rem] leading-[1.1] font-extrabold text-balance sm:text-6xl lg:text-[4.25rem]">
-            {t.homeTitleA} <span className="box-decoration-clone rounded-md bg-accent px-2 text-on-accent">{t.homeTitleB}</span>
-          </h1>
+          {/* Выключатель — рядом с заголовком (владелец 08.10.2026): открывает, что под большим кодом. */}
+          <div className="mt-6 flex items-center gap-4 sm:gap-6">
+            <h1 className="min-w-0 flex-1 font-heading text-[1.95rem] leading-[1.1] font-extrabold text-balance [hyphens:manual] sm:text-6xl lg:text-[4.25rem]">
+              {t.homeTitleA} <span className="box-decoration-clone rounded-md bg-accent px-2 text-on-accent">{t.homeTitleB}</span>
+            </h1>
+            <HeroSwitch t={t} open={reveal.open} toggle={reveal.toggle} />
+          </div>
           <p className="mt-6 max-w-xl text-base leading-relaxed text-on-stage/70 sm:text-lg">{t.homeLead}</p>
           <div className="mt-8 flex flex-wrap gap-2 sm:gap-3">
             <a href="#make" className="group inline-flex min-h-13 items-center gap-3 rounded-xl bg-accent px-5 sm:px-6 font-heading text-sm font-bold text-on-accent">
@@ -90,7 +96,7 @@ export function HomeHero({ t }: { t: Dict }) {
           </div>
         </div>
         <div className="mx-auto w-full max-w-md lg:max-w-none">
-          <HeroReveal t={t} code={<BigCode />} />
+          <HeroCode t={t} code={<BigCode />} open={reveal.open} moving={reveal.moving} />
         </div>
       </div>
     </section>

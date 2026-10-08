@@ -26,9 +26,9 @@ function MemoryUnder({ t }: { t: Dict }) {
   );
 }
 
-export function HeroReveal({ t, code }: { t: Dict; code: ReactNode }) {
+/** Состояние выключателя: открыт ли код и идёт ли луч (виден, пока движется — в обе стороны). */
+export function useReveal() {
   const [open, setOpen] = useState(false);
-  // Луч виден, пока идёт (в обе стороны); в покое его нет.
   const [moving, setMoving] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const toggle = () => {
@@ -37,47 +37,52 @@ export function HeroReveal({ t, code }: { t: Dict; code: ReactNode }) {
     clearTimeout(timer.current);
     timer.current = setTimeout(() => setMoving(false), 1450);
   };
+  return { open, moving, toggle };
+}
+
+/** Вертикальный выключатель — рядом с заголовком; мягко мерцает, пока его не включили. */
+export function HeroSwitch({ t, open, toggle }: { t: Dict; open: boolean; toggle: () => void }) {
+  return (
+    <div className="flex shrink-0 flex-col items-center gap-2">
+      <span className={`font-mono text-[10px] uppercase tracking-[0.14em] transition-colors ${open ? "text-accent" : "text-on-stage/50"}`}>{t.heroUnder}</span>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={open}
+        aria-label={t.heroSwitch}
+        onClick={toggle}
+        className={`relative h-40 w-12 rounded-full border transition-colors sm:h-48 sm:w-14 ${open ? "border-accent bg-accent/20" : "border-stage-line bg-white/5"}`}
+      >
+        <span aria-hidden className={`x-blink pointer-events-none absolute -inset-1.5 rounded-full bg-accent/25 blur-md ${open ? "opacity-40" : ""}`} />
+        <span
+          className={`absolute left-1/2 top-1 h-10 w-10 -translate-x-1/2 rounded-full shadow-lg transition-transform duration-700 ease-[cubic-bezier(.65,0,.35,1)] sm:h-12 sm:w-12 ${
+            open ? "translate-y-0 bg-accent" : "translate-y-[6.75rem] bg-on-stage sm:translate-y-[8.25rem]"
+          }`}
+        />
+      </button>
+      <span className={`font-mono text-[10px] uppercase tracking-[0.14em] transition-colors ${open ? "text-on-stage/50" : "text-on-stage"}`}>QR</span>
+    </div>
+  );
+}
+
+/** Большой код; под ним — память. Включили — луч сверху вниз открывает её, выключили — закрывает. */
+export function HeroCode({ t, code, open, moving }: { t: Dict; code: ReactNode; open: boolean; moving: boolean }) {
   const ease = "duration-[1400ms] ease-[cubic-bezier(.65,0,.35,1)]";
   return (
-    <div className="flex items-center gap-4 sm:gap-6">
-      <div className="flex flex-col items-center gap-2">
-        <span className={`font-mono text-[10px] uppercase tracking-[0.14em] transition-colors ${open ? "text-accent" : "text-on-stage/50"}`}>{t.heroUnder}</span>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={open}
-          aria-label={t.heroSwitch}
-          onClick={toggle}
-          className={`relative h-28 w-11 rounded-full border transition-colors ${open ? "border-accent bg-accent/20" : "border-stage-line bg-white/5"}`}
-        >
-          <span
-            className={`absolute left-1/2 top-1 h-9 w-9 -translate-x-1/2 rounded-full shadow-lg transition-transform duration-500 ${open ? "translate-y-0 bg-accent" : "translate-y-[3.75rem] bg-on-stage"}`}
-          >
-            {!open && <span className="x-blink absolute inset-0 rounded-full ring-2 ring-accent/60" />}
-          </span>
-        </button>
-        <span className={`font-mono text-[10px] uppercase tracking-[0.14em] transition-colors ${open ? "text-on-stage/50" : "text-on-stage"}`}>QR</span>
-      </div>
-
-      <div className="relative min-w-0 flex-1">
-        <div className="relative aspect-square overflow-hidden rounded-2xl border border-stage-line bg-stage">
-          <MemoryUnder t={t} />
-          {/* Код сверху; открываем/закрываем его срезом сверху — граница среза идёт вместе с лучом. */}
-          <div
-            className={`absolute inset-0 bg-stage p-5 transition-[clip-path] sm:p-7 ${ease}`}
-            style={{ clipPath: open ? "inset(100% 0 0 0)" : "inset(0 0 0 0)" }}
-            aria-hidden={open}
-          >
-            {code}
-            {!open && <div aria-hidden className="x-scan pointer-events-none" />}
-          </div>
-          <div aria-hidden className={`pointer-events-none absolute inset-0 transition-transform ${ease}`} style={{ transform: open ? "translateY(100%)" : "translateY(0%)" }}>
-            <div className={`h-1 bg-accent shadow-[0_0_24px_6px_rgba(198,255,46,0.65)] transition-opacity duration-300 ${moving ? "opacity-100" : "opacity-0"}`} />
-          </div>
+    <div className="relative">
+      <div className="relative aspect-square overflow-hidden rounded-2xl border border-stage-line bg-stage">
+        <MemoryUnder t={t} />
+        {/* Код сверху; открываем/закрываем его срезом сверху — граница среза идёт вместе с лучом. */}
+        <div className={`absolute inset-0 bg-stage p-5 transition-[clip-path] sm:p-7 ${ease}`} style={{ clipPath: open ? "inset(100% 0 0 0)" : "inset(0 0 0 0)" }} aria-hidden={open}>
+          {code}
+          {!open && <div aria-hidden className="x-scan pointer-events-none" />}
         </div>
-        <span className="absolute -top-3 right-6 rounded-md bg-accent px-2.5 py-1 font-heading text-xs font-bold text-on-accent">№ 000 777</span>
-        <span className="absolute -bottom-3 left-6 rounded-md border border-stage-line bg-stage px-2.5 py-1 font-mono text-xs text-on-stage/80">{open ? t.heroUnder : t.numbersTitle}</span>
+        <div aria-hidden className={`pointer-events-none absolute inset-0 transition-transform ${ease}`} style={{ transform: open ? "translateY(100%)" : "translateY(0%)" }}>
+          <div className={`h-1 bg-accent shadow-[0_0_24px_6px_rgba(198,255,46,0.65)] transition-opacity duration-300 ${moving ? "opacity-100" : "opacity-0"}`} />
+        </div>
       </div>
+      <span className="absolute -top-3 right-6 rounded-md bg-accent px-2.5 py-1 font-heading text-xs font-bold text-on-accent">№ 000 777</span>
+      <span className="absolute -bottom-3 left-6 rounded-md border border-stage-line bg-stage px-2.5 py-1 font-mono text-xs text-on-stage/80">{open ? t.heroUnder : t.numbersTitle}</span>
     </div>
   );
 }
