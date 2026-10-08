@@ -7,13 +7,26 @@ import { useMe } from "@/lib/me";
 import { CODE_PACKS, packBytes, type PackPlan } from "@/lib/packs";
 import { LoginModal } from "./LoginModal";
 
-/** Сетка «кодов в пакете»: столько клеток, сколько кодов (до 100 — мелко), — сразу видно, сколько это. */
+/**
+ * Сколько кодов — картинкой на всё свободное место вверху карточки (владелец 09.10.2026): каждый код — маленький
+ * квадрат с «глазком», как угол QR. 5 — крупно, 100 — мелко.
+ */
 function Cells({ n }: { n: number }) {
-  const cols = n <= 5 ? 5 : 10;
+  // Почти квадрат; у больших пакетов — ровные ряды (столбцов — делитель числа: 50 и 100 — по 10).
+  const aim = Math.sqrt(n / 0.8);
+  const even = Array.from({ length: n }, (_, i) => i + 1).filter((d) => n % d === 0 && d >= aim * 0.7 && d <= aim * 1.4);
+  const cols = n > 20 && even.length ? even.reduce((a, b) => (Math.abs(b - aim) < Math.abs(a - aim) ? b : a)) : Math.ceil(aim);
+  const gap = n > 20 ? 4 : 8;
   return (
-    <span aria-hidden className="grid gap-[3px]" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
+    <span aria-hidden className="flex w-full max-w-[240px] flex-wrap justify-center" style={{ gap }}>
       {Array.from({ length: n }, (_, i) => (
-        <span key={i} className="aspect-square rounded-[2px] bg-accent" />
+        <span
+          key={i}
+          className="x-cell relative grid aspect-square place-items-center rounded-[22%] bg-accent"
+          style={{ width: `calc((100% - ${(cols - 1) * gap}px) / ${cols})`, animationDelay: `${Math.min(i, 60) * 12}ms` }}
+        >
+          <span className="h-[38%] w-[38%] rounded-[30%] border-[max(1.5px,1.6cqw)] border-stage" />
+        </span>
       ))}
     </span>
   );
@@ -78,10 +91,11 @@ export function CodePacks({ t, lang }: { t: Dict; lang: Lang }) {
                 <span className="font-heading text-5xl font-extrabold tracking-tight">{p.codes}</span>
                 <span className="font-semibold text-on-stage/70">{t.packCodes}</span>
               </div>
-              <div className="mt-4 w-24">
+              {/* Вверху — сколько кодов, на всё свободное место; внизу — место под кодом, цена и кнопка. */}
+              <div className="@container flex min-h-44 flex-1 items-center justify-center py-6">
                 <Cells n={p.codes} />
               </div>
-              <div className="mt-5 flex items-center gap-2 rounded-xl px-3 py-2.5 bg-white/10">
+              <div className="flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2.5">
                 <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0 text-accent" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   <path d="M4 7c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3Zm0 0v10c0 1.7 3.6 3 8 3s8-1.3 8-3V7M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" />
                 </svg>
@@ -90,7 +104,7 @@ export function CodePacks({ t, lang }: { t: Dict; lang: Lang }) {
                   <span className="block text-xs text-on-stage/70">{t.packRoomMore}</span>
                 </span>
               </div>
-              <div className="mt-auto flex items-end justify-between gap-2 pt-5">
+              <div className="flex items-end justify-between gap-2 pt-4">
                 <span className="font-heading text-3xl font-extrabold text-accent">{money(p.price)}</span>
                 <span className="pb-1 font-mono text-xs text-on-stage/70">
                   {money(Math.round((p.price / p.codes) * 100) / 100)} {t.packPer}

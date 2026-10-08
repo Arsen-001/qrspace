@@ -242,3 +242,19 @@ button:not(:disabled) {
     animation: none;
   }
 }
+
+/* Коды в карточке пакета появляются по одному (CodePacks.tsx). */
+@keyframes x-cell {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}
+.x-cell {
+  animation: x-cell 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .x-cell {
+    animation: none;
+  }
+}
