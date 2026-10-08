@@ -100,18 +100,18 @@ export function CodePacks({ t, lang }: { t: Dict; lang: Lang }) {
           </span>
         )}
       </div>
-      <ul className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+      <ul className="mt-7 grid grid-cols-1 gap-x-3 gap-y-6 sm:grid-cols-2 sm:gap-x-4 lg:grid-cols-4">
         {CODE_PACKS.map((p) => {
           // Все карточки тёмные, как «Популярный» (владелец 09.10.2026); у популярной — значок и свечение.
           const hot = p.id === best;
           return (
             <li
               key={p.id}
-              className={`relative flex flex-col overflow-hidden rounded-[1.5rem] border p-5 transition-transform hover:-translate-y-1 ${
+              className={`relative flex flex-col rounded-[1.5rem] border p-5 transition-transform hover:-translate-y-1 ${
                 hot ? "border-accent/60 bg-stage text-on-stage shadow-[0_30px_60px_-30px_rgba(198,255,46,0.5)]" : "border-stage-line bg-stage text-on-stage"
               }`}
             >
-              {hot && <span className="-mt-1 mb-3 self-start rounded-full border border-accent/60 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-accent">★ {t.packBest}</span>}
+              {hot && <span className="absolute -top-3 right-5 rounded-full bg-accent px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-on-accent shadow-lg">★ {t.packBest}</span>}
               <div className="flex items-baseline gap-2">
                 <span className="font-heading text-5xl font-extrabold tracking-tight">{p.codes}</span>
                 <span className="font-semibold text-on-stage/70">{t.packCodes}</span>
