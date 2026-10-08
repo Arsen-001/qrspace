@@ -830,6 +830,7 @@ export const de: Dict = {
   storageTooSmall: "Was schon da ist, passt nicht",
   storageMonthly: "Platz ist monatlich, der Code selbst funktioniert immer. Nicht verlängert — wieder 1 MB: Vorhandenes bleibt, Neues kannst du nicht hinzufügen.",
   packRoomMore: "Platz lässt sich erweitern",
+  packMore: "weitere",
   packsKicker: "Code-Pakete",
   packsTitle: "Mehrere Codes auf einmal — auf Vorrat",
   packsHint: "Jeder Look, schlicht oder gestaltet. Jeder Code bekommt eigenen Platz für Fotos, Videos und Text.",

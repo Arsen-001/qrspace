@@ -830,6 +830,7 @@ export const es: Dict = {
   storageTooSmall: "Lo que ya hay no cabe",
   storageMonthly: "El espacio es mensual; el código funciona siempre. Sin renovar vuelve a 1 MB: lo que hay se queda, pero no podrás añadir más.",
   packRoomMore: "el espacio se puede ampliar",
+  packMore: "más",
   packsKicker: "Paquetes de códigos",
   packsTitle: "Varios códigos a la vez — de reserva",
   packsHint: "Cualquier diseño, simple o con estilo. Cada código tiene su propio espacio para fotos, vídeos y texto.",
