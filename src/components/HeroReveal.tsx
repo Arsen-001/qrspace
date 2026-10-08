@@ -1,7 +1,7 @@
 "use client";
 // Первый экран (владелец 08.10.2026): вертикальный выключатель рядом с большим кодом. Включили — луч сканера идёт сверху
 // вниз и открывает, что под кодом (номер телефона); выключили — луч идёт обратно и код закрывает память.
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { Dict } from "@/lib/i18n";
 import { TypeIcon } from "./TypeIcon";
 
@@ -28,16 +28,43 @@ function PhoneUnder({ t }: { t: Dict }) {
   );
 }
 
-/** Состояние выключателя: открыт ли код и идёт ли луч (виден, пока движется — в обе стороны). */
+/**
+ * Состояние выключателя: открыт ли код и идёт ли луч (виден, пока движется — в обе стороны).
+ * Первый раз сам включается и выключается (владелец 09.10.2026) — показать, что под кодом; тронули раньше — не мешаем.
+ */
 export function useReveal() {
   const [open, setOpen] = useState(false);
   const [moving, setMoving] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const toggle = () => {
+  const touched = useRef(false);
+  const flip = () => {
     setOpen((v) => !v);
     setMoving(true);
     clearTimeout(timer.current);
     timer.current = setTimeout(() => setMoving(false), 1450);
+  };
+  useEffect(() => {
+    let seen = false;
+    try {
+      seen = localStorage.getItem("qrspace.heroDemo") === "1";
+    } catch {}
+    if (seen || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const on = setTimeout(() => {
+      if (touched.current) return;
+      try {
+        localStorage.setItem("qrspace.heroDemo", "1");
+      } catch {}
+      flip();
+    }, 1200);
+    const off = setTimeout(() => !touched.current && flip(), 4800);
+    return () => {
+      clearTimeout(on);
+      clearTimeout(off);
+    };
+  }, []);
+  const toggle = () => {
+    touched.current = true;
+    flip();
   };
   return { open, moving, toggle };
 }
@@ -56,11 +83,15 @@ export function HeroSwitch({ t, open, toggle }: { t: Dict; open: boolean; toggle
         className={`relative h-40 w-12 rounded-full border transition-colors sm:h-48 sm:w-14 ${open ? "border-accent bg-accent/20" : "border-stage-line bg-white/5"}`}
       >
         <span aria-hidden className={`x-blink pointer-events-none absolute -inset-1.5 rounded-full bg-accent/25 blur-md ${open ? "opacity-40" : ""}`} />
+        {/* На кружке — ON / OFF (владелец 09.10.2026). */}
         <span
-          className={`absolute left-1/2 top-1 h-10 w-10 -translate-x-1/2 rounded-full shadow-lg transition-transform duration-700 ease-[cubic-bezier(.65,0,.35,1)] sm:h-12 sm:w-12 ${
-            open ? "translate-y-0 bg-accent" : "translate-y-[6.75rem] bg-on-stage sm:translate-y-[8.25rem]"
+          aria-hidden
+          className={`absolute left-1/2 top-1 grid h-10 w-10 -translate-x-1/2 place-items-center rounded-full font-mono text-[10px] font-bold shadow-lg transition-[transform,background-color] duration-700 ease-[cubic-bezier(.65,0,.35,1)] sm:h-12 sm:w-12 sm:text-[11px] ${
+            open ? "translate-y-0 bg-accent text-on-accent" : "translate-y-[6.75rem] bg-on-stage text-stage sm:translate-y-[8.25rem]"
           }`}
-        />
+        >
+          {open ? "ON" : "OFF"}
+        </span>
       </button>
       <span className={`font-mono text-[10px] uppercase tracking-[0.14em] transition-colors ${open ? "text-on-stage/50" : "text-on-stage"}`}>QR</span>
     </div>
