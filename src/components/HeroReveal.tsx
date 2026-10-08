@@ -1,46 +1,29 @@
 "use client";
 // Первый экран (владелец 08.10.2026): вертикальный выключатель рядом с большим кодом. Включили — луч сканера идёт сверху
-// вниз и открывает, что под кодом (фото, текст, видео); выключили — луч идёт обратно и код закрывает память.
+// вниз и открывает, что под кодом (номер телефона); выключили — луч идёт обратно и код закрывает память.
 import { useRef, useState, type ReactNode } from "react";
 import type { Dict } from "@/lib/i18n";
+import { TypeIcon } from "./TypeIcon";
 
-/** Что «под кодом»: живой пример памяти — как её увидит тот, кто отсканировал (фото, видео, слова, кто видит). */
-function MemoryUnder({ t }: { t: Dict }) {
-  const photo = "relative grid place-items-center overflow-hidden rounded-lg text-2xl sm:text-3xl";
+/** Что «под кодом»: номер телефона — так его увидит тот, кто отсканировал (владелец 08.10.2026). */
+function PhoneUnder({ t }: { t: Dict }) {
+  const btn = "flex min-h-11 items-center justify-center gap-2 rounded-xl px-3 font-heading text-sm font-bold sm:min-h-12";
   return (
-    <div className="flex h-full flex-col gap-2 p-3.5 text-left sm:gap-2.5 sm:p-5">
-      <div className="flex items-center gap-2.5">
-        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-accent font-heading text-sm font-extrabold text-on-accent">А</span>
-        <div className="min-w-0">
-          <div className="truncate font-heading text-sm font-bold sm:text-base">{t.heroMemTitle}</div>
-          <div className="font-mono text-[10px] text-on-stage/50">08.10 · {t.heroMemPhotos}</div>
-        </div>
-      </div>
-      <div className="grid flex-1 grid-cols-3 gap-1.5">
-        <span className={`${photo} col-span-2 row-span-2 bg-[linear-gradient(160deg,#ffd48a,#ff8a5c_60%,#e2557a)]`}>
-          <span aria-hidden className="text-5xl sm:text-6xl">🌻</span>
+    <div className="flex h-full flex-col justify-center gap-3 p-4 text-left min-[400px]:gap-4 min-[400px]:p-5 sm:gap-5 sm:p-7">
+      <div className="flex items-center gap-3">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-accent text-on-accent sm:h-12 sm:w-12">
+          <TypeIcon type="phone" className="h-6 w-6" />
         </span>
-        <span className={`${photo} bg-[linear-gradient(160deg,#8fd3ff,#4c6ef5)]`}>
-          <span aria-hidden>🌊</span>
-        </span>
-        <span className={`${photo} bg-[linear-gradient(160deg,#ffe1ec,#ff9db8)]`}>
-          <span aria-hidden>🎂</span>
-        </span>
+        <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-on-stage/60">{t["type.phone"]}</span>
       </div>
-      <div className="flex items-center gap-2.5 rounded-xl bg-white/10 p-2">
-        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-on-stage text-xs text-stage">▶</span>
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-xs font-semibold sm:text-sm">{t.heroMemVideo}</span>
-          <span className="mt-1 block h-1 overflow-hidden rounded-full bg-white/15">
-            <span className="block h-full w-1/3 rounded-full bg-accent" />
-          </span>
+      <p className="whitespace-nowrap font-heading text-[clamp(1rem,6vw,1.6rem)] font-extrabold leading-tight sm:text-4xl">+374 91 12 34 56</p>
+      <div className="grid gap-2">
+        <span className={`${btn} bg-accent text-on-accent`}>
+          {t.actCall} <span aria-hidden>→</span>
         </span>
+        <span className={`${btn} border border-stage-line bg-white/5`}>{t.actCopyNumber}</span>
       </div>
-      <p className="rounded-xl rounded-bl-sm bg-accent px-3 py-2 text-xs font-medium leading-snug text-on-accent sm:text-sm">{t.heroMemText}</p>
-      <div className="flex items-center justify-between font-mono text-[10px] text-on-stage/60">
-        <span className="flex items-center gap-1">🔒 {t.heroMemWho}</span>
-        <span>♥ 12</span>
-      </div>
+      <span className="font-mono text-[10px] text-on-stage/60">🔒 {t.heroMemWho}</span>
     </div>
   );
 }
@@ -90,7 +73,7 @@ export function HeroCode({ t, code, open, moving }: { t: Dict; code: ReactNode; 
   return (
     <div className="relative">
       <div className="relative aspect-square overflow-hidden rounded-2xl border border-stage-line bg-stage">
-        <MemoryUnder t={t} />
+        <PhoneUnder t={t} />
         {/* Код сверху; открываем/закрываем его срезом сверху — граница среза идёт вместе с лучом. */}
         <div className={`absolute inset-0 bg-stage p-5 transition-[clip-path] sm:p-7 ${ease}`} style={{ clipPath: open ? "inset(100% 0 0 0)" : "inset(0 0 0 0)" }} aria-hidden={open}>
           {code}
