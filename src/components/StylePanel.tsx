@@ -6,14 +6,11 @@ import { buildDrawing, toSvg } from "@/lib/qr/render";
 import { isPreset, STYLE_PRESETS, type StylePreset } from "@/lib/qr/presets";
 import { DEFAULT_STYLE, toQrStyle } from "@/lib/qr/style";
 import { TEXTURE_INK, TEXTURES, textureSrc, type TextureId } from "@/lib/qr/textures";
-import { numberSvg } from "@/lib/qr/logo-art";
 import { LogoPicker, logoFile } from "./LogoPicker";
 import type { PictureState } from "./PicturePicker";
 import { Card, ColorField, GhostButton, Label, Segmented, Slider, UploadButton } from "./ui";
 
 type Tab = "colors" | "shape" | "bg" | "media";
-/** Табличка с номером — крупнее логотипа: сколько выдерживает код (проверено). */
-const NUMBER_SCALE = 0.34;
 
 export type StyleState = {
   fg: string;
@@ -165,13 +162,6 @@ export function StylePanel({
   const [tab, setTab] = useState<Tab>("colors");
   // Какой готовый логотип выбран (свой файл — «own»; логотипа нет — null).
   const [logoId, setLogoId] = useState<string | null>(null);
-  const [num, setNum] = useState("");
-  // Номер — табличка цвета точек с цифрами цвета фона; крупнее обычного логотипа, чтобы цифры читались.
-  const putNumber = () => {
-    if (!num) return;
-    setLogoId("number");
-    onLogo(new File([numberSvg(num, s.fg, s.bg)], `n${num}.svg`, { type: "image/svg+xml" }), NUMBER_SCALE);
-  };
   const picked = s.logo ? (logoId ?? "own") : null;
   const logoProps = {
     t,
@@ -211,31 +201,6 @@ export function StylePanel({
         />
       </div>
 
-      <div className="mt-5">
-        <Label hint={t.numberCenterHint}>{t.numberCenter}</Label>
-        <form
-          className="flex max-w-sm gap-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            putNumber();
-          }}
-        >
-          <span className="flex min-h-11 min-w-0 flex-1 items-center rounded-xl border border-line bg-field pl-3.5 focus-within:border-accent">
-            <input
-              value={num}
-              onChange={(e) => setNum(e.target.value.replace(/\D/g, "").slice(0, 7))}
-              inputMode="numeric"
-              placeholder="777"
-              aria-label={t.numberCenter}
-              className="min-w-0 flex-1 bg-transparent pr-2 font-heading text-lg font-bold outline-none"
-            />
-          </span>
-          <button type="submit" disabled={!num} className="min-h-11 rounded-xl bg-stage px-4 font-heading text-sm font-bold text-on-stage disabled:opacity-40">
-            {t.numberPut}
-          </button>
-        </form>
-
-      </div>
 
       <div className="mt-6 border-t border-line pt-5">
         <div className="mb-2 text-sm font-semibold">{t.moreSettings}</div>

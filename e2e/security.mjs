@@ -54,7 +54,7 @@ ok(statuses.includes(429) && statuses.indexOf(429) <= 5, `batches stop at the da
 let singles = 0;
 while (singles < 100 && (await post("/api/codes", { title: "Ещё", kind: "memory" })) === 200) singles++;
 ok(singles < 100, `single codes fill the rest of the limit, then refused (${singles} more)`);
-ok((await post("/api/codes/quick", { target: "https://example.org/spam", style: {} })) === 429, "generator code refused after the limit");
+ok((await post("/api/codes/quick", { content: { type: "url", fields: { url: "https://example.org/spam" } }, style: {} })) === 429, "generator code refused after the limit");
 await p.goto(B + "/market", { waitUntil: "networkidle" });
 ok(!alerted, "no script ran anywhere");
 console.log("errors:", errors.length ? errors : "none");

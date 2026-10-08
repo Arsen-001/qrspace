@@ -18,7 +18,7 @@ await p.getByRole("radio", { name: "Космос", exact: true }).click();
 await p.getByRole("tab", { name: "Форма", exact: true }).click();
 await p.getByRole("radio", { name: "Круги", exact: true }).click();
 await p.waitForFunction(() => /Код читается/.test(document.body.innerText), null, { timeout: 30000 });
-await p.getByRole("button", { name: /Живой код/ }).click();
+await p.getByRole("button", { name: /Видео-код|Живой код/ }).click();
 await p.waitForSelector("text=К оплате: $5");
 const [d] = await Promise.all([p.waitForEvent("download", { timeout: 30000 }), p.getByRole("button", { name: /Оплатить и скачать/ }).click()]);
 const file = out + "live." + d.suggestedFilename().split(".").pop();

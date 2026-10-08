@@ -197,8 +197,24 @@ button:not(:disabled) {
   to { transform: translateY(calc(-100vh - 80px)) rotate(180deg); }
 }
 
+/* Маркет: вращающееся сияние за кодом дропа (только transform). */
+.x-ring {
+  position: absolute;
+  inset: -35%;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 0deg, color-mix(in oklab, var(--accent) 55%, transparent) 40deg, transparent 110deg, transparent 200deg, color-mix(in oklab, var(--accent) 30%, transparent) 250deg, transparent 320deg);
+  mask-image: radial-gradient(closest-side, #000 55%, transparent 100%);
+  animation: x-spin 16s linear infinite;
+}
+@keyframes x-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .x-marquee,
+  .x-ring,
   .x-blink,
   .x-stage-grid,
   .x-stage-glow,

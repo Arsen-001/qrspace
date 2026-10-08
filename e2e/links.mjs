@@ -68,7 +68,8 @@ await shot(a, "lnk-1280-editor");
 await a.goto(B + "/codes", { waitUntil: "networkidle" });
 await a.getByRole("link", { name: /Wi/ }).last().click();
 await a.getByRole("tab", { name: "Статистика" }).click();
-await a.waitForSelector('svg[aria-label="Сканы по дням за 30 дней"]');
+// График — когда сканы есть, иначе подсказка «Пока никто не сканировал».
+await a.locator('svg[aria-label="Сканы по дням за 30 дней"]').or(a.getByText("Пока никто не сканировал")).first().waitFor();
 ok(true, "memory code has a Stats tab");
 const m = await mk(390);
 await login(m, "Арман", `/codes/${id}`);

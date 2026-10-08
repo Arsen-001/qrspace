@@ -18,7 +18,7 @@ const create = async (p, kindRe, starterRe) => {
 const a = await demo("Арман", "/codes", 1280);
 await create(a, /Память/, /Свадьба/);
 await a.waitForSelector("text=Добавляйте свои фото и видео");
-ok(await a.locator("input[value='Свадьба / праздник']").count() === 1, "title filled from template");
+ok((await a.getByLabel(/Название/).first().inputValue()) === "Свадьба / праздник", "title filled from template");
 await a.getByRole("tab", { name: /Кто видит/ }).click();
 ok(await a.getByRole("switch", { name: /Гости могут добавлять/ }).isChecked(), "wedding: guests can add — on");
 const scan = a.url().replace("/codes/", "/c/");

@@ -72,11 +72,3 @@ export function logoSvg(l: BrandLogo, px: number): string {
     : `<path d="${l.d}" fill="${ink}"/>`;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${px}" height="${px}" viewBox="0 0 24 24">${defs}<rect width="24" height="24" rx="5.4" fill="${bg}"/><g transform="translate(4.6 4.6) scale(.6167)">${glyph}</g></svg>`;
 }
-
-/** Номер в центре кода (владелец 08.10.2026): только цифры до 9 999 999 на табличке цвета кода. */
-export function numberSvg(n: string, plate: string, ink: string): string {
-  const digits = n.replace(/\D/g, "").slice(0, 7);
-  // Ширина цифры в жирном шрифте ≈ 0,66 высоты; оставляем поля.
-  const size = Math.min(170, Math.floor(234 / (Math.max(digits.length, 2) * 0.63)));
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256"><rect width="256" height="256" rx="44" fill="${plate}"/><text x="128" y="${128 + size * 0.36}" font-family="Arial Black, Arial, Helvetica, sans-serif" font-weight="900" font-size="${size}" letter-spacing="-4" text-anchor="middle" fill="${ink}">${digits}</text></svg>`;
-}
