@@ -146,51 +146,67 @@ export function Preview({
       </div>
 
       {gate?.blocked && <p className="mt-3 rounded-xl bg-warn-soft p-3 text-sm">{gate.blocked}</p>}
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        <button
-          type="button"
-          disabled={!canDownload || busy}
-          onClick={() => download("png")}
-          className="min-h-14 rounded-xl bg-accent px-3 text-on-accent transition-opacity disabled:opacity-40"
-        >
-          <span className="block text-sm font-semibold">
+      {/* Главное действие — одна крупная кнопка; SVG и видео-код — рядом поменьше. */}
+      <button
+        type="button"
+        disabled={!canDownload || busy}
+        onClick={() => download("png")}
+        className="group mt-3 flex min-h-14 w-full items-center justify-center gap-3 rounded-xl bg-accent px-4 text-on-accent transition-all hover:brightness-95 disabled:opacity-40"
+      >
+        <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0 transition-transform group-enabled:group-hover:translate-y-0.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14" />
+        </svg>
+        <span className="text-left">
+          <span className="block font-heading text-sm font-bold">
             {t.download} {t.png}
           </span>
-          <span className="block text-xs opacity-80">{t.pngHint}</span>
-        </button>
+          <span className="block text-xs opacity-75">{t.pngHint}</span>
+        </span>
+      </button>
+      <div className={`mt-2 grid gap-2 ${payload && canRecord ? "grid-cols-2" : "grid-cols-1"}`}>
         <button
           type="button"
           disabled={!canDownload || busy}
           onClick={() => download("svg")}
-          className="min-h-14 rounded-xl border border-line bg-field px-3 transition-opacity disabled:opacity-40"
+          className="min-h-14 min-w-0 rounded-xl border border-line bg-field px-3 py-2 text-left transition-colors hover:border-muted disabled:opacity-40"
         >
           <span className="block text-sm font-semibold">
             {t.download} {t.svg}
           </span>
-          <span className="block text-xs text-muted">{t.svgHint}</span>
+          <span className="block text-xs leading-snug text-muted">{t.svgHint}</span>
         </button>
+        {payload && canRecord && (
+          <button
+            type="button"
+            disabled={!canDownload || busy || typeof live === "number"}
+            onClick={() => download("live")}
+            title={t.liveCode}
+            className="min-h-14 min-w-0 rounded-xl border border-line bg-field px-3 py-2 text-left transition-colors hover:border-muted disabled:opacity-40"
+          >
+            <span className="block text-sm font-semibold">
+              <span aria-hidden>✨ </span>
+              {typeof live === "number" ? `${t.liveRecording} ${Math.round(live * 100)}%` : t.liveShort}
+            </span>
+            <span className="block text-xs leading-snug text-muted">{t.liveHint}</span>
+          </button>
+        )}
       </div>
-      {payload && canRecord && (
-        <button
-          type="button"
-          disabled={!canDownload || busy || typeof live === "number"}
-          onClick={() => download("live")}
-          className="mt-2 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-line bg-field px-3 text-sm font-semibold transition-opacity hover:border-muted disabled:opacity-40"
-        >
-          ✨ {typeof live === "number" ? `${t.liveRecording} ${Math.round(live * 100)}%` : t.liveCode}
-          <span className="text-xs font-normal text-muted">{t.liveHint}</span>
-        </button>
-      )}
       {live === "bad" && <p className="mt-2 text-xs text-warn">{t.liveBad}</p>}
       {failed && <p className="mt-2 text-xs text-warn">{t.saveError}</p>}
       {gate && !gate.blocked && (
-        <p className="mt-3 text-center text-xs text-muted">
-          {gate.tier === "simple" ? t.tierSimple : t.tierStyled} · {t.priceFrom} ${PRICES[gate.tier]}
-          <span className="block">{t.firstFree}</span>
-        </p>
+        <div className="mt-3">
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-line px-3 py-2.5">
+            <span className="flex items-center gap-2 text-sm font-semibold">
+              <span className={`h-2 w-2 rounded-full ${gate.tier === "simple" ? "bg-muted" : "bg-accent"}`} aria-hidden />
+              {gate.tier === "simple" ? t.tierSimple : t.tierStyled}
+            </span>
+            <span className="font-heading text-lg font-bold">${PRICES[gate.tier]}</span>
+          </div>
+          <p className="mt-2 text-center text-xs text-muted">{t.firstFree}</p>
+        </div>
       )}
       {pay && (
-        <div className="mt-3 rounded-xl border border-accent/40 bg-field p-4" role="dialog" aria-label={t.payTitle}>
+        <div className="mt-3 rounded-xl bg-stage p-4 text-on-stage" role="dialog" aria-label={t.payTitle}>
           {!pay.quote ? (
             <>
               <p className="text-sm font-semibold">{t.loginToDownload}</p>
@@ -201,12 +217,12 @@ export function Preview({
           ) : (
             <>
               <p className="text-sm font-semibold">{pay.quote.free ? t.freeFirst : `${t.payTitle}: $${pay.quote.price}`}</p>
-              {!pay.quote.free && <p className="mt-1 text-xs text-muted">{t.buyDemo}</p>}
+              {!pay.quote.free && <p className="mt-1 text-xs text-on-stage/60">{t.buyDemo}</p>}
               <div className="mt-3 flex gap-2">
                 <button type="button" disabled={busy} onClick={confirm} className="min-h-11 flex-1 rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent disabled:opacity-50">
                   {pay.quote.free ? t.downloadFree : `${t.payAndDownload} — $${pay.quote.price}`}
                 </button>
-                <button type="button" onClick={() => setPay(null)} className="min-h-11 rounded-xl px-3 text-sm font-medium text-muted hover:text-ink">
+                <button type="button" onClick={() => setPay(null)} className="min-h-11 rounded-xl px-3 text-sm font-medium text-on-stage/70 hover:text-on-stage">
                   {t.cancel}
                 </button>
               </div>

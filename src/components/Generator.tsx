@@ -90,14 +90,28 @@ export function Generator() {
             isDesigner(me) ? (
               <PublishBox t={t} style={style} base={base} />
             ) : (
-              <section className="rounded-2xl border border-line bg-card p-5">
-                <h2 className="font-heading text-base font-bold">{direct ? t.directTitle : t.viaTitle}</h2>
-                <p className="mt-1 text-sm text-muted">{direct ? t.directText : t.viaText}</p>
-                {!direct && me && (
-                  <Link href="/codes" className="mt-3 inline-grid min-h-11 place-items-center rounded-xl border border-line bg-field px-4 text-sm font-semibold hover:border-muted">
-                    {t.viaCta}
-                  </Link>
-                )}
+              <section className="flex gap-4 rounded-2xl bg-stage p-5 text-on-stage">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-accent text-on-accent" aria-hidden>
+                  {direct ? (
+                    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="6.5" y="2.5" width="11" height="19" rx="2.5" />
+                      <path d="M11 18.5h2" />
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4" />
+                    </svg>
+                  )}
+                </span>
+                <div className="min-w-0">
+                  <h2 className="font-heading text-base font-bold">{direct ? t.directTitle : t.viaTitle}</h2>
+                  <p className="mt-1 text-sm leading-relaxed text-on-stage/70">{direct ? t.directText : t.viaText}</p>
+                  {!direct && me && (
+                    <Link href="/codes" className="mt-3 inline-flex min-h-10 items-center gap-1.5 text-sm font-semibold text-accent hover:underline">
+                      {t.viaCta} →
+                    </Link>
+                  )}
+                </div>
               </section>
             )
           }

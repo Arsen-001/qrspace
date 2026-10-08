@@ -149,49 +149,62 @@ export function HomeTicker({ t }: { t: Dict }) {
   );
 }
 
+/** Картинки к карточкам «Больше, чем QR-код»: что внутри, понятно без слов. */
+function FeatureArt({ kind }: { kind: "memory" | "numbers" | "market" }) {
+  if (kind === "memory")
+    return (
+      <div className="relative h-full w-full" aria-hidden>
+        <span className="absolute left-2 top-3 h-16 w-14 -rotate-6 rounded-lg border-4 border-white bg-[linear-gradient(135deg,#ffb38a,#ff6f91)] shadow-lg" />
+        <span className="absolute left-12 top-1 h-16 w-14 rotate-3 rounded-lg border-4 border-white bg-[linear-gradient(135deg,#7ad7f0,#4c6ef5)] shadow-lg" />
+        <span className="absolute left-24 top-5 grid h-14 w-14 rotate-6 place-items-center rounded-lg bg-accent font-heading text-xl font-extrabold text-on-accent shadow-lg">♥</span>
+      </div>
+    );
+  if (kind === "numbers")
+    return (
+      <div className="flex h-full items-center gap-2" aria-hidden>
+        <span className="rounded-md bg-accent px-2.5 py-1 font-heading text-sm font-bold text-on-accent">№ 000 001</span>
+        <span className="rounded-md border border-current/20 px-2.5 py-1 font-mono text-sm opacity-70">№ 777 777</span>
+      </div>
+    );
+  return (
+    <div className="flex h-full items-center gap-2" aria-hidden>
+      <span className="rounded-full border border-current/20 px-3 py-1 font-mono text-xs opacity-70">3 / 50</span>
+      <span className="rounded-full bg-accent px-3 py-1 font-heading text-sm font-bold text-on-accent">$15</span>
+    </div>
+  );
+}
+
 export function HomeFeatures({ t }: { t: Dict }) {
   const items = [
-    {
-      n: "01",
-      title: t.memoryPromoTitle,
-      text: t.memoryPromoText,
-      cta: t.memoryPromoCta,
-      href: "/codes",
-    },
-    {
-      n: "02",
-      title: t.numbersTitle,
-      text: t.numbersTeaser,
-      cta: t.numbersTitle,
-      href: "/numbers",
-    },
-    {
-      n: "03",
-      title: t.marketTitle,
-      text: t.marketHint,
-      cta: t.marketTitle,
-      href: "/market",
-    },
+    { n: "01", art: "memory" as const, title: t.memoryPromoTitle, text: t.memoryPromoText, cta: t.memoryPromoCta, href: "/codes" },
+    { n: "02", art: "numbers" as const, title: t.numbersTitle, text: t.numbersTeaser, cta: t.homeNumbersCta, href: "/numbers" },
+    { n: "03", art: "market" as const, title: t.marketTitle, text: t.marketHint, cta: t.homeMarketCta, href: "/market" },
   ];
   return (
     <section className="mt-16">
       <h2 className="font-heading text-2xl font-extrabold sm:text-4xl">{t.homeWhy}</h2>
       <div className="mt-6 grid gap-3 md:grid-cols-3">
-        {items.map((x) => (
+        {items.map((x, i) => (
           <Link
             key={x.n}
             href={x.href}
-            aria-label={x.cta}
-            className="group flex flex-col rounded-2xl border border-line bg-card p-6 transition-colors hover:border-ink"
+            className={`group flex flex-col rounded-2xl border p-6 transition-all hover:-translate-y-1 ${
+              i === 0 ? "border-stage bg-stage text-on-stage" : "border-line bg-card hover:border-ink"
+            }`}
           >
-            <span className="font-mono text-xs text-muted">{x.n}</span>
-            <span className="mt-8 font-heading text-xl font-bold">{x.title}</span>
-            <span className="mt-2 flex-1 text-sm leading-relaxed text-muted">{x.text}</span>
-            <span
-              aria-hidden
-              className="mt-6 grid h-10 w-10 place-items-center rounded-full border border-line transition-colors group-hover:border-ink group-hover:bg-accent group-hover:text-on-accent"
-            >
-              →
+            <div className="flex items-start justify-between">
+              <span className={`font-mono text-xs ${i === 0 ? "text-on-stage/60" : "text-muted"}`}>{x.n}</span>
+            </div>
+            <div className="mt-4 h-24">
+              <FeatureArt kind={x.art} />
+            </div>
+            <span className="mt-4 font-heading text-xl font-bold">{x.title}</span>
+            <span className={`mt-2 flex-1 text-sm leading-relaxed ${i === 0 ? "text-on-stage/70" : "text-muted"}`}>{x.text}</span>
+            <span className={`mt-6 inline-flex items-center gap-2 text-sm font-semibold ${i === 0 ? "text-accent" : "text-accent-ink"}`}>
+              {x.cta}
+              <span aria-hidden className="transition-transform group-hover:translate-x-1">
+                →
+              </span>
             </span>
           </Link>
         ))}
