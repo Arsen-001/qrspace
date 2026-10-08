@@ -763,6 +763,8 @@ export const de: Dict = {
   actSaveContact: "In Kontakte speichern",
   actAddCalendar: "Zum Kalender hinzufügen",
   wifiHow: "Öffne die WLAN-Einstellungen, wähle dieses Netz und füge das Passwort ein.",
+  loginModalTitle: "Anmelden zum Herunterladen",
+  loginModalText: "Kostenlos und in einer Sekunde erledigt. Der Code landet in Meine Codes: Später kannst du den Inhalt ändern, festlegen, wer ihn sieht, und die Scans verfolgen. Alles, was du eingestellt hast, bleibt.",
   logoQuick: "Logo in der Mitte",
   logoQuickHint: "Netzwerke, Messenger, Bezahlen – antippen, und es steht in der Mitte des Codes",
   logoAll: "Alle Logos",

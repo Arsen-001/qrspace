@@ -1,12 +1,12 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "@/lib/codes";
 import { buildPayload, CONTENT_TYPES, type ContentType, type Fields } from "@/lib/qr/payload";
 import { buildDrawing } from "@/lib/qr/render";
 import { LOGO_FOR } from "@/lib/qr/logo-art";
 import { codeKey, tierOf } from "@/lib/pricing";
-import { DEFAULT_STYLE, toQrStyle, toSaved } from "@/lib/qr/style";
+import { DEFAULT_STYLE, fromSaved, toQrStyle, toSaved } from "@/lib/qr/style";
 import { useLang } from "@/lib/lang";
 import { useMe } from "@/lib/me";
 import { isDesigner } from "@/lib/people";
@@ -28,6 +28,27 @@ export function Generator() {
     return f;
   });
   const [style, setStyle] = useState<StyleState>(DEFAULT_STYLE);
+  // Вход через Google/Apple уводит со страницы — перед этим запоминаем, что человек настроил, и возвращаем после входа.
+  const DRAFT = "qrspace.draft";
+  const saveDraft = () => {
+    try {
+      sessionStorage.setItem(DRAFT, JSON.stringify({ type, fields, style: toSaved(style) }));
+    } catch {}
+  };
+  useEffect(() => {
+    let d: { type: ContentType; fields: Record<ContentType, Fields>; style: ReturnType<typeof toSaved> } | null = null;
+    try {
+      d = JSON.parse(sessionStorage.getItem(DRAFT) ?? "null");
+      sessionStorage.removeItem(DRAFT);
+    } catch {}
+    if (!d || !CONTENT_TYPES.includes(d.type)) return;
+    // Черновик есть только в браузере — на сервере его нет, поэтому ставим после загрузки.
+    /* eslint-disable react-hooks/set-state-in-effect */
+    setType(d.type);
+    setFields((f) => ({ ...f, ...d.fields }));
+    setStyle(fromSaved(d.style));
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, []);
   const raw = buildPayload(type, fields[type]);
   const { me, base } = useMe();
   // Любой наш код ведёт через нашу короткую ссылку, скан открывает нашу страницу с содержимым и кнопками (и Wi-Fi,
@@ -67,6 +88,7 @@ export function Generator() {
           gate={{
             tier,
             key: () => codeKey(raw, toSaved(style)),
+            beforeLogin: saveDraft,
             finalize: async () => {
               const { link } = await api.quick({ content: { type, fields: fields[type] }, style: toSaved(style) });
               return { drawing: buildDrawing(link, toQrStyle(style)), payload: link };

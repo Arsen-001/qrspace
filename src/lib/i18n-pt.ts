@@ -763,6 +763,8 @@ export const pt: Dict = {
   actSaveContact: "Salvar nos contatos",
   actAddCalendar: "Adicionar à agenda",
   wifiHow: "Abra as configurações de Wi-Fi, escolha esta rede e cole a senha.",
+  loginModalTitle: "Entre para baixar",
+  loginModalText: "É grátis e leva um segundo. O código fica salvo em Meus códigos: depois você pode mudar o conteúdo, escolher quem vê e acompanhar os escaneamentos. Tudo o que você configurou continua.",
   logoQuick: "Logo no centro",
   logoQuickHint: "Redes, mensageiros, pagamentos — toque em um e ele vai para o centro do código",
   logoAll: "Todos os logos",

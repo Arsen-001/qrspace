@@ -9,6 +9,8 @@ import { PRICES, type Quote, type Tier } from "@/lib/pricing";
 import { useInBrowser } from "./QrThumb";
 import { type Drawing, toSvg } from "@/lib/qr/render";
 import { downloadLive, downloadPng, downloadSvg } from "@/lib/qr/raster";
+import { useLang } from "@/lib/lang";
+import { LoginModal } from "./LoginModal";
 import { StepBadge } from "./ui";
 
 export type ScanState = "idle" | "checking" | "ok" | "bad";
@@ -18,7 +20,7 @@ export type ScanState = "idle" | "checking" | "ok" | "bad";
  * finalize — перед сохранением получить настоящий код (генератор: короткая ссылка вместо образца);
  * blocked — скачать нельзя, вместо кнопок — объяснение.
  */
-export type Gate = { tier: Tier; key: () => string; finalize?: () => Promise<{ drawing: Drawing; payload: string }>; blocked?: string };
+export type Gate = { tier: Tier; key: () => string; finalize?: () => Promise<{ drawing: Drawing; payload: string }>; blocked?: string; beforeLogin?: () => void };
 type Format = "png" | "svg" | "live";
 
 /** sample — показываем пример (человек ещё ничего не ввёл): видно оформление, скачать нельзя. step — номер шага в генераторе. */
@@ -71,10 +73,13 @@ export function Preview({
     const ok = await downloadLive(d, text, name, (p) => setLive(p)).catch(() => false);
     setLive(ok ? null : "bad");
   };
-  const download = async (format: Format) => {
+  const { lang } = useLang();
+  // Без входа — окно входа поверх страницы; после демо-входа скачивание продолжается само.
+  const [login, setLogin] = useState<Format | null>(null);
+  const download = async (format: Format, signedIn = false) => {
     if (!gate) return save(format);
     const key = gate.key();
-    if (!me) return setPay({ format, quote: null, key });
+    if (!me && !signedIn) return setLogin(format);
     setBusy(true);
     try {
       const q = await api.quote(key, gate.tier);
@@ -229,6 +234,20 @@ export function Preview({
             </>
           )}
         </div>
+      )}
+      {login && (
+        <LoginModal
+          t={t}
+          lang={lang}
+          next={`${path}#make`}
+          beforeLeave={gate?.beforeLogin}
+          onClose={() => setLogin(null)}
+          onDone={() => {
+            const f = login;
+            setLogin(null);
+            download(f, true);
+          }}
+        />
       )}
     </section>
   );

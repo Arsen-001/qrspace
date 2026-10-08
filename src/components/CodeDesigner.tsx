@@ -138,31 +138,38 @@ export function CodeDesigner({
 
   const lowContrast = !style.picture && contrast(style.fg, style.bg) < 3;
 
-  // Телефон: предпросмотр — под оформлением. Пока человек в шаге 2, а код не виден — маленький код в углу,
-  // нажал — прокрутка к шагу 3.
-  const styleRef = useRef<HTMLDivElement>(null);
+  // Телефон (владелец 08.10.2026): пока человек в шагах 1 и 2, код закреплён сверху — видно, как меняется; у шага 3 уходит.
   const previewRef = useRef<HTMLDivElement>(null);
-  const [seen, setSeen] = useState({ style: false, preview: true });
-  useEffect(() => {
-    if (!steps || !styleRef.current || !previewRef.current) return;
-    const io = new IntersectionObserver((entries) => {
-      setSeen((v) => {
-        const next = { ...v };
-        for (const e of entries) next[e.target === styleRef.current ? "style" : "preview"] = e.isIntersecting;
-        return next;
-      });
-    });
-    io.observe(styleRef.current);
-    io.observe(previewRef.current);
-    return () => io.disconnect();
-  }, [steps]);
-  const mini = steps && drawing && seen.style && !seen.preview;
+  const bar = steps && drawing && (
+    <div className="sticky top-0 z-30 -mx-4 mb-1 border-b border-line bg-[color-mix(in_oklab,var(--bg)_92%,transparent)] px-4 py-2.5 backdrop-blur lg:hidden">
+      <div className="flex items-center gap-3">
+        <span className="relative block h-24 w-24 shrink-0 overflow-hidden rounded-xl border border-line bg-field shadow-sm">
+          <span aria-hidden className={`block h-full w-full [&>svg]:h-full [&>svg]:w-full ${sample ? "opacity-85" : ""}`} dangerouslySetInnerHTML={{ __html: toSvg(drawing, 96) }} />
+          {sample && <span className="absolute bottom-1 left-1 rounded bg-stage px-1 font-mono text-[9px] font-bold uppercase text-accent">{t.sampleBadge}</span>}
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="text-sm font-semibold" aria-live="polite">
+            {sample ? <span className="text-muted">{t.sampleBadge}</span> : scan === "ok" ? <span className="text-ok">✓ {t.scanOk}</span> : scan === "bad" ? <span className="text-warn">! {t.scanBad}</span> : <span className="text-muted">{t.checking}</span>}
+          </div>
+          <button
+            type="button"
+            onClick={() => previewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+            className="mt-2 inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-stage px-3.5 font-heading text-sm font-bold text-on-stage"
+          >
+            {t.step3} <span className="text-accent">↓</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[minmax(0,1fr)_400px] lg:items-start">
-      <div className="contents lg:block lg:space-y-5">
+      {/* В генераторе шаги 1 и 2 — один блок и на телефоне: закреплённый сверху код держится только в нём. */}
+      <div className={steps ? "min-w-0 space-y-5" : "contents lg:block lg:space-y-5"}>
+        {bar}
         {top && <div className="order-1 min-w-0">{top}</div>}
-        <div ref={styleRef} className={`min-w-0 ${steps ? "order-2" : "order-3"}`}>
+        <div className={`min-w-0 ${steps ? "order-2" : "order-3"}`}>
           <StylePanel
             t={t}
             s={style}
@@ -212,18 +219,6 @@ export function CodeDesigner({
         />
         {side}
       </div>
-      {mini && (
-        <button
-          type="button"
-          onClick={() => previewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
-          className="fixed bottom-4 right-4 z-30 flex items-center gap-3 rounded-2xl border border-stage-line bg-stage p-2 pr-4 text-on-stage shadow-[0_12px_30px_-10px_rgba(0,0,0,0.6)] lg:hidden"
-        >
-          <span aria-hidden className="block h-14 w-14 overflow-hidden rounded-lg [&>svg]:h-full [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: toSvg(drawing, 56) }} />
-          <span className="font-heading text-sm font-bold">
-            {t.step3} <span className="text-accent">↓</span>
-          </span>
-        </button>
-      )}
     </div>
   );
 }
