@@ -215,13 +215,15 @@ export function HomeTicker({ t }: { t: Dict }) {
     </div>
   );
   return (
-    // На телефоне наклонная лента шире экрана — обрезаем её ровной рамкой, чтобы страница не уезжала вбок.
-    <div className="-mx-4 my-8 overflow-hidden py-2 sm:-mx-6 sm:overflow-visible" role="img" aria-label={t.logoQuick}>
-      <div className="-mx-4 -rotate-1 overflow-hidden border-y border-ink bg-accent py-3 sm:mx-0">
-        <div className="x-marquee flex w-max" style={{ animationDuration: `${logos.length * 1.4}s` }}>
-          {row(false)}
-          {row(true)}
-        </div>
+    // Без своей подложки — логотипы едут по общему фону страницы (владелец 09.10.2026); края мягко растворяются.
+    <div
+      className="-mx-4 my-8 overflow-hidden py-2 [mask-image:linear-gradient(90deg,transparent,#000_8%,#000_92%,transparent)] sm:-mx-6"
+      role="img"
+      aria-label={t.logoQuick}
+    >
+      <div className="x-marquee flex w-max" style={{ animationDuration: `${logos.length * 1.4}s` }}>
+        {row(false)}
+        {row(true)}
       </div>
     </div>
   );
