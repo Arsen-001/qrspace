@@ -7,25 +7,53 @@ import { useMe } from "@/lib/me";
 import { CODE_PACKS, packBytes, type PackPlan } from "@/lib/packs";
 import { LoginModal } from "./LoginModal";
 
+/** Маленький QR лаймом: три «глазка» по углам и точки — у каждого свой узор (по номеру). */
+function MiniQr({ seed }: { seed: number }) {
+  // Поле 9×9: углы заняты «глазками» 3×3, остальные клетки — точка или пусто (детерминированно от номера).
+  const dots: [number, number][] = [];
+  for (let y = 0; y < 9; y++)
+    for (let x = 0; x < 9; x++) {
+      const eye = (x < 4 && y < 4) || (x > 4 && y < 4) || (x < 4 && y > 4);
+      const h = Math.imul(x * 73856093 ^ y * 19349663 ^ seed * 83492791, 2654435761) >>> 0;
+      if (!eye && (h >>> 7) % 100 < 52) dots.push([x, y]);
+    }
+  const eye = (x: number, y: number) => (
+    <g key={`${x}${y}`}>
+      <rect x={x + 0.25} y={y + 0.25} width={2.5} height={2.5} rx={0.6} fill="none" stroke="currentColor" strokeWidth={0.5} />
+      <rect x={x + 0.95} y={y + 0.95} width={1.1} height={1.1} rx={0.3} fill="currentColor" />
+    </g>
+  );
+  return (
+    <svg viewBox="0 0 9 9" className="block h-full w-full text-accent">
+      {eye(0, 0)}
+      {eye(6, 0)}
+      {eye(0, 6)}
+      {dots.map(([x, y]) => (
+        <rect key={`${x}-${y}`} x={x + 0.12} y={y + 0.12} width={0.76} height={0.76} rx={0.22} fill="currentColor" />
+      ))}
+    </svg>
+  );
+}
+
 /**
- * Сколько кодов — картинкой на всё свободное место вверху карточки (владелец 09.10.2026): каждый код — маленький
- * квадрат с «глазком», как угол QR. 5 — крупно, 100 — мелко.
+ * Сколько кодов — картинкой на свободное место вверху карточки (владелец 09.10.2026): каждый код — маленький QR лаймом.
+ * Не крупнее 52 px (у пакета из 5 — не огромные), у больших пакетов — ровные ряды по 10.
  */
 function Cells({ n }: { n: number }) {
   // Почти квадрат; у больших пакетов — ровные ряды (столбцов — делитель числа: 50 и 100 — по 10).
   const aim = Math.sqrt(n / 0.8);
   const even = Array.from({ length: n }, (_, i) => i + 1).filter((d) => n % d === 0 && d >= aim * 0.7 && d <= aim * 1.4);
   const cols = n > 20 && even.length ? even.reduce((a, b) => (Math.abs(b - aim) < Math.abs(a - aim) ? b : a)) : Math.ceil(aim);
-  const gap = n > 20 ? 4 : 8;
+  const gap = n > 20 ? 6 : 12;
   return (
     <span aria-hidden className="flex w-full max-w-[240px] flex-wrap justify-center" style={{ gap }}>
       {Array.from({ length: n }, (_, i) => (
         <span
           key={i}
-          className="x-cell relative grid aspect-square place-items-center rounded-[22%] bg-accent"
-          style={{ width: `calc((100% - ${(cols - 1) * gap}px) / ${cols})`, animationDelay: `${Math.min(i, 60) * 12}ms` }}
+          className="x-cell aspect-square"
+          style={{ width: `min(52px, calc((100% - ${(cols - 1) * gap}px) / ${cols}))`, animationDelay: `${Math.min(i, 60) * 12}ms` }}
         >
-          <span className="h-[38%] w-[38%] rounded-[30%] border-[max(1.5px,1.6cqw)] border-stage" />
+          <MiniQr seed={i + 1} />
         </span>
       ))}
     </span>
@@ -92,7 +120,7 @@ export function CodePacks({ t, lang }: { t: Dict; lang: Lang }) {
                 <span className="font-semibold text-on-stage/70">{t.packCodes}</span>
               </div>
               {/* Вверху — сколько кодов, на всё свободное место; внизу — место под кодом, цена и кнопка. */}
-              <div className="@container flex min-h-44 flex-1 items-center justify-center py-6">
+              <div className="flex min-h-44 flex-1 items-center justify-center py-6">
                 <Cells n={p.codes} />
               </div>
               <div className="flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2.5">
