@@ -1,8 +1,67 @@
 "use client";
 // Первый экран, бегущая строка и «больше, чем QR-код» на главной .
 import Link from "next/link";
+import { useLayoutEffect, useRef, useState } from "react";
 import type { Dict } from "@/lib/i18n";
 import { HeroCode, HeroSwitch, useReveal } from "./HeroReveal";
+
+/**
+ * Заголовок первого экрана — всегда ровно три строки (владелец 08.10.2026), на любом экране и языке.
+ * Строки: «The QR / code / that lives»; если первая часть — одно слово: «QR-код, / который / живёт».
+ * Размер — сколько позволяет ширина под самую длинную строку, но не больше обычного.
+ */
+function HeroTitle({ a, b }: { a: string; b: string }) {
+  const wa = a.split(" ");
+  const wb = b.split(" ");
+  const lines: { text: string; hi: boolean }[] =
+    wa.length > 1
+      ? [
+          { text: wa.slice(0, -1).join(" "), hi: false },
+          { text: wa.at(-1)!, hi: false },
+          { text: b, hi: true },
+        ]
+      : [
+          { text: a, hi: false },
+          { text: wb.slice(0, -1).join(" ") || b, hi: true },
+          { text: wb.length > 1 ? wb.at(-1)! : "", hi: true },
+        ];
+  // Выделенная строка шире на поля плашки — считаем её на символ длиннее.
+  const longest = Math.max(...lines.map((l) => l.text.length + (l.hi ? 1 : 0)));
+  // Сначала — прикидка по числу букв (так приходит с сервера), в браузере — точно по ширине самой длинной строки.
+  const ref = useRef<HTMLHeadingElement>(null);
+  const [fit, setFit] = useState<number | null>(null);
+  useLayoutEffect(() => {
+    const h = ref.current;
+    const box = h?.parentElement;
+    if (!h || !box) return;
+    const measure = () => {
+      const prev = h.style.fontSize;
+      h.style.fontSize = "100px";
+      const widest = Math.max(...[...h.children].map((c) => c.scrollWidth));
+      h.style.fontSize = prev;
+      const max = parseFloat(getComputedStyle(h).getPropertyValue("--max")) * parseFloat(getComputedStyle(document.documentElement).fontSize);
+      setFit(Math.min(max, Math.floor((100 * box.clientWidth) / widest)));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(box);
+    document.fonts?.ready.then(measure);
+    return () => ro.disconnect();
+  }, [a, b]);
+  return (
+    <h1
+      ref={ref}
+      className="font-heading leading-[1.12] font-extrabold [--max:2.5rem] sm:[--max:3.75rem] lg:[--max:4.25rem]"
+      style={{ fontSize: fit ? `${fit}px` : `min(var(--max), calc(100cqw / ${(longest * 0.78).toFixed(2)}))` }}
+    >
+      {lines.map((l, i) => (
+        <span key={i} className="block whitespace-nowrap">
+          {l.hi ? <span className="rounded-md bg-accent px-[0.12em] text-on-accent">{l.text}</span> : l.text}
+        </span>
+      ))}
+    </h1>
+  );
+}
 
 const N = 25;
 
@@ -74,9 +133,9 @@ export function HomeHero({ t }: { t: Dict }) {
           </p>
           {/* Выключатель — рядом с заголовком (владелец 08.10.2026): открывает, что под большим кодом. */}
           <div className="mt-6 flex items-center gap-4 sm:gap-6">
-            <h1 className="min-w-0 flex-1 font-heading text-[2.5rem] leading-[1.1] font-extrabold text-balance [hyphens:manual] sm:text-6xl lg:text-[4.25rem]">
-              {t.homeTitleA} <span className="box-decoration-clone rounded-md bg-accent px-2 text-on-accent">{t.homeTitleB}</span>
-            </h1>
+            <div className="@container min-w-0 flex-1">
+              <HeroTitle a={t.homeTitleA} b={t.homeTitleB} />
+            </div>
             <div className="hidden sm:block">
               <HeroSwitch t={t} open={reveal.open} toggle={reveal.toggle} />
             </div>
