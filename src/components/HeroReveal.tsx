@@ -64,10 +64,6 @@ export function HeroSwitch({ t, open, toggle }: { t: Dict; open: boolean; toggle
   return (
     <div className="flex shrink-0 flex-col items-center gap-2">
       <span className={`font-mono text-[10px] uppercase tracking-[0.14em] transition-colors ${open ? "text-accent" : "text-on-stage/50"}`}>{t.heroUnder}</span>
-      {/* Включили — рядом номер телефона: под кодом может быть и он (владелец 08.10.2026). */}
-      <span aria-hidden={!open} className={`whitespace-nowrap rounded-md bg-accent px-1.5 py-0.5 font-mono text-[10px] font-bold text-on-accent transition-all duration-500 ${open ? "opacity-100" : "-translate-y-1 opacity-0"}`}>
-        ☎ +374 91 12 34 56
-      </span>
       <button
         type="button"
         role="switch"
