@@ -1,7 +1,7 @@
 // Всё, что делается с кодом в браузере: рисуем на canvas, проверяем, читается ли он, отдаём файлы.
 // Данные никуда не отправляются.
 import type { CollageLayout } from "./collage";
-import { type Drawing, type IconMask, type Tones, toSvg } from "./render";
+import { CAPTION_FONT, type Drawing, type IconMask, type Tones, toSvg } from "./render";
 
 const cache = new Map<string, Promise<HTMLImageElement>>();
 
@@ -30,7 +30,7 @@ function drawCover(ctx: CanvasRenderingContext2D, img: HTMLImageElement, x: numb
 export async function drawToCanvas(drawing: Drawing, px: number): Promise<HTMLCanvasElement> {
   const canvas = document.createElement("canvas");
   canvas.width = px;
-  canvas.height = px;
+  canvas.height = Math.round((px * (drawing.height ?? drawing.size)) / drawing.size);
   const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
   const k = px / drawing.size;
   ctx.scale(k, k);
@@ -75,6 +75,11 @@ export async function drawToCanvas(drawing: Drawing, px: number): Promise<HTMLCa
         ctx.fill(outside, "evenodd");
         ctx.restore();
       }
+    } else if (s.kind === "text") {
+      ctx.fillStyle = s.fill;
+      ctx.font = `900 ${s.size}px ${CAPTION_FONT}`;
+      ctx.textAlign = "center";
+      ctx.fillText(s.text, s.x, s.y);
     } else {
       drawCover(ctx, await loadImage(s.src), s.x, s.y, s.w, s.h);
     }
@@ -102,10 +107,11 @@ export async function checkScan(drawing: Drawing, expected: string): Promise<boo
   const sharp = await drawToCanvas(drawing, 720);
   // «Как с камеры»: код мельче и чуть размыт — так его видит телефон с полуметра.
   const camera = document.createElement("canvas");
-  camera.width = camera.height = 360;
+  camera.width = 360;
+  camera.height = Math.round((360 * sharp.height) / sharp.width);
   const cctx = camera.getContext("2d", { willReadFrequently: true })!;
   cctx.filter = "blur(1.2px)";
-  cctx.drawImage(sharp, 0, 0, 360, 360);
+  cctx.drawImage(sharp, 0, 0, camera.width, camera.height);
   for (const c of [sharp, camera]) {
     const data = c.getContext("2d")!.getImageData(0, 0, c.width, c.height);
     const res = await readBarcodes(data, { formats: ["QRCode"], tryHarder: false, tryInvert: true, maxNumberOfSymbols: 1 });
@@ -304,7 +310,9 @@ async function liveReads(base: HTMLCanvasElement, glint: number, expected: strin
 
 /** Записать живой код. Блик ослабляем, пока код не читается в каждом кадре. */
 export async function recordLive(drawing: Drawing, expected: string, onProgress?: (p: number) => void): Promise<{ blob: Blob; ext: string } | null> {
-  const base = await drawToCanvas(drawing, LIVE.px);
+  // Видео квадратное — подпись под кодом в него не входит.
+  const square: Drawing = { ...drawing, height: undefined, shapes: drawing.shapes.filter((s) => s.kind !== "text") };
+  const base = await drawToCanvas(square, LIVE.px);
   let glint = 1;
   while (glint > 0.15 && !(await liveReads(base, glint, expected))) glint -= 0.25;
   if (!(await liveReads(base, glint, expected))) return null;

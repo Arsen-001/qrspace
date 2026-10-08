@@ -32,6 +32,8 @@ export type QrStyle = {
   /** Свой значок в центре углов — тиснением (чуть светлее центра), strength — насколько светлее. */
   eyeIcon?: { mask: IconMask; strength: number } | null;
   logo?: { src: string; scale: number } | null;
+  /** Текст под кодом — по ширине кода (владелец 08.10.2026). */
+  caption?: string | null;
   /** QR-картинка: фото под кодом, от каждой клетки остаётся точка в центре. */
   picture?: { src: string; dotSize: number; tones?: Tones } | null;
 };
@@ -92,9 +94,15 @@ export type Fill = string | Gradient;
 /** fixed — не поворачивается вместе с кодом (фон, фото, логотип). */
 export type Shape =
   | { kind: "path"; d: string; fill: Fill; rule?: "evenodd"; opacity?: number; fixed?: boolean; effect?: Effect }
-  | { kind: "image"; src: string; x: number; y: number; w: number; h: number; fixed?: boolean };
+  | { kind: "image"; src: string; x: number; y: number; w: number; h: number; fixed?: boolean }
+  | { kind: "text"; text: string; x: number; y: number; size: number; fill: string; fixed: true };
 
-export type Drawing = { size: number; shapes: Shape[]; rotate: Rotation };
+/** height — с подписью под кодом рисунок выше, чем шире (без подписи = size). */
+export type Drawing = { size: number; shapes: Shape[]; rotate: Rotation; height?: number };
+
+/** Шрифт подписи: жирный и есть везде — в PNG, SVG и на телефоне выглядит одинаково. */
+export const CAPTION_FONT = '"Arial Black", Arial, Helvetica, sans-serif';
+export const CAPTION_MAX = 40;
 
 const QUIET = 4; // пустая рамка вокруг кода в клетках — без неё телефоны читают хуже
 
@@ -427,8 +435,12 @@ export function buildDrawing(text: string, style: QrStyle): Drawing {
   const eyeColor = style.eyeColor || style.fg;
   const ballColor = style.eyeBallColor || eyeColor;
 
-  shapes.push({ kind: "path", d: rectPath(0, 0, size, size), fill: style.bg, fixed: true });
-  if (style.texture && !style.picture) shapes.push({ kind: "image", src: style.texture, x: 0, y: 0, w: size, h: size, fixed: true });
+  // Подпись под кодом: полоса снизу; шрифт — чтобы строка заняла ширину кода, но не крупнее 3,6 клетки.
+  const caption = (style.caption ?? "").trim().slice(0, CAPTION_MAX);
+  const capFont = caption ? Math.min(3.6, (count * 0.98) / (caption.length * 0.66)) : 0;
+  const height = caption ? size + capFont + 1.6 : size;
+  shapes.push({ kind: "path", d: rectPath(0, 0, size, height), fill: style.bg, fixed: true });
+  if (style.texture && !style.picture) shapes.push({ kind: "image", src: style.texture, x: 0, y: 0, w: size, h: height, fixed: true });
   const fx: Effect | undefined = style.effect && style.effect !== "none" ? style.effect : undefined;
 
   const inEye = (r: number, c: number) => (r < 7 && c < 7) || (r < 7 && c >= count - 7) || (r >= count - 7 && c < 7);
@@ -544,7 +556,9 @@ export function buildDrawing(text: string, style: QrStyle): Drawing {
     shapes.push({ kind: "image", src: style.logo.src, x: QUIET + x + 0.3, y: QUIET + x + 0.3, w: w - 0.6, h: w - 0.6, fixed: true });
   }
 
-  return { size, shapes, rotate };
+  if (caption) shapes.push({ kind: "text", text: caption, x: size / 2, y: size - QUIET / 2 + capFont * 0.82, size: capFont, fill: style.eyeColor || style.fg, fixed: true });
+
+  return { size, shapes, rotate, ...(caption && { height }) };
 }
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
@@ -577,11 +591,14 @@ export function toSvg(drawing: Drawing, px = 1024): string {
       const el =
         s.kind === "path"
           ? `<path d="${s.d}" fill="${fill(s.fill)}"${s.rule ? ` fill-rule="${s.rule}"` : ""}${s.opacity !== undefined ? ` fill-opacity="${s.opacity}"` : ""}/>`
-          : `<image href="${esc(s.src)}" x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" preserveAspectRatio="xMidYMid slice"/>`;
+          : s.kind === "text"
+            ? `<text x="${n(s.x)}" y="${n(s.y)}" font-size="${n(s.size)}" font-family='${CAPTION_FONT}' font-weight="900" text-anchor="middle" fill="${esc(s.fill)}">${esc(s.text)}</text>`
+            : `<image href="${esc(s.src)}" x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" preserveAspectRatio="xMidYMid slice"/>`;
       const placed = s.fixed || !turn ? el : `<g${turn}>${el}</g>`;
       // Тень — снаружи поворота, чтобы свет всегда падал сверху слева, как и в PNG.
       return s.kind === "path" && s.effect ? `<g filter="url(#fx-${s.effect})">${placed}</g>` : placed;
     })
     .join("");
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${drawing.size} ${drawing.size}" width="${px}" height="${px}" shape-rendering="geometricPrecision">${defs.length ? `<defs>${defs.join("")}</defs>` : ""}${body}</svg>`;
+  const h = drawing.height ?? drawing.size;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${drawing.size} ${n(h)}" width="${px}" height="${Math.round((px * h) / drawing.size)}" shape-rendering="geometricPrecision">${defs.length ? `<defs>${defs.join("")}</defs>` : ""}${body}</svg>`;
 }

@@ -2,7 +2,7 @@
 import { useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { Dict } from "@/lib/i18n";
 import { ballSample, DOT_STYLES, dotSample, EFFECTS, EYE_BALLS, EYE_STYLES, eyeSample, type EyeBall, type DotStyle, type Effect, type EyeStyle, type IconMask, type Rotation } from "@/lib/qr/render";
-import { buildDrawing, toSvg } from "@/lib/qr/render";
+import { buildDrawing, CAPTION_MAX, toSvg } from "@/lib/qr/render";
 import { isPreset, STYLE_PRESETS, type StylePreset } from "@/lib/qr/presets";
 import { DEFAULT_STYLE, toQrStyle } from "@/lib/qr/style";
 import { TEXTURE_INK, TEXTURES, textureSrc, type TextureId } from "@/lib/qr/textures";
@@ -27,6 +27,8 @@ export type StyleState = {
   eyeIcon: { mask: IconMask; preview: string; strength: number } | null;
   logo: { src: string; scale: number; band?: boolean } | null;
   picture: PictureState | null;
+  /** Текст под кодом (по ширине кода). */
+  caption?: string | null;
 };
 
 const PRESETS: [string, string][] = [
@@ -201,6 +203,23 @@ export function StylePanel({
         />
       </div>
 
+
+      <div className="mt-5">
+        <Label hint={t.captionHint}>{t.captionLabel}</Label>
+        <div className="flex min-h-11 max-w-md items-center rounded-xl border border-line bg-field pr-3 focus-within:border-accent">
+          <input
+            value={s.caption ?? ""}
+            maxLength={CAPTION_MAX}
+            onChange={(e) => set({ caption: e.target.value || null })}
+            placeholder="Scan me"
+            aria-label={t.captionLabel}
+            className="min-w-0 flex-1 bg-transparent px-3.5 font-heading font-bold outline-none"
+          />
+          <span className="font-mono text-xs text-muted">
+            {(s.caption ?? "").length}/{CAPTION_MAX}
+          </span>
+        </div>
+      </div>
 
       <div className="mt-6 border-t border-line pt-5">
         <div className="mb-2 text-sm font-semibold">{t.moreSettings}</div>

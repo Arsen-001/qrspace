@@ -69,5 +69,7 @@ export function sanitizeStyle(v: unknown): SavedStyle | null {
     if (!src || tw === null || !Number.isInteger(tw) || !tdata || !layout || dotSize === null || typeof p.mono !== "boolean") return null;
     picture = { src, tones: { w: tw, data: tdata }, layout, dotSize, mono: p.mono };
   }
-  return { fg, bg, eyeColor, eyeBallColor, dot, eye, eyeBall, gradient, rotate, effect, texture, eyeIcon, logo, picture };
+  // Подпись под кодом: обычный текст, до 40 знаков, без управляющих символов.
+  const caption = typeof v.caption === "string" ? v.caption.replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 40) : "";
+  return { fg, bg, eyeColor, eyeBallColor, dot, eye, eyeBall, gradient, rotate, effect, texture, eyeIcon, logo, picture, ...(caption && { caption }) };
 }

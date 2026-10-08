@@ -795,6 +795,8 @@ export const de: Dict = {
   heroSwitch: "Zeigen, was unter dem Code ist",
   heroMemTitle: "Unsere Hochzeit · 14.11",
   heroMemText: "Fotos, Videos und Wünsche der Gäste – unter einem Code",
+  captionLabel: "Text unter dem Code",
+  captionHint: "Bis zu 40 Zeichen, so breit wie der Code: „Scan mich“, Name des Cafés, „Gäste-WLAN“",
   logoQuick: "Logo in der Mitte",
   logoQuickHint: "Netzwerke, Messenger, Bezahlen – antippen, und es steht in der Mitte des Codes",
   logoAll: "Alle Logos",
