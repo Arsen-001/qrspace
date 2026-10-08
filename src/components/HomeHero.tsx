@@ -1,6 +1,7 @@
 // Первый экран, бегущая строка и «больше, чем QR-код» на главной .
 import Link from "next/link";
 import type { Dict } from "@/lib/i18n";
+import { HeroReveal } from "./HeroReveal";
 
 const N = 25;
 
@@ -88,15 +89,8 @@ export function HomeHero({ t }: { t: Dict }) {
             </Link>
           </div>
         </div>
-        <div className="relative mx-auto w-full max-w-sm lg:max-w-none">
-          <div className="relative aspect-square overflow-hidden rounded-2xl border border-stage-line bg-stage p-5 sm:p-7">
-            <BigCode />
-            <div aria-hidden className="x-scan pointer-events-none" />
-          </div>
-          <span className="absolute -top-3 right-6 rounded-md bg-accent px-2.5 py-1 font-heading text-xs font-bold text-on-accent">№ 000 777</span>
-          <span className="absolute -bottom-3 left-6 rounded-md border border-stage-line bg-stage px-2.5 py-1 font-mono text-xs text-on-stage/80">
-            {t.numbersTitle}
-          </span>
+        <div className="mx-auto w-full max-w-md lg:max-w-none">
+          <HeroReveal t={t} code={<BigCode />} />
         </div>
       </div>
     </section>
