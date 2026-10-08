@@ -7,7 +7,7 @@ import { tr, type Dict, type Lang } from "@/lib/i18n";
 import { useLang } from "@/lib/lang";
 import { catalog, type Design } from "@/lib/market";
 import { useMe } from "@/lib/me";
-import { CodePacks } from "./CodePacks";
+import { CodePacks, OneQrBanner } from "./CodePacks";
 import { LotCards, useLots } from "./Lots";
 import { QrThumb } from "./QrThumb";
 import { Shell } from "./Shell";
@@ -156,6 +156,8 @@ export function MarketPage() {
           )}
         </div>
       </div>
+
+      <OneQrBanner t={t} />
 
       {/* Дроп дня — витрина: код на подсвеченном постаменте, тираж полоской, покупка крупно. */}
       <section className="relative mt-8 overflow-hidden rounded-[2rem] bg-stage text-on-stage">

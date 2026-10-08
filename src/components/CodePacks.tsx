@@ -1,14 +1,15 @@
 "use client";
 // Пакеты кодов в маркете (владелец 08.10.2026): сколько кодов и сколько места под каждым. Цены демо.
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { buyPack, fmtBytes, myPacks } from "@/lib/codes";
 import type { Dict, Lang } from "@/lib/i18n";
 import { useMe } from "@/lib/me";
-import { CODE_PACKS, packBytes, type PackPlan } from "@/lib/packs";
+import { CODE_PACKS, CODE_PRICE, packBytes, type PackPlan } from "@/lib/packs";
 import { LoginModal } from "./LoginModal";
 
 /** Маленький QR лаймом: три «глазка» по углам и точки — у каждого свой узор (по номеру). */
-function MiniQr({ seed }: { seed: number }) {
+export function MiniQr({ seed }: { seed: number }) {
   // Поле 9×9: углы заняты «глазками» 3×3, остальные клетки — точка или пусто (детерминированно от номера).
   const dots: [number, number][] = [];
   for (let y = 0; y < 9; y++)
@@ -171,6 +172,37 @@ export function CodePacks({ t, lang }: { t: Dict; lang: Lang }) {
           }}
         />
       )}
+    </section>
+  );
+}
+
+/** Верхний баннер маркета (владелец 09.10.2026): один QR — один доллар. */
+export function OneQrBanner({ t }: { t: Dict }) {
+  return (
+    <section className="relative mt-8 overflow-hidden rounded-[2rem] bg-stage text-on-stage">
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div className="x-stage-grid" />
+      </div>
+      <div className="relative flex flex-col gap-6 p-6 sm:flex-row sm:items-center sm:gap-10 sm:p-10">
+        <span aria-hidden className="x-cell block w-32 shrink-0 rounded-3xl bg-white/[0.06] p-4 shadow-[0_30px_60px_-30px_rgba(198,255,46,0.6)] sm:w-40">
+          <MiniQr seed={7} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+            <h2 className="font-heading text-5xl font-extrabold tracking-tight sm:text-7xl">
+              1 <span className="text-accent">QR</span>
+            </h2>
+            <span className="font-heading text-5xl font-extrabold tracking-tight sm:text-7xl">
+              <span aria-hidden className="text-on-stage/40">— </span>
+              <span className="text-accent">${CODE_PRICE}</span>
+            </span>
+          </div>
+          <p className="mt-3 max-w-xl text-on-stage/70">{t.oneQrText}</p>
+        </div>
+        <Link href="/#make" className="inline-flex min-h-13 shrink-0 items-center justify-center gap-3 self-start rounded-xl bg-accent px-6 font-heading text-base font-bold text-on-accent hover:brightness-95 sm:self-center">
+          {t.homeCta} <span aria-hidden>→</span>
+        </Link>
+      </div>
     </section>
   );
 }

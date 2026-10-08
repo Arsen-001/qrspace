@@ -831,6 +831,7 @@ export const de: Dict = {
   storageMonthly: "Platz ist monatlich, der Code selbst funktioniert immer. Nicht verlängert — wieder 1 MB: Vorhandenes bleibt, Neues kannst du nicht hinzufügen.",
   packRoomMore: "Platz lässt sich erweitern",
   packMore: "weitere",
+  oneQrText: "Jeder Look, schlicht oder gestaltet. Darunter 1 MB für Fotos, Video und Text, Platz lässt sich erweitern. Der erste schlichte ist kostenlos.",
   packsKicker: "Code-Pakete",
   packsTitle: "Mehrere Codes auf einmal — auf Vorrat",
   packsHint: "Jeder Look, schlicht oder gestaltet. Jeder Code bekommt eigenen Platz für Fotos, Videos und Text.",
