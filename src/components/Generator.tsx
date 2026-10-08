@@ -4,6 +4,7 @@ import { useState } from "react";
 import { api } from "@/lib/codes";
 import { buildPayload, CONTENT_TYPES, isDirect, linkTarget, type ContentType, type Fields } from "@/lib/qr/payload";
 import { buildDrawing } from "@/lib/qr/render";
+import { LOGO_FOR } from "@/lib/qr/logo-art";
 import { codeKey, tierOf } from "@/lib/pricing";
 import { DEFAULT_STYLE, toQrStyle, toSaved } from "@/lib/qr/style";
 import { useLang } from "@/lib/lang";
@@ -63,6 +64,7 @@ export function Generator() {
           style={style}
           setStyle={setStyle}
           sample={!raw}
+          suggestLogo={LOGO_FOR[type]}
           steps
           gate={{
             tier,

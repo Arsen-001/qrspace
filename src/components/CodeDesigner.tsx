@@ -44,6 +44,7 @@ export function CodeDesigner({
   gate,
   sample,
   steps,
+  suggestLogo,
 }: {
   t: Dict;
   payload: string;
@@ -58,6 +59,8 @@ export function CodeDesigner({
   /** Генератор: пример вместо пустого предпросмотра и номера шагов 2 и 3. */
   sample?: boolean;
   steps?: boolean;
+  /** Готовый логотип под вид содержимого (генератор). */
+  suggestLogo?: string;
 }) {
   const [imageError, setImageError] = useState(false);
   const patchStyle = (p: Partial<StyleState>) => setStyle((s) => ({ ...s, ...p }));
@@ -188,6 +191,7 @@ export function CodeDesigner({
             }
             lowContrast={lowContrast}
             step={steps ? 2 : undefined}
+            suggestLogo={suggestLogo}
           />
           {imageError && <p className="mt-2 text-sm text-warn">{t.imageError}</p>}
         </div>

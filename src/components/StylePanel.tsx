@@ -6,6 +6,7 @@ import { buildDrawing, toSvg } from "@/lib/qr/render";
 import { isPreset, STYLE_PRESETS, type StylePreset } from "@/lib/qr/presets";
 import { DEFAULT_STYLE, toQrStyle } from "@/lib/qr/style";
 import { TEXTURE_INK, TEXTURES, textureSrc, type TextureId } from "@/lib/qr/textures";
+import { LogoPicker, logoFile } from "./LogoPicker";
 import type { PictureState } from "./PicturePicker";
 import { Card, ColorField, GhostButton, Label, Segmented, Slider, UploadButton } from "./ui";
 
@@ -144,6 +145,7 @@ export function StylePanel({
   picturePicker,
   lowContrast,
   step,
+  suggestLogo,
 }: {
   t: Dict;
   s: StyleState;
@@ -154,8 +156,26 @@ export function StylePanel({
   lowContrast: boolean;
   /** Номер шага в генераторе. */
   step?: number;
+  /** Готовый логотип под вид содержимого — первым в строке логотипов. */
+  suggestLogo?: string;
 }) {
   const [tab, setTab] = useState<Tab>("colors");
+  // Какой готовый логотип выбран (свой файл — «own»; логотипа нет — null).
+  const [logoId, setLogoId] = useState<string | null>(null);
+  const picked = s.logo ? (logoId ?? "own") : null;
+  const logoProps = {
+    t,
+    picked,
+    suggest: suggestLogo,
+    onPick: (l: Parameters<typeof logoFile>[0]) => {
+      setLogoId(l.id);
+      onLogo(logoFile(l));
+    },
+    onNone: () => {
+      setLogoId(null);
+      set({ logo: null });
+    },
+  };
   const tabs: { id: Tab; label: string }[] = [
     { id: "colors", label: t.colors },
     { id: "shape", label: t.tabShape },
@@ -168,6 +188,18 @@ export function StylePanel({
     <Card title={t.step2} step={step}>
       <Label hint={t.styleReadyHint}>{t.styleReady}</Label>
       <PresetGrid t={t} s={s} set={set} />
+
+      <div className="mt-5">
+        <Label hint={t.logoQuickHint}>{t.logoQuick}</Label>
+        <LogoPicker
+          {...logoProps}
+          mode="quick"
+          onMore={() => {
+            setTab("media");
+            document.getElementById("style-tab-media")?.scrollIntoView({ behavior: "smooth", block: "center" });
+          }}
+        />
+      </div>
 
       <div className="mt-6 border-t border-line pt-5">
         <div className="mb-2 text-sm font-semibold">{t.moreSettings}</div>
@@ -329,14 +361,23 @@ export function StylePanel({
         <div {...panel("media")}>
           {picturePicker}
           <div>
-            <Label hint={t.logoHint}>{t.logo}</Label>
+            <Label hint={t.logoQuickHint}>{t.logo}</Label>
+            <LogoPicker {...logoProps} mode="all" />
+            <div className="mb-2 mt-5 text-sm font-semibold">{t.logoOwn}</div>
+            <div className="mb-2 text-xs text-muted">{t.logoHint}</div>
             <div className="flex flex-wrap items-center gap-2">
-              {s.logo && (
+              {s.logo && picked === "own" && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={s.logo.src} alt="" className="h-10 w-10 rounded-lg border border-line bg-white object-contain" />
               )}
-              <UploadButton label={s.logo ? t.replace : t.upload} onFile={onLogo} />
-              {s.logo && <GhostButton onClick={() => set({ logo: null })}>{t.remove}</GhostButton>}
+              <UploadButton
+                label={picked === "own" ? t.replace : t.upload}
+                onFile={(f) => {
+                  setLogoId(null);
+                  onLogo(f);
+                }}
+              />
+              {s.logo && <GhostButton onClick={logoProps.onNone}>{t.remove}</GhostButton>}
             </div>
             {s.logo && (
               <div className="mt-4">
