@@ -16,7 +16,7 @@ function PhoneUnder({ t }: { t: Dict }) {
         </span>
         <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-on-stage/60">{t["type.phone"]}</span>
       </div>
-      <p className="whitespace-nowrap font-heading text-[clamp(1rem,6vw,1.6rem)] font-extrabold leading-tight sm:text-4xl">+374 91 12 34 56</p>
+      <p className="whitespace-nowrap font-heading text-[clamp(1rem,6vw,1.6rem)] font-extrabold leading-tight sm:text-4xl">+1 (212) 555-0142</p>
       <div className="grid gap-2">
         <span className={`${btn} bg-accent text-on-accent`}>
           {t.actCall} <span aria-hidden>→</span>
