@@ -47,22 +47,29 @@ export function AuthBatchesPage() {
       <Link href="/brand" className="inline-flex min-h-10 items-center gap-1 text-sm font-medium text-muted hover:text-ink">
         ← {t.brandTitle}
       </Link>
-      <h1 className="mt-1 font-heading text-3xl font-extrabold tracking-tight">{t.authTitle}</h1>
-      <p className="mt-2 max-w-2xl text-sm text-muted">{t.authHint}</p>
-      <ol className="mt-4 grid max-w-3xl gap-2 text-sm sm:grid-cols-3">
-        {[t.authStep1, t.authStep2, t.authStep3].map((s, i) => (
-          <li key={i} className="rounded-2xl border border-line bg-card p-4">
-            <span className="mb-1 block font-heading text-lg font-extrabold text-accent-ink">{i + 1}</span>
-            {s}
-          </li>
-        ))}
-      </ol>
+      <p className="mt-3 font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">{t.brandKicker}</p>
+      <h1 className="mt-2 font-heading text-4xl font-extrabold tracking-tight [hyphens:manual] sm:text-6xl">{t.authTitle}</h1>
+      <p className="mt-3 max-w-2xl text-muted">{t.authHint}</p>
+      {/* Как работает — на сцене: три шага, последний («Оригинал») — лаймом. */}
+      <section className="relative mt-8 overflow-hidden rounded-[2rem] bg-stage p-5 text-on-stage sm:p-8">
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          <div className="x-stage-grid" />
+        </div>
+        <ol className="relative grid gap-3 text-sm sm:grid-cols-3">
+          {[t.authStep1, t.authStep2, t.authStep3].map((s, i) => (
+            <li key={i} className={`rounded-2xl p-5 ${i === 2 ? "bg-accent text-on-accent" : "border border-stage-line bg-on-stage/5"}`}>
+              <span className={`mb-3 grid h-8 w-8 place-items-center rounded-lg font-mono text-sm font-bold ${i === 2 ? "bg-stage text-accent" : "bg-accent text-on-accent"}`}>{i + 1}</span>
+              {s}
+            </li>
+          ))}
+        </ol>
+      </section>
       {!ready ? null : !me ? (
         <LoginFirst t={t} next="/brand/auth" />
       ) : (
         <div className="mt-6 space-y-6">
           <form
-            className="grid max-w-3xl gap-3 rounded-2xl border border-line bg-card p-5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_110px_auto] sm:items-end"
+            className="grid gap-3 rounded-3xl border border-line bg-card p-5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_110px_auto] sm:items-end sm:p-6"
             onSubmit={async (e) => {
               e.preventDefault();
               setBusy(true);

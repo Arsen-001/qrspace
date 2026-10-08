@@ -11,11 +11,85 @@ import { useMe } from "@/lib/me";
 import { NEEDS, PACKAGES, type Need, type Order, type OrderStatus, type Pkg } from "@/lib/orders";
 import { isDesigner } from "@/lib/people";
 import { prepareImage } from "@/lib/qr/raster";
+import { DEFAULT_STYLE, toSaved } from "@/lib/qr/style";
+import { QrThumb } from "./QrThumb";
 import { personName } from "./Avatar";
 import { Notice, Shell } from "./Shell";
 import { UploadButton, StepBadge, Select } from "./ui";
 
 const field = "w-full rounded-xl border border-line bg-field px-3.5 py-2.5 text-base outline-none transition-colors focus:border-accent";
+
+// Примеры кодов «под бренд» для витрины: пекарня (крафт), мода (чёрный), косметика (пудровый).
+const BRAND_SAMPLES = [
+  { fg: "#3a2414", bg: "#e9d3ad", dot: "rounded", eye: "leaf", tag: "BAKERY" },
+  { fg: "#f3f2ec", bg: "#0b0b0c", dot: "dots", eye: "circle", tag: "STREETWEAR" },
+  { fg: "#7a1f2b", bg: "#fbe9ea", dot: "liquid", eye: "rounded", tag: "BEAUTY" },
+] as const;
+const sampleStyle = (x: (typeof BRAND_SAMPLES)[number]) => ({ ...toSaved(DEFAULT_STYLE), fg: x.fg, bg: x.bg, eyeColor: x.fg, eyeBallColor: x.fg, dot: x.dot, eye: x.eye });
+
+/** Лендинг для бизнеса: ценность на сцене, три шага, дальше заявка с тарифами. */
+function BrandHero({ t }: { t: Dict }) {
+  return (
+    <>
+      <section className="relative mt-8 overflow-hidden rounded-[2rem] bg-stage text-on-stage">
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          <div className="x-stage-grid" />
+        </div>
+        <div className="relative grid items-center gap-10 p-6 sm:p-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:p-12">
+          <div className="min-w-0">
+            <h2 className="font-heading text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl">{t.brandHeroTitle}</h2>
+            <ul className="mt-6 space-y-3 text-sm">
+              {[t.brandValue1, t.brandValue2, t.brandValue3].map((x) => (
+                <li key={x} className="flex items-start gap-3">
+                  <span aria-hidden className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-md bg-accent text-[11px] font-bold text-on-accent">
+                    ✓
+                  </span>
+                  <span className="text-on-stage/80">{x}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-7 flex flex-wrap gap-3">
+              <a href="#order" className="inline-flex min-h-13 items-center gap-3 rounded-xl bg-accent px-6 font-heading text-base font-bold text-on-accent hover:brightness-95">
+                {t.brandCta} <span aria-hidden>→</span>
+              </a>
+              <Link href="/brand/auth" className="inline-flex min-h-13 items-center rounded-xl border border-stage-line px-6 font-heading text-sm font-bold hover:border-on-stage/60">
+                {t.authTitle}
+              </Link>
+            </div>
+          </div>
+          {/* Три кода «под бренд» веером — сразу видно, что это не просто чёрный квадрат. */}
+          <div aria-hidden className="relative mx-auto h-64 w-full max-w-[360px] sm:h-80">
+            <div className="x-ring" />
+            {BRAND_SAMPLES.map((x, i) => (
+              <div
+                key={x.tag}
+                className={`absolute top-1/2 w-[46%] -translate-y-1/2 rounded-2xl p-2.5 shadow-[0_24px_50px_-20px_rgba(0,0,0,0.6)] ${["left-0 -rotate-12", "left-1/2 z-10 -translate-x-1/2 scale-110", "right-0 rotate-12"][i]}`}
+                style={{ background: x.bg }}
+              >
+                <QrThumb link="HTTPS://QRSPACE.CO/K/BRAND1" style={sampleStyle(x)} className="w-full rounded-lg" />
+                <div className="mt-1.5 truncate px-0.5 font-mono text-[9px] font-bold tracking-wider" style={{ color: x.fg }}>
+                  {x.tag}
+                </div>
+                {i === 1 && <span className="absolute -right-2 -top-2 rounded-md bg-accent px-1.5 py-0.5 font-mono text-[9px] font-bold text-on-accent shadow">✓ ORIGINAL</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+      <section className="mt-8">
+        <h2 className="font-heading text-2xl font-extrabold">{t.brandHowTitle}</h2>
+        <ol className="mt-4 grid gap-3 sm:grid-cols-3">
+          {[t.brandHow1, t.brandHow2, t.brandHow3].map((x, i) => (
+            <li key={x} className="rounded-3xl border border-line bg-card p-5">
+              <StepBadge n={i + 1} />
+              <p className="mt-3 text-sm">{x}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+    </>
+  );
+}
 
 export function StatusChip({ t, status }: { t: Dict; status: OrderStatus }) {
   const cls = status === "done" ? "bg-ok-soft text-ok" : status === "review" ? "bg-accent text-on-accent" : status === "new" ? "bg-warn-soft text-warn" : "bg-field text-ink";
@@ -112,15 +186,15 @@ function OrderForm({ t }: { t: Dict }) {
             role="radio"
             aria-checked={pkg === k}
             onClick={() => setPkg(k)}
-            className={`rounded-xl border p-4 text-left transition-colors ${pkg === k ? "border-accent bg-accent text-on-accent" : "border-line bg-field hover:border-muted"}`}
+            className={`rounded-3xl border-2 p-5 text-left transition-all ${pkg === k ? "border-accent bg-stage text-on-stage shadow-[0_18px_40px_-20px_rgba(0,0,0,0.6)]" : "border-line bg-field hover:-translate-y-0.5 hover:border-muted"}`}
           >
             <span className="flex items-baseline justify-between gap-2">
-              <span className="font-heading font-bold">{t[`pkg.${k}`]}</span>
-              <span className="font-heading font-extrabold">
+              <span className="font-heading text-lg font-bold">{t[`pkg.${k}`]}</span>
+              <span className={`font-heading text-2xl font-extrabold ${pkg === k ? "text-accent" : ""}`}>
                 {k === "pro" && `${t.fromPrice} `}${PACKAGES[k]}
               </span>
             </span>
-            <span className={`mt-1 block text-xs ${pkg === k ? "opacity-85" : "text-muted"}`}>{t[`pkgHint.${k}`]}</span>
+            <span className={`mt-2 block text-xs leading-relaxed ${pkg === k ? "text-on-stage/70" : "text-muted"}`}>{t[`pkgHint.${k}`]}</span>
           </button>
         ))}
       </div>
@@ -171,17 +245,21 @@ export function BrandPage() {
 
   return (
     <Shell t={t} lang={lang}>
-      <h1 className="max-w-3xl font-heading text-3xl font-extrabold tracking-tight text-balance sm:text-4xl">{designer ? t.ordersTitle : t.brandTitle}</h1>
-      {!designer && <p className="mt-2 max-w-2xl text-sm text-muted">{t.brandHint}</p>}
-      <Link href="/brand/auth" className="mt-5 flex max-w-2xl items-center gap-3 rounded-2xl border border-line bg-card p-4 hover:border-muted">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-ok-soft text-ok">✓</span>
-        <span className="min-w-0">
-          <span className="block font-semibold">{t.authTitle}</span>
-          <span className="block text-xs text-muted">{t.authTeaser}</span>
-        </span>
-        <span className="ml-auto text-muted">→</span>
-      </Link>
-      <div className="mt-6 space-y-6">
+      <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">{t.brandKicker}</p>
+      <h1 className="mt-2 max-w-4xl font-heading text-4xl font-extrabold tracking-tight text-balance [hyphens:manual] sm:text-6xl">{designer ? t.ordersTitle : t.brandTitle}</h1>
+      {!designer && <p className="mt-3 max-w-2xl text-muted">{t.brandHint}</p>}
+      {!designer && <BrandHero t={t} />}
+      {designer && (
+        <Link href="/brand/auth" className="mt-5 flex max-w-2xl items-center gap-3 rounded-2xl border border-line bg-card p-4 hover:border-muted">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-ok-soft text-ok">✓</span>
+          <span className="min-w-0">
+            <span className="block font-semibold">{t.authTitle}</span>
+            <span className="block text-xs text-muted">{t.authTeaser}</span>
+          </span>
+          <span className="ml-auto text-muted">→</span>
+        </Link>
+      )}
+      <div id="order" className="mt-8 scroll-mt-6 space-y-6">
         {list && list.length > 0 && (
           <section>
             {!designer && <h2 className="mb-3 font-heading text-xl font-bold">{t.myOrders}</h2>}
