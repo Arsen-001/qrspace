@@ -67,6 +67,8 @@ export type CodeRecord = {
   styleLocked?: boolean;
   /** Место под кодом, байт (владелец 08.10.2026: 1 МБ бесплатно, больше — платно); нет — 1 МБ. */
   storage?: number;
+  /** До когда оплачено место (помесячно, владелец 09.10.2026); прошло — снова 1 МБ. Нет даты — навсегда (старые данные). */
+  storageUntil?: string;
   /** Вещь бренда (защита от подделок): секрет под стираемым слоем, кто зарегистрировал. */
   auth?: AuthRecord;
   /** Все, кто видит и вошёл, могут добавлять записи (свадьба, праздник). */
@@ -114,7 +116,7 @@ export type CodeView = {
   /** Вид закреплён — менять нельзя (скачан, куплен в маркете, вещь бренда). */
   styleLocked: boolean;
   /** Место под кодом: занято и всего, байт (хозяину и тем, кто дописывает). */
-  storage?: { used: number; quota: number };
+  storage?: { used: number; quota: number; plan: string | null; until: string | null };
   stats?: ScanStats;
   /** Заблокирован администратором (видят все: гостю — «заблокирован», хозяину — почему). */
   blocked: boolean;
@@ -168,14 +170,29 @@ export type Lot = Listing & { view: Pick<CodeView, "title" | "style" | "edition"
 export const MAX_PHOTO_PX = 1600;
 export const MAX_VIDEO_MB = 50;
 
-/** Место под каждым кодом (владелец 08.10.2026): 1 МБ бесплатно; больше — пакетами (цены демо, владелец не утверждал). */
+/**
+ * Место под каждым кодом (владелец 08.10.2026): 1 МБ бесплатно; больше — помесячно (владелец 09.10.2026: «1 QR — 1 доллар
+ * и 1 МБ под ним, место можно поменять»). Сам код оплачивается один раз и работает всегда — помесячно только место.
+ * Не продлили — снова 1 МБ: то, что уже лежит, остаётся, новое не добавить, пока не освободят или не продлят.
+ * Цены демо, владелец не утверждал.
+ */
 export const FREE_STORAGE = 1024 * 1024;
 export const STORAGE_PLANS = [
   { id: "s10", bytes: 10 * 1024 * 1024, price: 1 },
   { id: "s100", bytes: 100 * 1024 * 1024, price: 3 },
   { id: "s1000", bytes: 1024 * 1024 * 1024, price: 9 },
 ] as const;
-export const storageOf = (c: Pick<CodeRecord, "storage" | "blocks">) => ({ used: c.blocks.reduce((s, b) => s + (b.size ?? 0), 0), quota: c.storage ?? FREE_STORAGE });
+export const STORAGE_MONTH_MS = 30 * 24 * 3600 * 1000;
+export const storageOf = (c: Pick<CodeRecord, "storage" | "storageUntil" | "blocks">, now = Date.now()) => {
+  const active = !!c.storage && (!c.storageUntil || Date.parse(c.storageUntil) > now);
+  const quota = active ? Math.max(FREE_STORAGE, c.storage!) : FREE_STORAGE;
+  return {
+    used: c.blocks.reduce((s, b) => s + (b.size ?? 0), 0),
+    quota,
+    plan: active ? (STORAGE_PLANS.find((p) => p.bytes === c.storage)?.id ?? null) : null,
+    until: active ? (c.storageUntil ?? null) : null,
+  };
+};
 /** «0,4 МБ», «120 КБ». */
 export const fmtBytes = (n: number, lang: string) =>
   n >= 1024 * 1024 * 1024
@@ -183,6 +200,7 @@ export const fmtBytes = (n: number, lang: string) =>
     : n >= 1024 * 1024
       ? `${(n / 1024 ** 2).toLocaleString(lang, { maximumFractionDigits: 1 })} MB`
       : `${Math.max(1, Math.round(n / 1024))} KB`;
+/** Сменить место под кодом: пакет («s10»…) на месяц или «free» — обратно 1 МБ. */
 export const buyStorage = (id: string, plan: string) => call<CodeView>(`/api/codes/${id}/storage`, json("POST", { plan }));
 /** Пакеты кодов: мои (сколько осталось) и покупка. */
 export const myPacks = () => call<{ left: number; packs: Pack[] }>("/api/packs");
@@ -267,7 +285,7 @@ export const api = {
   patch: (id: string, patch: CodePatch) => call<CodeView>(`/api/codes/${id}`, json("PATCH", patch)),
   remove: (id: string) => call<{ ok: true }>(`/api/codes/${id}`, { method: "DELETE" }),
   /** Код из генератора: адрес (код-ссылка) или текст → короткая ссылка для самого кода. */
-  quick: (body: { content: Content; style: unknown; key?: string }) => call<{ id: string; link: string }>("/api/codes/quick", json("POST", body)),
+  quick: (body: { content: Content; style: unknown }) => call<{ id: string; link: string }>("/api/codes/quick", json("POST", body)),
   addBlock: (id: string, form: FormData) => call<CodeView>(`/api/codes/${id}/blocks`, { method: "POST", body: form }),
   editBlock: (id: string, blockId: string, text: string) => call<CodeView>(`/api/codes/${id}/blocks/${blockId}`, json("PATCH", { text })),
   removeBlock: (id: string, blockId: string) => call<CodeView>(`/api/codes/${id}/blocks/${blockId}`, { method: "DELETE" }),

@@ -1,11 +1,11 @@
-// Цены (демо, владелец не утверждал): бесплатно — только 1 простой код на человека; следующий простой — $1;
-// красивый (фото, текстура, объём, особые формы, значок в углах) — $5. Смотреть и настраивать — бесплатно,
-// платят при скачивании; уже оплаченный код скачивается снова бесплатно.
+// Цены: бесплатно — только 1 простой код на человека; дальше любой код — $1, и простой, и красивый
+// (владелец 09.10.2026: «1 QR — 1 доллар и 1 МБ под ним»; было: красивый $5). Смотреть и настраивать — бесплатно,
+// платят при скачивании; уже оплаченный код скачивается снова бесплатно. Место больше 1 МБ — помесячно (codes.ts).
 import type { StyleState } from "@/components/StylePanel";
 import type { SavedStyle } from "./qr/style";
 
 export type Tier = "simple" | "styled";
-export const PRICES: Record<Tier, number> = { simple: 1, styled: 5 };
+export const PRICES: Record<Tier, number> = { simple: 1, styled: 1 };
 export type Purchase = { person: string; key: string; tier: Tier; price: number; free: boolean; at: string; /** Скачан из пакета. */ pack?: string; bytes?: number };
 export type Quote = { paid: boolean; price: number; free: boolean; /** Можно взять из пакета: сколько кодов осталось и место под кодом. */ pack?: { left: number; bytes: number } };
 

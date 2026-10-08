@@ -35,8 +35,8 @@ await p.getByRole("radio", { name: "Звёзды", exact: true }).click();
 await ready();
 ok(await p.locator("text=Красивый код").count() === 1, "styled tier shown");
 await p.getByRole("button", { name: /Скачать PNG/ }).click();
-await p.waitForSelector("text=К оплате: $5");
-ok(true, "styled generator code: $5");
+await p.waitForSelector("text=К оплате: $1");
+ok(true, "styled generator code: $1 (owner 09.10: every code $1)");
 await shot("p-styled");
 // код с памятью: простой (первый бесплатный у Армана), потом красивее — доплата разницы $4
 await p.goto(B + "/login?next=/codes");

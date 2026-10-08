@@ -1,7 +1,7 @@
 "use client";
 // Память под кодом: записи (текст, фото, видео) и форма «дописать». Одна и та же в настройках и после скана.
 import { useRef, useState } from "react";
-import { api, buyStorage, fmtBytes, MAX_PHOTO_PX, MAX_VIDEO_MB, mediaUrl, STORAGE_PLANS, VIDEO_TYPES, type Block, type CodeView } from "@/lib/codes";
+import { api, buyStorage, fmtBytes, MAX_PHOTO_PX, MAX_VIDEO_MB, FREE_STORAGE, mediaUrl, STORAGE_PLANS, VIDEO_TYPES, type Block, type CodeView } from "@/lib/codes";
 import { fmtDateTime } from "@/lib/format";
 import type { Dict, Lang } from "@/lib/i18n";
 import { prepareImage } from "@/lib/qr/raster";
@@ -240,7 +240,8 @@ function StorageBar({ t, lang, code, onChange }: { t: Dict; lang: Lang; code: Co
   const st = code.storage;
   if (!st) return null;
   const k = Math.min(1, st.used / st.quota);
-  const buy = async (plan: string) => {
+  // Место помесячно (владелец 09.10.2026): выбрать больше или меньше, тот же пакет — продлить; «Бесплатно» — 1 МБ.
+  const change = async (plan: string) => {
     setBusy(true);
     try {
       onChange(await buyStorage(code.id, plan));
@@ -249,6 +250,8 @@ function StorageBar({ t, lang, code, onChange }: { t: Dict; lang: Lang; code: Co
       setBusy(false);
     }
   };
+  const until = st.until ? new Date(st.until).toLocaleDateString(lang, { day: "numeric", month: "short" }) : null;
+  const options = [{ id: "free", bytes: FREE_STORAGE, price: 0 }, ...STORAGE_PLANS];
   return (
     <section className="rounded-2xl border border-line bg-card p-4">
       <div className="flex items-center justify-between gap-3">
@@ -256,11 +259,12 @@ function StorageBar({ t, lang, code, onChange }: { t: Dict; lang: Lang; code: Co
           <div className="text-sm font-semibold">{t.storageTitle}</div>
           <div className="font-mono text-xs text-muted">
             {fmtBytes(st.used, lang)} / {fmtBytes(st.quota, lang)}
+            {until && ` · ${t.storagePaidUntil} ${until}`}
           </div>
         </div>
         {code.access === "owner" && (
-          <button type="button" onClick={() => setOpen((v) => !v)} className="min-h-10 shrink-0 rounded-xl bg-stage px-3.5 font-heading text-sm font-bold text-on-stage">
-            {t.storageMore}
+          <button type="button" aria-expanded={open} onClick={() => setOpen((v) => !v)} className="min-h-10 shrink-0 rounded-xl bg-stage px-3.5 font-heading text-sm font-bold text-on-stage">
+            {t.storageChange}
           </button>
         )}
       </div>
@@ -268,20 +272,32 @@ function StorageBar({ t, lang, code, onChange }: { t: Dict; lang: Lang; code: Co
         <div className={`h-full rounded-full ${k > 0.9 ? "bg-warn" : "bg-accent"}`} style={{ width: `${Math.max(2, k * 100)}%` }} />
       </div>
       {open && (
-        <div className="mt-3 grid gap-2 sm:grid-cols-3">
-          {STORAGE_PLANS.filter((p) => p.bytes > st.quota).map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              disabled={busy}
-              onClick={() => buy(p.id)}
-              className="flex items-center justify-between rounded-xl border border-line bg-field px-3.5 py-3 text-left hover:border-muted disabled:opacity-50"
-            >
-              <span className="font-heading text-lg font-extrabold">{fmtBytes(p.bytes, lang)}</span>
-              <span className="rounded-lg bg-accent px-2 py-0.5 font-heading text-sm font-bold text-on-accent">${p.price}</span>
-            </button>
-          ))}
-          <p className="text-xs text-muted sm:col-span-3">{t.buyDemo}</p>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          {options.map((p) => {
+            const now = (st.plan ?? "free") === p.id;
+            const small = st.used > p.bytes;
+            return (
+              <button
+                key={p.id}
+                type="button"
+                disabled={busy || small || (now && p.id === "free")}
+                onClick={() => change(p.id)}
+                aria-label={`${fmtBytes(p.bytes, lang)} — ${p.price ? `$${p.price} / ${t.storageMonth}` : t.storageFreeName}${now ? ` (${t.storageNow})` : ""}`}
+                className={`relative flex flex-col items-start gap-1 rounded-xl border px-3.5 py-3 text-left transition-colors disabled:cursor-not-allowed ${
+                  now ? "border-accent bg-stage text-on-stage" : "border-line bg-field hover:border-muted disabled:opacity-45"
+                }`}
+              >
+                {now && <span className="absolute right-2.5 top-2.5 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold uppercase text-on-accent">{t.storageNow}</span>}
+                <span className="font-heading text-lg font-extrabold">{fmtBytes(p.bytes, lang)}</span>
+                <span className={`font-mono text-xs ${now ? "text-accent" : "text-muted"}`}>{p.price ? `$${p.price} / ${t.storageMonth}` : t.storageFreeName}</span>
+                {now && p.id !== "free" && <span className="mt-1 text-xs font-semibold underline underline-offset-2">{t.storageRenew}</span>}
+                {small && <span className="mt-1 text-[11px] text-muted">{t.storageTooSmall}</span>}
+              </button>
+            );
+          })}
+          <p className="text-xs leading-relaxed text-muted sm:col-span-2 lg:col-span-4">
+            {t.storageMonthly} {t.buyDemo}
+          </p>
         </div>
       )}
     </section>

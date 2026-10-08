@@ -42,12 +42,9 @@ export async function POST(req: Request) {
       Object.assign(buy, { pack: pack.id, bytes: pack.bytes });
     }
     if (!q.paid) db.purchases.push(buy);
-    // Скачали свой код с памятью — его вид закрепляется; из пакета — под ним место пакета.
+    // Скачали свой код с памятью — его вид закрепляется.
     const code = key.startsWith("code:") ? db.codes.find((c) => c.id === key.slice(5) && c.owner === me) : null;
-    if (code) {
-      code.styleLocked = true;
-      if (pack) code.storage = Math.max(code.storage ?? 0, pack.bytes);
-    }
+    if (code) code.styleLocked = true;
     return q;
   });
   return Response.json({ ok: true, price: q.price });

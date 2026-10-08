@@ -8,12 +8,12 @@ import { CODE_PACKS, packBytes, type PackPlan } from "@/lib/packs";
 import { LoginModal } from "./LoginModal";
 
 /** Сетка «кодов в пакете»: столько клеток, сколько кодов (до 100 — мелко), — сразу видно, сколько это. */
-function Cells({ n, dark }: { n: number; dark: boolean }) {
+function Cells({ n }: { n: number }) {
   const cols = n <= 5 ? 5 : 10;
   return (
     <span aria-hidden className="grid gap-[3px]" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
       {Array.from({ length: n }, (_, i) => (
-        <span key={i} className={`aspect-square rounded-[2px] ${dark ? "bg-accent" : "bg-ink"}`} />
+        <span key={i} className="aspect-square rounded-[2px] bg-accent" />
       ))}
     </span>
   );
@@ -64,33 +64,35 @@ export function CodePacks({ t, lang }: { t: Dict; lang: Lang }) {
       </div>
       <ul className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
         {CODE_PACKS.map((p) => {
-          const dark = p.id === best;
+          // Все карточки тёмные, как «Популярный» (владелец 09.10.2026); у популярной — значок и свечение.
+          const hot = p.id === best;
           return (
             <li
               key={p.id}
               className={`relative flex flex-col overflow-hidden rounded-[1.5rem] border p-5 transition-transform hover:-translate-y-1 ${
-                dark ? "border-accent/60 bg-stage text-on-stage shadow-[0_30px_60px_-30px_rgba(198,255,46,0.5)]" : "border-line bg-card"
+                hot ? "border-accent/60 bg-stage text-on-stage shadow-[0_30px_60px_-30px_rgba(198,255,46,0.5)]" : "border-stage-line bg-stage text-on-stage"
               }`}
             >
-              {dark && <span className="absolute right-4 top-4 rounded-full bg-accent px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-on-accent">{t.packBest}</span>}
+              {hot && <span className="absolute right-4 top-4 rounded-full bg-accent px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-on-accent">{t.packBest}</span>}
               <div className="flex items-baseline gap-2">
                 <span className="font-heading text-5xl font-extrabold tracking-tight">{p.codes}</span>
-                <span className={`font-semibold ${dark ? "text-on-stage/70" : "text-muted"}`}>{t.packCodes}</span>
+                <span className="font-semibold text-on-stage/70">{t.packCodes}</span>
               </div>
               <div className="mt-4 w-24">
-                <Cells n={p.codes} dark={dark} />
+                <Cells n={p.codes} />
               </div>
-              <div className={`mt-5 flex items-center gap-2 rounded-xl px-3 py-2.5 ${dark ? "bg-white/10" : "bg-field"}`}>
-                <svg viewBox="0 0 24 24" className={`h-5 w-5 shrink-0 ${dark ? "text-accent" : ""}`} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <div className="mt-5 flex items-center gap-2 rounded-xl px-3 py-2.5 bg-white/10">
+                <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0 text-accent" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   <path d="M4 7c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3Zm0 0v10c0 1.7 3.6 3 8 3s8-1.3 8-3V7M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" />
                 </svg>
                 <span className="text-sm">
-                  <b className="font-heading">{fmtBytes(packBytes(p), lang)}</b> <span className={dark ? "text-on-stage/70" : "text-muted"}>{t.packRoom}</span>
+                  <b className="font-heading">{fmtBytes(packBytes(p), lang)}</b> <span className="text-on-stage/70">{t.packRoom}</span>
+                  <span className="block text-xs text-on-stage/70">{t.packRoomMore}</span>
                 </span>
               </div>
-              <div className="mt-5 flex items-end justify-between gap-2">
-                <span className={`font-heading text-3xl font-extrabold ${dark ? "text-accent" : ""}`}>{money(p.price)}</span>
-                <span className={`pb-1 font-mono text-xs ${dark ? "text-on-stage/60" : "text-muted"}`}>
+              <div className="mt-auto flex items-end justify-between gap-2 pt-5">
+                <span className="font-heading text-3xl font-extrabold text-accent">{money(p.price)}</span>
+                <span className="pb-1 font-mono text-xs text-on-stage/70">
                   {money(Math.round((p.price / p.codes) * 100) / 100)} {t.packPer}
                 </span>
               </div>
@@ -99,14 +101,12 @@ export function CodePacks({ t, lang }: { t: Dict; lang: Lang }) {
                 disabled={busy === p.id}
                 onClick={() => buy(p)}
                 aria-label={`${t.packBuy}: ${p.codes} ${t.packCodes}, ${fmtBytes(packBytes(p), lang)}`}
-                className={`mt-4 min-h-12 rounded-xl font-heading text-sm font-bold transition-all disabled:opacity-60 ${
-                  dark ? "bg-accent text-on-accent hover:brightness-95" : "bg-stage text-on-stage hover:opacity-90"
-                }`}
+                className="mt-4 min-h-12 rounded-xl bg-accent font-heading text-sm font-bold text-on-accent transition-all hover:brightness-95 disabled:opacity-60"
               >
                 {t.packBuy} <span aria-hidden>→</span>
               </button>
               {done === p.id && (
-                <p role="status" className={`mt-3 text-xs font-semibold ${dark ? "text-accent" : "text-ok"}`}>
+                <p role="status" className="mt-3 text-xs font-semibold text-accent">
                   ✓ {t.packBought}
                 </p>
               )}
