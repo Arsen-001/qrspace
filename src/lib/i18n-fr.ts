@@ -834,7 +834,7 @@ export const fr: Dict = {
   packsKicker: "Packs de codes",
   packsTitle: "Plusieurs codes d’un coup — en réserve",
   packsHint: "N’importe quel style, simple ou travaillé. Chaque code a son propre espace pour photos, vidéos et texte.",
-  packCodes: "codes",
+  packCodes: "QR",
   packRoom: "par code",
   packPer: "par code",
   packBuy: "Acheter le pack",

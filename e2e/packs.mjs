@@ -25,7 +25,7 @@ p.on("pageerror", (e) => errors.push(e.message));
 p.on("console", (m) => m.type() === "error" && !/401/.test(m.text()) && errors.push(m.text()));
 // Гость: «Купить пакет» → окно входа → после входа пакет куплен
 await p.goto(B + "/market", { waitUntil: "networkidle" });
-await p.getByRole("button", { name: /Купить пакет: 5 кодов, 1 MB/ }).click();
+await p.getByRole("button", { name: /Купить пакет: 5 QR, 1 MB/ }).click();
 await p.getByRole("dialog").getByRole("button", { name: /Лилит/ }).click();
 await p.waitForSelector("text=Пакет ваш");
 ok(true, "guest signs in and the pack is bought");

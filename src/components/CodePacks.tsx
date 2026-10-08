@@ -114,7 +114,7 @@ export function CodePacks({ t, lang }: { t: Dict; lang: Lang }) {
               {hot && <span className="absolute -top-3 right-5 rounded-full bg-accent px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-on-accent shadow-lg">★ {t.packBest}</span>}
               <div className="flex items-baseline gap-2">
                 <span className="font-heading text-5xl font-extrabold tracking-tight">{p.codes}</span>
-                <span className="font-semibold text-on-stage/70">{t.packCodes}</span>
+                <span className="font-heading text-2xl font-extrabold text-accent">{t.packCodes}</span>
                 <span className="ml-auto self-center rounded-lg bg-accent px-2 py-1 font-heading text-sm font-extrabold text-on-accent">−{p.off}%</span>
               </div>
               {/* Вверху — сколько кодов, на всё свободное место; внизу — место под кодом, цена и кнопка. */}
