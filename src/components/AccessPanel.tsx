@@ -7,7 +7,7 @@ import { refreshPeople } from "@/lib/me";
 import type { Dict, Lang } from "@/lib/i18n";
 import { Avatar, personName } from "./Avatar";
 import { ContactsBox } from "./ContactsBox";
-import { Card, Switch } from "./ui";
+import { Card, Switch, Select } from "./ui";
 import { VisIcon } from "./VisBadge";
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -118,15 +118,17 @@ export function AccessPanel({ t, lang, code, base, save }: { t: Dict; lang: Lang
               return (
                 <Row key={g.personId} id={g.personId} lang={lang} sub={g.until ? `${t.until} ${fmtDate(g.until, lang)}${expired ? ` · ${t.expired}` : ""}` : t.untilNone}>
                   <div className="flex w-full flex-wrap gap-2 sm:w-auto">
-                    <select
-                      aria-label={personName(g.personId, lang)}
+                    <Select
+                      compact
+                      className="w-full min-w-0 sm:w-52"
+                      label={personName(g.personId, lang)}
                       value={g.role}
-                      onChange={(e) => patchGrant(g.personId, { role: e.target.value as Role })}
-                      className={`${small} w-full min-w-0 sm:w-auto`}
-                    >
-                      <option value="view">{t["role.view"]}</option>
-                      <option value="edit">{t["role.edit"]}</option>
-                    </select>
+                      onChange={(v) => patchGrant(g.personId, { role: v as Role })}
+                      options={[
+                        { id: "view", label: t["role.view"] },
+                        { id: "edit", label: t["role.edit"] },
+                      ]}
+                    />
                     <input
                       type="date"
                       aria-label={t.until}

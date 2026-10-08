@@ -7,6 +7,7 @@ import { saveLang } from "@/lib/lang";
 import { useMe } from "@/lib/me";
 import { Avatar, personName } from "./Avatar";
 import { Bell } from "./Bell";
+import { Select } from "./ui";
 
 export function Logo() {
   // Тот же знак, что в иконке сайта: чёрная плитка, три «глаза» с лаймом и точки.
@@ -79,31 +80,7 @@ export function SiteHeader({ t, lang }: { t: Dict; lang: Lang }) {
         </nav>
         <div className="ml-auto flex items-center gap-2">
           {/* Языков семь — выпадающий список, чтобы шапка помещалась на телефоне. */}
-          <label className="relative">
-            <span className="sr-only">Language</span>
-            <select
-              value={lang}
-              onChange={(e) => saveLang(e.target.value as Lang)}
-              aria-label="Language"
-              className="min-h-10 cursor-pointer appearance-none rounded-xl border border-line bg-card py-1 pl-3 pr-8 text-sm font-medium hover:border-muted"
-            >
-              {LANGS.map((l) => (
-                <option key={l.id} value={l.id}>
-                  {l.name}
-                </option>
-              ))}
-            </select>
-            <svg
-              viewBox="0 0 24 24"
-              className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              aria-hidden
-            >
-              <path d="m6 9 6 6 6-6" />
-            </svg>
-          </label>
+          <Select compact className="w-32" label="Language" value={lang} onChange={(v) => saveLang(v)} options={LANGS.map((l) => ({ id: l.id, label: l.name }))} />
           {ready && me && <Bell t={t} lang={lang} />}
           {ready &&
             (me ? (

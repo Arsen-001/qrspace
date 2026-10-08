@@ -226,3 +226,19 @@ button:not(:disabled) {
     display: none;
   }
 }
+
+/* Выпадающий список появляется плавно (Select в ui.tsx). */
+@keyframes x-pop {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+.x-pop {
+  animation: x-pop 0.14s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .x-pop {
+    animation: none;
+  }
+}

@@ -35,11 +35,15 @@ for (const [locale, lang, nav, market] of CASES) {
 // Переключение списком и запоминание
 const p = await (await browser.newContext({ viewport: { width: 390, height: 900 }, locale: "ru-RU" })).newPage();
 await p.goto(B + "/", { waitUntil: "networkidle" });
-await p.getByLabel("Language").selectOption("fr");
+await p.getByRole("button", { name: "Language" }).click();
+await p.getByRole("option", { name: "Français" }).click();
 await p.waitForSelector("text=Générateur");
 await p.goto(B + "/market", { waitUntil: "networkidle" });
 ok((await p.locator('h1:text("Marché des codes")').count()) === 1, "switching language sticks across pages");
-await p.getByLabel("Language").selectOption("ru");
+await p.getByRole("button", { name: "Language" }).click();
+// с клавиатуры: первые буквы и Enter
+await p.keyboard.type("ru");
+await p.keyboard.press("Enter");
 await p.waitForSelector("text=Генератор");
 ok(true, "switch back to Russian");
 console.log("errors:", errors.length ? errors : "none");

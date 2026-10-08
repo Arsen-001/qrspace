@@ -1,6 +1,6 @@
 "use client";
 // Мелкие элементы формы — один вид на всём сайте.
-import { useId, useRef, type ReactNode } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 
 /** step — номер шага в генераторе (кружок перед заголовком). */
 export function Card({ title, step, children }: { title: string; step?: number; children: ReactNode }) {
@@ -219,5 +219,169 @@ export function DoneCheck({ label, busy, onClick }: { label: string; busy?: bool
         <path d="m5 12.5 4.5 4.5L19 7.5" />
       </svg>
     </button>
+  );
+}
+
+export type SelectOption<T extends string> = { id: T; label: ReactNode; /** Текст для поиска по первым буквам, если label не строка. */ text?: string };
+
+/**
+ * Выпадающий список в нашем стиле вместо нативного <select>: кнопка как наши поля, список — карточка с тенью,
+ * выбранный пункт с лаймовой отметкой. Клавиатура: ↑ ↓ Home End, Enter/пробел — выбрать, Esc — закрыть,
+ * первые буквы — перейти к пункту; клик снаружи закрывает, фокус возвращается на кнопку.
+ */
+export function Select<T extends string>({
+  value,
+  onChange,
+  options,
+  label,
+  compact,
+  className = "",
+  disabled,
+}: {
+  value: T;
+  onChange: (v: T) => void;
+  options: SelectOption<T>[];
+  /** Подпись для чтения с экрана (видимую подпись ставьте рядом). */
+  label: string;
+  compact?: boolean;
+  className?: string;
+  disabled?: boolean;
+}) {
+  const id = useId();
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(0);
+  const [place, setPlace] = useState<{ up: boolean; right: boolean }>({ up: false, right: false });
+  const root = useRef<HTMLDivElement>(null);
+  const button = useRef<HTMLButtonElement>(null);
+  const list = useRef<HTMLUListElement>(null);
+  const typed = useRef({ text: "", at: 0 });
+  const current = options.find((o) => o.id === value) ?? options[0];
+  const textOf = (o: SelectOption<T>) => (o.text ?? (typeof o.label === "string" ? o.label : String(o.id))).toLowerCase();
+
+  const show = (at = Math.max(0, options.findIndex((o) => o.id === value))) => {
+    setActive(at);
+    setOpen(true);
+  };
+  const close = (focus = true) => {
+    setOpen(false);
+    if (focus) button.current?.focus();
+  };
+  const pick = (i: number) => {
+    const o = options[i];
+    if (o && o.id !== value) onChange(o.id);
+    close();
+  };
+
+  // Где открыть: не вылезать за край экрана справа и снизу (на телефоне — вверх, если внизу мало места).
+  useLayoutEffect(() => {
+    if (!open || !root.current || !list.current) return;
+    const b = root.current.getBoundingClientRect();
+    const h = list.current.offsetHeight;
+    const w = list.current.offsetWidth;
+    setPlace({ up: b.bottom + h + 8 > innerHeight && b.top > h + 8, right: b.left + w > innerWidth - 8 });
+    list.current.focus();
+  }, [open]);
+  useEffect(() => {
+    if (!open) return;
+    const away = (e: PointerEvent) => !root.current?.contains(e.target as Node) && close(false);
+    document.addEventListener("pointerdown", away);
+    return () => document.removeEventListener("pointerdown", away);
+  }, [open]);
+  useEffect(() => {
+    if (open) list.current?.querySelector(`[data-i="${active}"]`)?.scrollIntoView({ block: "nearest" });
+  }, [open, active]);
+
+  const onListKey = (e: React.KeyboardEvent) => {
+    const last = options.length - 1;
+    const keys: Record<string, () => void> = {
+      ArrowDown: () => setActive((a) => Math.min(last, a + 1)),
+      ArrowUp: () => setActive((a) => Math.max(0, a - 1)),
+      Home: () => setActive(0),
+      End: () => setActive(last),
+      Enter: () => pick(active),
+      " ": () => pick(active),
+      Escape: () => close(),
+      Tab: () => close(false),
+    };
+    if (keys[e.key]) {
+      if (e.key !== "Tab") e.preventDefault();
+      keys[e.key]();
+      return;
+    }
+    if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
+      const now = e.timeStamp;
+      typed.current = { text: (now - typed.current.at < 600 ? typed.current.text : "") + e.key.toLowerCase(), at: now };
+      const i = options.findIndex((o) => textOf(o).startsWith(typed.current.text) || o.id.toLowerCase().startsWith(typed.current.text));
+      if (i >= 0) setActive(i);
+    }
+  };
+
+  return (
+    <div ref={root} className={`relative ${className}`}>
+      <button
+        ref={button}
+        type="button"
+        disabled={disabled}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={`${id}-list`}
+        aria-label={label}
+        onClick={() => (open ? close() : show())}
+        onKeyDown={(e) => {
+          if (["ArrowDown", "ArrowUp", "Enter", " "].includes(e.key)) {
+            e.preventDefault();
+            show();
+          }
+        }}
+        className={`flex w-full min-w-0 items-center justify-between gap-2 rounded-xl border bg-field text-left outline-none transition-colors hover:border-muted focus-visible:border-ink disabled:opacity-50 ${
+          open ? "border-ink" : "border-line"
+        } ${compact ? "min-h-10 px-3 text-sm font-medium" : "min-h-11 px-3.5 text-base"}`}
+      >
+        <span className="min-w-0 truncate">{current?.label}</span>
+        <svg viewBox="0 0 24 24" className={`h-4 w-4 shrink-0 text-muted transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </button>
+      {open && (
+        <ul
+          ref={list}
+          id={`${id}-list`}
+          role="listbox"
+          tabIndex={-1}
+          aria-label={label}
+          aria-activedescendant={`${id}-o${active}`}
+          onKeyDown={onListKey}
+          className={`x-pop absolute z-50 max-h-72 min-w-full overflow-auto rounded-xl border border-line bg-card p-1 shadow-[0_18px_40px_-14px_rgba(0,0,0,0.4)] outline-none ${
+            place.up ? "bottom-full mb-1.5 origin-bottom" : "top-full mt-1.5 origin-top"
+          } ${place.right ? "right-0" : "left-0"}`}
+          style={{ maxWidth: "calc(100vw - 32px)" }}
+        >
+          {options.map((o, i) => {
+            const sel = o.id === value;
+            return (
+              <li
+                key={o.id}
+                id={`${id}-o${i}`}
+                data-i={i}
+                role="option"
+                aria-selected={sel}
+                onPointerEnter={() => setActive(i)}
+                onClick={() => pick(i)}
+                className={`flex min-h-10 cursor-pointer items-center gap-2.5 whitespace-nowrap rounded-lg px-3 text-sm ${i === active ? "bg-field" : ""} ${sel ? "font-semibold" : ""}`}
+              >
+                <span aria-hidden className={`grid h-4 w-4 shrink-0 place-items-center rounded ${sel ? "bg-accent text-on-accent" : ""}`}>
+                  {sel && (
+                    <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="m5 12.5 4.5 4.5L19 7.5" />
+                    </svg>
+                  )}
+                </span>
+                {o.label}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
   );
 }

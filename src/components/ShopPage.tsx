@@ -14,7 +14,7 @@ import { personName } from "./Avatar";
 import { sampleLink } from "./MarketPage";
 import { QrThumb } from "./QrThumb";
 import { Notice, Shell } from "./Shell";
-import { Segmented } from "./ui";
+import { Segmented, Select } from "./ui";
 
 /** Сотруднику: все заказы товаров — печать и отправка; покупатель получает уведомление о каждом шаге. */
 function StaffOrders({ t, lang }: { t: Dict; lang: Lang }) {
@@ -44,21 +44,17 @@ function StaffOrders({ t, lang }: { t: Dict; lang: Lang }) {
                   {personName(o.person, lang)} · {o.address.name}, {o.address.city}, {o.address.street} · {o.address.phone} · {fmtDateTime(o.createdAt, lang)}
                 </span>
               </span>
-              <select
-                aria-label={t.orderStatus}
+              <Select
+                compact
+                className="w-40"
+                label={t.orderStatus}
                 value={o.status}
-                onChange={async (e) => {
-                  const updated = await api.shopStatus(o.id, e.target.value as ShopOrder["status"]);
+                onChange={async (v) => {
+                  const updated = await api.shopStatus(o.id, v);
                   setOrders((list) => list && list.map((x) => (x.id === o.id ? updated : x)));
                 }}
-                className="min-h-10 rounded-xl border border-line bg-field px-3 text-sm"
-              >
-                {(["paid", "printing", "shipped"] as const).map((s) => (
-                  <option key={s} value={s}>
-                    {t[`shopStatus.${s}`]}
-                  </option>
-                ))}
-              </select>
+                options={(["paid", "printing", "shipped"] as const).map((s) => ({ id: s, label: t[`shopStatus.${s}`] }))}
+              />
             </li>
           ))}
         </ul>
@@ -182,16 +178,10 @@ export function ShopPage() {
       {/* Сотруднику заказы важнее витрины — сверху. */}
       {isDesigner(me) && <StaffOrders t={t} lang={lang} />}
       {mine && mine.codes.length > 0 && (
-        <label className="mt-5 flex max-w-md flex-col gap-1.5">
+        <div className="mt-5 flex max-w-md flex-col gap-1.5">
           <span className="text-sm font-semibold">{t.whichCode}</span>
-          <select value={code?.id} onChange={(e) => setCodeId(e.target.value)} className="min-h-11 rounded-xl border border-line bg-card px-3 text-base">
-            {mine.codes.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.title}
-              </option>
-            ))}
-          </select>
-        </label>
+          <Select label={t.whichCode} value={code?.id ?? mine.codes[0].id} onChange={setCodeId} options={mine.codes.map((c) => ({ id: c.id, label: c.title ?? c.id }))} />
+        </div>
       )}
       {done && (
         <p className="mt-5 rounded-2xl bg-ok-soft p-4 text-sm font-semibold text-ok">

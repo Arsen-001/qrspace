@@ -5,7 +5,7 @@ import { api, daysLeft, REPEATS, todayYmd, type CodeView, type Repeat, type Task
 import { fmtDate, fmtDateTime, fmtDays } from "@/lib/format";
 import type { Dict, Lang } from "@/lib/i18n";
 import { personName } from "./Avatar";
-import { DoneCheck } from "./ui";
+import { DoneCheck, Select } from "./ui";
 
 const field = "w-full min-w-0 rounded-xl border border-line bg-field px-3.5 py-2.5 text-base outline-none transition-colors focus:border-accent";
 
@@ -87,13 +87,7 @@ function AddTask({ t, code, onChange }: { t: Dict; code: CodeView; onChange: (v:
     >
       <input value={text} maxLength={120} placeholder={t.taskPlaceholder} aria-label={t.taskPlaceholder} onChange={(e) => setText(e.target.value)} className={field} />
       <input type="date" value={due} aria-label={t.taskDue} onChange={(e) => setDue(e.target.value)} className={field} />
-      <select value={every} aria-label={t.taskRepeat} onChange={(e) => setEvery(e.target.value as Repeat)} className={field}>
-        {REPEATS.map((r) => (
-          <option key={r} value={r}>
-            {t[`repeat.${r}`]}
-          </option>
-        ))}
-      </select>
+      <Select label={t.taskRepeat} value={every} onChange={(v) => setEvery(v as Repeat)} options={REPEATS.map((r) => ({ id: r, label: t[`repeat.${r}`] }))} />
       <button type="submit" disabled={busy || !text.trim()} className="min-h-11 rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent disabled:opacity-40">
         + {t.addTask}
       </button>

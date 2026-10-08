@@ -11,7 +11,7 @@ import { buildDrawing, toSvg } from "@/lib/qr/render";
 import { DEFAULT_STYLE, fromSaved, toQrStyle, toSaved } from "@/lib/qr/style";
 import { useInBrowser } from "./QrThumb";
 import { Notice, Shell } from "./Shell";
-import { Segmented, StepBadge } from "./ui";
+import { Segmented, StepBadge, Select } from "./ui";
 
 // A4 в миллиметрах; поля 10 мм, между наклейками 4 мм (место для ножниц).
 const PAGE = { w: 210, h: 297, margin: 10, gap: 4 };
@@ -159,13 +159,7 @@ export function PrintPage() {
               <h2 className="font-heading font-bold">{t.newSet}</h2>
               <p className="mt-1 text-xs text-muted">{t.newSetHint}</p>
               <div className="mt-3 flex gap-2">
-                <select value={count} aria-label={t.newSet} onChange={(e) => setCount(Number(e.target.value))} className="min-h-11 rounded-xl border border-line bg-field px-3 text-sm">
-                  {[10, 30, 100].map((n) => (
-                    <option key={n} value={n}>
-                      {n}
-                    </option>
-                  ))}
-                </select>
+                <Select className="w-24" label={t.newSet} value={String(count)} onChange={(v) => setCount(Number(v))} options={["10", "30", "100"].map((n) => ({ id: n, label: n }))} />
                 <button type="button" disabled={busy} onClick={makeSet} className="min-h-11 flex-1 rounded-xl border border-line bg-field px-4 text-sm font-semibold hover:border-muted disabled:opacity-50">
                   + {t.makeSet}
                 </button>

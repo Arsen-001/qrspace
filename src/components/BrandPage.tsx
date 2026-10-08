@@ -13,7 +13,7 @@ import { isDesigner } from "@/lib/people";
 import { prepareImage } from "@/lib/qr/raster";
 import { personName } from "./Avatar";
 import { Notice, Shell } from "./Shell";
-import { UploadButton, StepBadge } from "./ui";
+import { UploadButton, StepBadge, Select } from "./ui";
 
 const field = "w-full rounded-xl border border-line bg-field px-3.5 py-2.5 text-base outline-none transition-colors focus:border-accent";
 
@@ -75,16 +75,10 @@ function OrderForm({ t }: { t: Dict }) {
         {t.brandStep2}
       </h3>
       <div className="grid gap-3 sm:grid-cols-2">
-        <label className="block">
+        <div>
           <span className="mb-1.5 block text-sm font-medium text-muted">{t.brandNeed}</span>
-          <select value={need} onChange={(e) => setNeed(e.target.value as Need)} className={field}>
-            {NEEDS.map((n) => (
-              <option key={n} value={n}>
-                {t[`need.${n}`]}
-              </option>
-            ))}
-          </select>
-        </label>
+          <Select label={t.brandNeed} value={need} onChange={(v) => setNeed(v as Need)} options={NEEDS.map((n) => ({ id: n, label: t[`need.${n}`] }))} />
+        </div>
         <label className="block">
           <span className="mb-1.5 block text-sm font-medium text-muted">{t.brandQty}</span>
           <input type="number" min={1} inputMode="numeric" value={qty} onChange={(e) => setQty(e.target.value)} className={field} />

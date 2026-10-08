@@ -19,6 +19,7 @@ import { sampleLink } from "./MarketPage";
 import { QrThumb } from "./QrThumb";
 import { Notice, Shell } from "./Shell";
 import type { StyleState } from "./StylePanel";
+import { Select } from "./ui";
 
 const field = "w-full rounded-xl border border-line bg-field px-3.5 py-2.5 text-base outline-none transition-colors focus:border-accent";
 
@@ -98,13 +99,7 @@ function DesignerTools({ t, order, base, onChange }: { t: Dict; order: Order; ba
     <section className="space-y-4">
       <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-line bg-card p-4">
         <span className="text-sm font-semibold">{t.orderStatus}:</span>
-        <select value={order.status} onChange={async (e) => onChange(await api.patchOrder(order.id, { status: e.target.value as OrderStatus }))} className="min-h-10 rounded-xl border border-line bg-field px-3 text-sm">
-          {STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {t[`status.${s}`]}
-            </option>
-          ))}
-        </select>
+        <Select compact className="w-48" label={t.orderStatus} value={order.status} onChange={async (v) => onChange(await api.patchOrder(order.id, { status: v as OrderStatus }))} options={STATUSES.map((s) => ({ id: s, label: t[`status.${s}`] }))} />
       </div>
       <CodeDesigner
         t={t}
