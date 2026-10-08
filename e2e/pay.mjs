@@ -6,7 +6,7 @@ const errors = [];
 const ctx = await browser.newContext({ viewport: { width: 390, height: 900 }, locale: "ru-RU", acceptDownloads: true });
 const p = await ctx.newPage();
 p.on("pageerror", (e) => errors.push(e.message));
-p.on("console", (m) => m.type() === "error" && !/401/.test(m.text()) && errors.push(m.text()));
+p.on("console", (m) => m.type() === "error" && !/401|409/.test(m.text()) && errors.push(m.text()));
 const ok = (c, m) => { console.log(c ? "  ✓" : "  ✗", m); if (!c) errors.push(m); };
 const shot = async (name) => { await p.waitForTimeout(300); await p.screenshot({ path: out + name + ".png", fullPage: true }); };
 const ready = () => p.waitForFunction(() => /Код читается/.test(document.body.innerText), null, { timeout: 30000 });

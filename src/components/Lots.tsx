@@ -7,7 +7,7 @@ import { fmtUntil } from "@/lib/format";
 import type { Dict, Lang } from "@/lib/i18n";
 import { DURATIONS, FEE, sellerGets, topBid } from "@/lib/listings";
 import { QrThumb } from "./QrThumb";
-import { Segmented } from "./ui";
+import { Segmented, Select } from "./ui";
 
 // У номерных кодов номер уже в названии («№ 777») — второй раз не пишем.
 export const editionLabel = (t: Dict, e: { design?: string; no: number; of: number | null } | null) =>
@@ -122,16 +122,16 @@ export function SellBox({ t, code }: { t: Dict; code: CodeView }) {
             <input type="number" min={1} inputMode="numeric" value={price} onChange={(e) => setPrice(e.target.value)} className="min-h-11 w-full rounded-xl border border-line bg-field px-3 text-base" />
           </label>
           {mode === "auction" && (
-            <label className="block">
+            <div>
               <span className="mb-1 block text-xs font-medium text-muted">{t.auctionLength}</span>
-              <select value={hours} onChange={(e) => setHours(Number(e.target.value))} className="min-h-11 w-full rounded-xl border border-line bg-field px-3 text-sm">
-                {DURATIONS.map((h) => (
-                  <option key={h} value={h}>
-                    {t[`duration.${h}` as keyof Dict]}
-                  </option>
-                ))}
-              </select>
-            </label>
+              <Select
+                label={t.auctionLength}
+                value={String(hours)}
+                onChange={(v) => setHours(Number(v))}
+                options={DURATIONS.map((h) => ({ id: String(h), label: t[`duration.${h}` as keyof Dict] as string }))}
+                className="w-full"
+              />
+            </div>
           )}
           <p className="text-xs text-muted">
             {t.youGet} ${sellerGets(n)} ({t.fee} {FEE * 100}%). {t.sellWarning}

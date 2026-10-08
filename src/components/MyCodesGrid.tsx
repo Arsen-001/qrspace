@@ -145,7 +145,7 @@ function CardBody({ t, base, code, onRename, dragging }: { t: Dict; base: string
           {notSet && <Chip tone="soft">{t.notSetUp}</Chip>}
           {unread > 0 && <Chip tone="soft">{t.messagesBadge}: {unread}</Chip>}
           {requests > 0 && <Chip tone="soft">{t.requestsTitle}: {requests}</Chip>}
-          {code.edition && <Chip tone="dark">{code.edition.design === "number" ? t.numberCode : `№ ${code.edition.no}${code.edition.of !== null ? `/${code.edition.of}` : ""}`}</Chip>}
+          {code.edition && <Chip tone="dark">{code.edition.design === "number" ? t.numberCode : `№ ${code.edition.no}${code.edition.of !== null ? ` / ${code.edition.of}` : ""}`}</Chip>}
           {code.lost && <Chip tone="warn">{t.lostMode}</Chip>}
         </div>
         <div className="mt-auto flex items-baseline gap-1.5 font-mono text-xs text-on-stage/60">

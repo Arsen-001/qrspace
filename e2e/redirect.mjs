@@ -70,7 +70,7 @@ ok((await download()) === site, "same address again — same code, same short li
 
 // Звонок
 await p.getByRole("radio", { name: "Телефон", exact: true }).click();
-await p.getByLabel("Номер телефона").fill("+374 91 123456");
+await p.getByLabel("Номер телефона", { exact: true }).fill("+374 91 123456");
 await ready();
 const tel = await download();
 ok(tel !== site, "phone — its own code");
@@ -80,7 +80,7 @@ await has(g, "button:has-text('Скопировать номер')", "phone page
 
 // Текст
 await p.getByRole("radio", { name: "Текст", exact: true }).click();
-await p.getByLabel("Текст").fill("Сбор у входа в 10:00");
+await p.getByLabel("Текст", { exact: true }).fill("Сбор у входа в 10:00");
 await ready();
 g = await scan(await download());
 await has(g, "text=Сбор у входа в 10:00", "guest sees the text");
