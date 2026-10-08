@@ -114,8 +114,7 @@ export function HeroCode({ t, code, open, moving }: { t: Dict; code: ReactNode; 
           <div className={`h-1 bg-accent shadow-[0_0_24px_6px_rgba(198,255,46,0.65)] transition-opacity duration-300 ${moving ? "opacity-100" : "opacity-0"}`} />
         </div>
       </div>
-      <span className="absolute -top-3 right-6 rounded-md bg-accent px-2.5 py-1 font-heading text-xs font-bold text-on-accent">№ 000 777</span>
-      <span className="absolute -bottom-3 left-6 rounded-md border border-stage-line bg-stage px-2.5 py-1 font-mono text-xs text-on-stage/80">{open ? t.heroUnder : t.numbersTitle}</span>
+      <span className="absolute -bottom-3 left-6 rounded-md border border-stage-line bg-stage px-2.5 py-1 font-mono text-xs text-on-stage/80">{open ? t.heroUnder : "QR"}</span>
     </div>
   );
 }

@@ -18,7 +18,7 @@ for (const [locale, lang, nav, market] of CASES) {
   await p.goto(B + "/", { waitUntil: "networkidle" });
   ok((await p.getByRole("link", { name: nav, exact: true }).count()) === 1, `${lang}: opens in the system language`);
   ok((await p.evaluate(() => document.documentElement.lang)) === lang, `${lang}: <html lang> set`);
-  for (const path of ["/", "/market", "/numbers", "/how", "/login", "/legal/privacy", "/verify"]) {
+  for (const path of ["/", "/market", "/how", "/login", "/legal/privacy", "/verify"]) {
     await p.goto(B + path, { waitUntil: "networkidle" });
     const o = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth);
     ok(o === 0, `${lang} ${path}: fits the phone${o ? ` (overflow ${o})` : ""}`);

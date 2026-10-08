@@ -217,7 +217,7 @@ export function HomeTicker({ t }: { t: Dict }) {
 }
 
 /** Картинки к карточкам «Больше, чем QR-код»: что внутри, понятно без слов. */
-function FeatureArt({ kind }: { kind: "memory" | "numbers" | "market" }) {
+function FeatureArt({ kind }: { kind: "memory" | "price" | "market" }) {
   if (kind === "memory")
     return (
       <div className="relative h-full w-full" aria-hidden>
@@ -226,8 +226,14 @@ function FeatureArt({ kind }: { kind: "memory" | "numbers" | "market" }) {
         <span className="absolute left-24 top-5 grid h-14 w-14 rotate-6 place-items-center rounded-lg bg-accent font-heading text-xl font-extrabold text-on-accent shadow-lg">♥</span>
       </div>
     );
-  if (kind === "numbers")
+  if (kind === "price")
     return (
+      <div className="flex h-full items-center gap-2" aria-hidden>
+        <span className="rounded-md bg-accent px-2.5 py-1 font-heading text-sm font-bold text-on-accent">QR · $1</span>
+        <span className="rounded-md border border-current/20 px-2.5 py-1 font-mono text-sm opacity-70">5 QR −20%</span>
+      </div>
+    );
+  return (
       <div className="flex h-full items-center gap-2" aria-hidden>
         <span className="rounded-md bg-accent px-2.5 py-1 font-heading text-sm font-bold text-on-accent">№ 000 001</span>
         <span className="rounded-md border border-current/20 px-2.5 py-1 font-mono text-sm opacity-70">№ 777 777</span>
@@ -244,7 +250,7 @@ function FeatureArt({ kind }: { kind: "memory" | "numbers" | "market" }) {
 export function HomeFeatures({ t }: { t: Dict }) {
   const items = [
     { n: "01", art: "memory" as const, title: t.memoryPromoTitle, text: t.memoryPromoText, cta: t.memoryPromoCta, href: "/codes" },
-    { n: "02", art: "numbers" as const, title: t.numbersTitle, text: t.numbersTeaser, cta: t.homeNumbersCta, href: "/numbers" },
+    { n: "02", art: "price" as const, title: `${t.oneQrTitle} $1`, text: t.oneQrText, cta: t.packsKicker, href: "/market#packs-title" },
     { n: "03", art: "market" as const, title: t.marketTitle, text: t.marketHint, cta: t.homeMarketCta, href: "/market" },
   ];
   return (

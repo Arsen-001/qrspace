@@ -227,16 +227,6 @@ export function MarketPage() {
         </ul>
       </section>
 
-      <Link href="/numbers" className="group relative mt-12 flex flex-col items-start gap-4 overflow-hidden rounded-[2rem] bg-accent p-6 text-on-accent sm:flex-row sm:items-center sm:gap-6 sm:p-10">
-        <span className="whitespace-nowrap font-heading text-4xl font-extrabold tracking-tight sm:text-6xl">№ 000 001</span>
-        <span className="min-w-0">
-          <span className="block font-heading text-xl font-bold">{t.numbersTitle}</span>
-          <span className="mt-1 block text-sm opacity-75">{t.numbersTeaser}</span>
-        </span>
-        <span aria-hidden className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-on-accent text-accent transition-transform group-hover:translate-x-1 sm:ml-auto">
-          →
-        </span>
-      </Link>
     </Shell>
   );
 }
