@@ -11,7 +11,7 @@ import { type Drawing, toSvg } from "@/lib/qr/render";
 import { downloadLive, downloadPng, downloadSvg } from "@/lib/qr/raster";
 import { useLang } from "@/lib/lang";
 import { LoginModal } from "./LoginModal";
-import { StepBadge } from "./ui";
+import { Info, StepBadge } from "./ui";
 
 export type ScanState = "idle" | "checking" | "ok" | "bad";
 
@@ -110,6 +110,7 @@ export function Preview({
         <h2 className="mb-4 flex items-center gap-3 font-heading text-lg font-bold">
           <StepBadge n={step} />
           {t.step3}
+          <Info text={t.infoStep3} label={t.step3} />
         </h2>
       )}
       <div className="relative mx-auto aspect-square w-full max-w-[420px] overflow-hidden rounded-xl border border-line bg-field">

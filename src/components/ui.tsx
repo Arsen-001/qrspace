@@ -2,13 +2,14 @@
 // Мелкие элементы формы — один вид на всём сайте.
 import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 
-/** step — номер шага в генераторе (кружок перед заголовком). */
-export function Card({ title, step, children }: { title: string; step?: number; children: ReactNode }) {
+/** step — номер шага в генераторе (кружок перед заголовком); info — значок «i» с объяснением, как это работает. */
+export function Card({ title, step, info, children }: { title: string; step?: number; info?: string; children: ReactNode }) {
   return (
     <section className="rounded-2xl border border-line bg-card p-5 sm:p-6">
       <h2 className="mb-4 flex items-center gap-3 font-heading text-lg font-bold">
         {step && <StepBadge n={step} />}
         {title}
+        {info && <Info text={info} label={title} />}
       </h2>
       {children}
     </section>
@@ -19,12 +20,89 @@ export function StepBadge({ n }: { n: number }) {
   return <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-stage font-mono text-sm font-bold text-accent">{n}</span>;
 }
 
-export function Label({ children, hint }: { children: ReactNode; hint?: string }) {
+export function Label({ children, hint, info }: { children: ReactNode; hint?: string; info?: string }) {
   return (
     <div className="mb-2">
-      <div className="text-sm font-semibold">{children}</div>
+      <div className="flex items-center gap-2 text-sm font-semibold">
+        {children}
+        {info && <Info text={info} label={typeof children === "string" ? children : undefined} />}
+      </div>
       {hint && <div className="mt-0.5 text-xs text-muted">{hint}</div>}
     </div>
+  );
+}
+
+/**
+ * Значок «i»: нажал — рядом карточка, как это работает (владелец 09.10.2026: «везде, где нужно, info-значки, чтобы
+ * всё имело своё объяснение»). Карточка не выходит за экран; закрывается повторным нажатием, Esc и нажатием мимо.
+ */
+export function Info({ text, label, dark }: { text: string; label?: string; dark?: boolean }) {
+  const id = useId();
+  const btn = useRef<HTMLButtonElement>(null);
+  const card = useRef<HTMLDivElement>(null);
+  const [at, setAt] = useState<{ left: number; top: number } | null>(null);
+  const close = () => setAt(null);
+  const show = () => {
+    const r = btn.current?.getBoundingClientRect();
+    if (!r) return;
+    const w = Math.min(304, innerWidth - 24);
+    setAt({ left: Math.max(12, Math.min(r.left + r.width / 2 - w / 2, innerWidth - w - 12)), top: r.bottom + 8 });
+  };
+  useEffect(() => {
+    if (!at) return;
+    const onDown = (e: PointerEvent) => !card.current?.contains(e.target as Node) && !btn.current?.contains(e.target as Node) && close();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && (close(), btn.current?.focus());
+    addEventListener("pointerdown", onDown);
+    addEventListener("keydown", onKey);
+    addEventListener("scroll", close, { passive: true, capture: true });
+    addEventListener("resize", close);
+    return () => {
+      removeEventListener("pointerdown", onDown);
+      removeEventListener("keydown", onKey);
+      removeEventListener("scroll", close, { capture: true });
+      removeEventListener("resize", close);
+    };
+  }, [at]);
+  // Не влезает снизу — показываем над значком.
+  useLayoutEffect(() => {
+    const c = card.current;
+    const r = btn.current?.getBoundingClientRect();
+    if (!at || !c || !r) return;
+    if (at.top + c.offsetHeight > innerHeight - 12 && r.top - c.offsetHeight - 8 > 12) setAt({ ...at, top: r.top - c.offsetHeight - 8 });
+  }, [at]);
+  return (
+    <>
+      <button
+        ref={btn}
+        type="button"
+        aria-label={label ? `${label}: ?` : "?"}
+        aria-expanded={!!at}
+        aria-controls={id}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (at) close();
+          else show();
+        }}
+        className={`relative inline-grid h-5 w-5 shrink-0 place-items-center rounded-full border font-serif text-[11px] font-bold italic leading-none transition-colors before:absolute before:-inset-2.5 before:content-[''] ${
+          at ? "border-accent bg-accent text-on-accent" : dark ? "border-on-stage/40 text-on-stage/70 hover:border-accent hover:text-accent" : "border-ink/30 text-muted hover:border-ink hover:text-ink"
+        }`}
+      >
+        i
+      </button>
+      {at && (
+        <div
+          ref={card}
+          id={id}
+          role="tooltip"
+          className="x-pop fixed z-[60] rounded-2xl bg-stage p-4 text-left font-sans text-sm font-normal normal-case leading-relaxed tracking-normal text-on-stage shadow-2xl ring-1 ring-accent/40"
+          style={{ left: at.left, top: at.top, width: Math.min(304, innerWidth - 24) }}
+        >
+          {label && <div className="mb-1.5 font-heading text-sm font-bold text-accent">{label}</div>}
+          {text}
+        </div>
+      )}
+    </>
   );
 }
 

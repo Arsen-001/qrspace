@@ -12,6 +12,7 @@ import { HeroSlider } from "./HeroSlider";
 import { LotCards, useLots } from "./Lots";
 import { QrThumb } from "./QrThumb";
 import { Shell } from "./Shell";
+import { Info } from "./ui";
 
 export const sampleLink = (base: string) => `${base || "https://qr.studio"}/c/sample`;
 
@@ -157,6 +158,7 @@ export function MarketPage() {
                   <span className="x-blink h-1.5 w-1.5 rounded-full bg-on-accent" />
                   {t.dropOfDay}
                 </span>
+                <Info text={t.infoDrop} label={t.dropOfDay} dark />
                 <Countdown t={t} />
               </div>
               <h2 className="mt-4 font-heading text-5xl font-extrabold leading-[1.02] tracking-tight sm:text-6xl">{tr(drop.name, lang)}</h2>
@@ -195,7 +197,10 @@ export function MarketPage() {
       {lots && lots.length > 0 && (
         <section className="mt-12">
           <div className="flex flex-wrap items-end justify-between gap-2">
-            <h2 className="font-heading text-2xl font-extrabold sm:text-3xl">{t.resaleTitle}</h2>
+            <h2 className="flex items-center gap-2 font-heading text-2xl font-extrabold sm:text-3xl">
+              {t.resaleTitle}
+              <Info text={t.infoResale} label={t.resaleTitle} />
+            </h2>
           </div>
           <p className="mb-4 mt-2 max-w-2xl text-sm text-muted">{t.resaleHint}</p>
           <LotCards t={t} lang={lang} lots={lots} link={link} />

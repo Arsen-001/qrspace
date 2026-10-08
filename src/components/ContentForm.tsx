@@ -42,7 +42,7 @@ export function ContentForm({
 }) {
   const [showPass, setShowPass] = useState(false);
   return (
-    <Card title={t.step1} step={step}>
+    <Card title={t.step1} step={step} info={t.infoStep1}>
       <div className="space-y-4">
         {(Object.keys(CONTENT_GROUPS) as ContentGroup[]).map((g) => (
           <div key={g}>

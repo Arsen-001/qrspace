@@ -7,6 +7,7 @@ import type { Dict, Lang } from "@/lib/i18n";
 import { useMe } from "@/lib/me";
 import { CODE_PACKS, CODE_PRICE, packBytes, type PackPlan } from "@/lib/packs";
 import { LoginModal } from "./LoginModal";
+import { Info } from "./ui";
 
 /** Маленький QR лаймом: три «глазка» по углам и точки — у каждого свой узор (по номеру). */
 export function MiniQr({ seed }: { seed: number }) {
@@ -91,7 +92,7 @@ export function CodePacks({ t, lang }: { t: Dict; lang: Lang }) {
         <div>
           <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">{t.packsKicker}</p>
           <h2 id="packs-title" className="mt-2 font-heading text-2xl font-extrabold text-balance [hyphens:manual] sm:text-3xl">
-            {t.packsTitle}
+            {t.packsTitle} <Info text={t.infoPacks} label={t.packsKicker} />
           </h2>
           <p className="mt-2 max-w-2xl text-sm text-muted">{t.packsHint}</p>
         </div>
@@ -114,9 +115,9 @@ export function CodePacks({ t, lang }: { t: Dict; lang: Lang }) {
             >
               {hot && <span className="absolute -top-3 right-5 rounded-full bg-accent px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-on-accent shadow-lg">★ {t.packBest}</span>}
               <div className="flex items-baseline gap-2">
-                <span className="font-heading text-5xl font-extrabold tracking-tight">{p.codes}</span>
-                <span className="font-heading text-2xl font-extrabold text-accent">{t.packCodes}</span>
-                <span className="ml-auto self-center rounded-lg bg-accent px-2 py-1 font-heading text-sm font-extrabold text-on-accent">−{p.off}%</span>
+                <span className="font-heading text-4xl font-extrabold tracking-tight">{p.codes}</span>
+                <span className="font-heading text-xl font-extrabold text-accent">{t.packCodes}</span>
+                <span className="ml-auto self-center whitespace-nowrap rounded-lg bg-accent px-1.5 py-0.5 font-heading text-xs font-extrabold text-on-accent">−{p.off}%</span>
               </div>
               {/* Вверху — сколько кодов, на всё свободное место; внизу — место под кодом, цена и кнопка. */}
               <div className="flex min-h-44 flex-1 items-center justify-center py-6">
@@ -133,7 +134,7 @@ export function CodePacks({ t, lang }: { t: Dict; lang: Lang }) {
               </div>
               <div className="pt-4">
                 <div className="flex flex-wrap items-baseline gap-x-2">
-                  <span className="font-heading text-3xl font-extrabold text-accent">{money(p.price)}</span>
+                  <span className="font-heading text-2xl font-extrabold text-accent">{money(p.price)}</span>
                   <s className="font-mono text-sm text-on-stage/60">{money(p.full)}</s>
                 </div>
                 <div className="mt-1 font-mono text-xs text-on-stage/70">
@@ -188,6 +189,9 @@ export function OneQrBanner({ t }: { t: Dict }) {
           <span className="inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-xs font-bold uppercase tracking-wider text-on-accent">
             <span className="h-1.5 w-1.5 rounded-full bg-on-accent" />
             {t.oneQrKicker}
+          </span>
+          <span className="ml-2 inline-flex align-middle">
+            <Info text={t.infoOneQr} label={t.oneQrKicker} dark />
           </span>
           {/* «QR-код за $1» — словами, не «1 QR / $1» (владелец 09.10.2026: «очень некрасиво, непонятно»). */}
           <h2 className="mt-4 font-heading text-5xl font-extrabold leading-[1.02] tracking-tight [hyphens:manual] sm:text-6xl">

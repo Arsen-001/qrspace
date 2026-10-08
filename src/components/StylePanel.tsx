@@ -9,7 +9,7 @@ import { TEXTURE_INK, TEXTURES, textureSrc, type TextureId } from "@/lib/qr/text
 import { useMe } from "@/lib/me";
 import { LogoPicker, logoFile } from "./LogoPicker";
 import type { PictureState } from "./PicturePicker";
-import { Card, GhostButton, Label, Slider, UploadButton } from "./ui";
+import { Card, GhostButton, Info, Label, Slider, UploadButton } from "./ui";
 
 type Tab = "colors" | "shape" | "bg" | "media";
 
@@ -293,12 +293,12 @@ export function StylePanel({
   // Неактивные вкладки не убираем, а прячем: загруженные файлы и выбранное остаются на месте.
   const panel = (id: Tab) => ({ role: "tabpanel", id: `style-${id}`, "aria-labelledby": `style-tab-${id}`, hidden: tab !== id, className: "space-y-7 pt-6" }) as const;
   return (
-    <Card title={t.step2} step={step}>
+    <Card title={t.step2} step={step} info={t.infoStep2}>
       <Label hint={t.styleReadyHint}>{t.styleReady}</Label>
       <PresetGrid t={t} s={s} set={set} />
 
       <div className="mt-5">
-        <Label hint={t.logoQuickHint}>{t.logoQuick}</Label>
+        <Label hint={t.logoQuickHint} info={t.infoLogo}>{t.logoQuick}</Label>
         <LogoPicker
           {...logoProps}
           mode="quick"
@@ -311,7 +311,7 @@ export function StylePanel({
 
 
       <div className="mt-5">
-        <Label hint={t.captionHint}>{t.captionLabel}</Label>
+        <Label hint={t.captionHint} info={t.infoCaption}>{t.captionLabel}</Label>
         <div className="flex min-h-11 max-w-md items-center rounded-xl border border-line bg-field pr-3 focus-within:border-accent">
           <input
             value={s.caption ?? ""}
@@ -343,7 +343,10 @@ export function StylePanel({
 
       <div className="mt-7 border-t border-line pt-6">
         <div className="mb-3 flex items-baseline justify-between gap-3">
-          <h3 className="font-heading text-lg font-extrabold">{t.moreSettings}</h3>
+          <h3 className="flex items-center gap-2 font-heading text-lg font-extrabold">
+            {t.moreSettings}
+            <Info text={t.infoFineTune} label={t.moreSettings} />
+          </h3>
           <span aria-hidden className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
             {tabs.findIndex((x) => x.id === tab) + 1} / {tabs.length}
           </span>

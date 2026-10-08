@@ -7,7 +7,7 @@ import type { Dict, Lang } from "@/lib/i18n";
 import { prepareImage } from "@/lib/qr/raster";
 import { Avatar, personName } from "./Avatar";
 import { Tasks } from "./Tasks";
-import { Segmented } from "./ui";
+import { Info, Segmented } from "./ui";
 
 function KindLabel({ d, text }: { d: string; text: string }) {
   return (
@@ -256,7 +256,10 @@ function StorageBar({ t, lang, code, onChange }: { t: Dict; lang: Lang; code: Co
     <section className="rounded-2xl border border-line bg-card p-4">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <div className="text-sm font-semibold">{t.storageTitle}</div>
+          <div className="flex items-center gap-2 text-sm font-semibold">
+            {t.storageTitle}
+            <Info text={t.infoStorage} label={t.storageTitle} />
+          </div>
           <div className="font-mono text-xs text-muted">
             {fmtBytes(st.used, lang)} / {fmtBytes(st.quota, lang)}
             {until && ` · ${t.storagePaidUntil} ${until}`}

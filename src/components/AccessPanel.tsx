@@ -53,7 +53,7 @@ export function AccessPanel({ t, lang, code, base, save }: { t: Dict; lang: Lang
 
   return (
     <div className="space-y-5">
-      <Card title={t.visTitle}>
+      <Card title={t.visTitle} info={t.infoVis}>
         <div role="radiogroup" aria-label={t.visTitle} className="grid gap-2 sm:grid-cols-2">
           {(["all", "contacts", "people", "me"] as Visibility[]).map((v) => (
             <button
@@ -107,7 +107,7 @@ export function AccessPanel({ t, lang, code, base, save }: { t: Dict; lang: Lang
         </section>
       )}
 
-      <Card title={t.peopleTitle}>
+      <Card title={t.peopleTitle} info={t.infoPeople}>
         {code.visibility !== "people" && <p className="mb-3 rounded-xl bg-field p-3 text-sm text-muted">{t.peopleOffHint}</p>}
         {people.length === 0 ? (
           <p className="text-sm text-muted">{t.noPeople}</p>
@@ -177,7 +177,7 @@ export function AccessPanel({ t, lang, code, base, save }: { t: Dict; lang: Lang
         </form>
       </Card>
 
-      <Card title={t.inviteTitle}>
+      <Card title={t.inviteTitle} info={t.infoInvite}>
         <p className="mb-3 text-sm text-muted">{t.inviteHint}</p>
         <div className="flex flex-wrap gap-2">
           <input readOnly value={invite} onFocus={(e) => e.target.select()} className={`${small} min-w-0 flex-1 font-mono text-xs`} aria-label={t.inviteTitle} />
@@ -199,7 +199,7 @@ export function AccessPanel({ t, lang, code, base, save }: { t: Dict; lang: Lang
         </button>
       </Card>
 
-      <Card title={t.historyTitle}>
+      <Card title={t.historyTitle} info={t.infoHistory}>
         {visits.length === 0 ? (
           <p className="text-sm text-muted">{t.historyEmpty}</p>
         ) : (

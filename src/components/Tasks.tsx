@@ -5,7 +5,7 @@ import { api, daysLeft, REPEATS, todayYmd, type CodeView, type Repeat, type Task
 import { fmtDate, fmtDateTime, fmtDays } from "@/lib/format";
 import type { Dict, Lang } from "@/lib/i18n";
 import { personName } from "./Avatar";
-import { DoneCheck, Select } from "./ui";
+import { DoneCheck, Info, Select } from "./ui";
 
 const field = "w-full min-w-0 rounded-xl border border-line bg-field px-3.5 py-2.5 text-base outline-none transition-colors focus:border-accent";
 
@@ -103,7 +103,10 @@ export function Tasks({ t, lang, me, code, onChange }: { t: Dict; lang: Lang; me
   if (!tasks.length && !canEdit) return null;
   return (
     <section className="mb-3 rounded-2xl border border-line bg-card p-4 sm:p-5">
-      <h2 className="font-heading text-lg font-bold">{t.tasksTitle}</h2>
+      <h2 className="flex items-center gap-2 font-heading text-lg font-bold">
+        {t.tasksTitle}
+        <Info text={t.infoTasks} label={t.tasksTitle} />
+      </h2>
       <p className="mt-0.5 text-xs text-muted">{t.tasksHint}</p>
       {tasks.length > 0 ? (
         <ul className="mt-1 divide-y divide-line">

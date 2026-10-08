@@ -16,7 +16,7 @@ export function ScanStats({ t, lang, stats }: { t: Dict; lang: Lang; stats: Stat
   const H = 96;
   const bw = W / 30;
   return (
-    <Card title={t.statsTitle}>
+    <Card title={t.statsTitle} info={t.infoStats}>
       <dl className="grid grid-cols-3 gap-3">
         {[
           [t.statsTotal, stats.total],

@@ -15,7 +15,7 @@ import { QrThumb } from "./QrThumb";
 import { DueNote } from "./Tasks";
 import { Notice, Shell } from "./Shell";
 import { MyCodesGrid } from "./MyCodesGrid";
-import { DoneCheck } from "./ui";
+import { DoneCheck, Info } from "./ui";
 import { VisBadge } from "./VisBadge";
 
 function CodeCard({ t, lang, base, code, shared }: { t: Dict; lang: Lang; base: string; code: CodeView; shared?: boolean }) {
@@ -237,7 +237,10 @@ export function CodesPage({ startNew = null }: { startNew?: Kind | null }) {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="max-w-2xl">
           <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">{t.codesKicker}</p>
-          <h1 className="mt-2 font-heading text-4xl font-extrabold tracking-tight sm:text-6xl">{t.navCodes}</h1>
+          <h1 className="mt-2 flex items-center gap-3 font-heading text-4xl font-extrabold tracking-tight sm:text-6xl">
+            {t.navCodes}
+            <Info text={t.infoMyCodes} label={t.navCodes} />
+          </h1>
           <p className="mt-3 text-muted">{t.codesHint}</p>
           {list && list.mine.length > 0 && (
             <div className="mt-4 flex flex-wrap gap-2 font-mono text-xs">
