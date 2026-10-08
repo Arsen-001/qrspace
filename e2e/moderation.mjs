@@ -49,8 +49,8 @@ await shot(ad, "mod-1280-admin");
 await ad.locator("li:has-text('Похоже на поддельный банк')").getByRole("button", { name: "Заблокировать код" }).click();
 await ad.waitForSelector("text=⛔ заблокирован");
 // Ссылка больше не ведёт на подделку
-const res = await g.request.get(`${B}/c/${link}`, { maxRedirects: 0 });
-ok(res.status() === 200, `blocked link code doesn't redirect (status ${res.status()})`);
+const res = await g.request.get(`${B}/api/codes/${link}`);
+ok(!(await res.text()).includes("bank-login"), "blocked code: its address isn't given out");
 await g.goto(`${B}/c/${link}`, { waitUntil: "networkidle" });
 await g.waitForSelector("text=Код заблокирован");
 await shot(g, "mod-390-blocked");
@@ -68,7 +68,7 @@ ok(await g.locator("text=Код заблокирован").count() === 0, "dismi
 // Разблокировать
 await ad.locator("li:has-text('Похоже на поддельный банк')").getByRole("button", { name: "Разблокировать" }).click();
 await ad.waitForTimeout(500);
-const res2 = await g.request.get(`${B}/c/${link}`, { maxRedirects: 0 });
-ok(res2.status() === 307, "unblocked link code redirects again");
+await g.goto(`${B}/c/${link}`, { waitUntil: "networkidle" });
+ok((await g.locator("a:has-text('Открыть сайт')").getAttribute("href", { timeout: 10000 }).catch(() => null)) === "https://bank-login.example.com/", "unblocked code shows its page with «Открыть сайт» again");
 console.log("errors:", errors.length ? errors : "none");
 await browser.close();
