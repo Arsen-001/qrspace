@@ -111,10 +111,11 @@ export function CodePacks({ t, lang }: { t: Dict; lang: Lang }) {
                 hot ? "border-accent/60 bg-stage text-on-stage shadow-[0_30px_60px_-30px_rgba(198,255,46,0.5)]" : "border-stage-line bg-stage text-on-stage"
               }`}
             >
-              {hot && <span className="absolute right-4 top-4 rounded-full bg-accent px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-on-accent">{t.packBest}</span>}
+              {hot && <span className="-mt-1 mb-3 self-start rounded-full border border-accent/60 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-accent">★ {t.packBest}</span>}
               <div className="flex items-baseline gap-2">
                 <span className="font-heading text-5xl font-extrabold tracking-tight">{p.codes}</span>
                 <span className="font-semibold text-on-stage/70">{t.packCodes}</span>
+                <span className="ml-auto self-center rounded-lg bg-accent px-2 py-1 font-heading text-sm font-extrabold text-on-accent">−{p.off}%</span>
               </div>
               {/* Вверху — сколько кодов, на всё свободное место; внизу — место под кодом, цена и кнопка. */}
               <div className="flex min-h-44 flex-1 items-center justify-center py-6">
@@ -129,11 +130,14 @@ export function CodePacks({ t, lang }: { t: Dict; lang: Lang }) {
                   <span className="block text-xs text-on-stage/70">{t.packRoomMore}</span>
                 </span>
               </div>
-              <div className="flex items-end justify-between gap-2 pt-4">
-                <span className="font-heading text-3xl font-extrabold text-accent">{money(p.price)}</span>
-                <span className="pb-1 font-mono text-xs text-on-stage/70">
+              <div className="pt-4">
+                <div className="flex flex-wrap items-baseline gap-x-2">
+                  <span className="font-heading text-3xl font-extrabold text-accent">{money(p.price)}</span>
+                  <s className="font-mono text-sm text-on-stage/60">{money(p.full)}</s>
+                </div>
+                <div className="mt-1 font-mono text-xs text-on-stage/70">
                   {money(Math.round((p.price / p.codes) * 100) / 100)} {t.packPer}
-                </span>
+                </div>
               </div>
               <button
                 type="button"
