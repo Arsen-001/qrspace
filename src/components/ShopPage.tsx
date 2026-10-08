@@ -108,9 +108,14 @@ function Mockup({ product, variant, qr }: { product: ProductId; variant: string;
   );
 }
 
-function OrderForm({ t, product, code, onDone }: { t: Dict; product: ProductId; code: CodeView; onDone: (o: ShopOrder) => void }) {
+function OrderForm({ t, product, code, onDone, onVariant }: { t: Dict; product: ProductId; code: CodeView; onDone: (o: ShopOrder) => void; onVariant: (v: string) => void }) {
   const variants = PRODUCTS[product].variants as readonly string[];
-  const [variant, setVariant] = useState<string>(variants[product === "tshirt" ? 1 : 0]);
+  const [variant, setVariantState] = useState<string>(variants[product === "tshirt" ? 1 : 0]);
+  // Картинка товара над формой показывает выбранный вариант.
+  const setVariant = (v: string) => {
+    setVariantState(v);
+    onVariant(v);
+  };
   const [qty, setQty] = useState(1);
   const [address, setAddress] = useState({ name: "", phone: "", city: "", street: "" });
   const [busy, setBusy] = useState(false);
@@ -156,6 +161,7 @@ export function ShopPage() {
   const [codeId, setCodeId] = useState<string | null>(null);
   const [open, setOpen] = useState<ProductId | null>(null);
   const [done, setDone] = useState<ShopOrder | null>(null);
+  const [shown, setShown] = useState<Partial<Record<ProductId, string>>>({});
 
   useEffect(() => {
     if (!me) return;
@@ -173,33 +179,67 @@ export function ShopPage() {
 
   return (
     <Shell t={t} lang={lang}>
-      <h1 className="font-heading text-3xl font-extrabold tracking-tight sm:text-4xl">{t.shopTitle}</h1>
-      <p className="mt-2 max-w-2xl text-sm text-muted">{t.shopHint}</p>
+      <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">{t.shopKicker}</p>
+      <h1 className="mt-2 font-heading text-[2rem] leading-tight font-extrabold tracking-tight [hyphens:manual] sm:text-6xl">{t.shopTitle}</h1>
+      <p className="mt-3 max-w-2xl text-muted">{t.shopHint}</p>
       {/* Сотруднику заказы важнее витрины — сверху. */}
       {isDesigner(me) && <StaffOrders t={t} lang={lang} />}
-      {mine && mine.codes.length > 0 && (
-        <div className="mt-5 flex max-w-md flex-col gap-1.5">
-          <span className="text-sm font-semibold">{t.whichCode}</span>
-          <Select label={t.whichCode} value={code?.id ?? mine.codes[0].id} onChange={setCodeId} options={mine.codes.map((c) => ({ id: c.id, label: c.title ?? c.id }))} />
+
+      {/* Витрина: ваш код на вещах — крупно на сцене, рядом выбор кода и три шага. */}
+      <section className="relative mt-8 overflow-hidden rounded-[2rem] bg-stage text-on-stage">
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          <div className="x-stage-grid" />
         </div>
-      )}
+        <div className="relative grid items-center gap-8 p-6 sm:p-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:p-12">
+          <div className="min-w-0">
+            <h2 className="font-heading text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl">{t.shopHeroTitle}</h2>
+            <ol className="mt-6 space-y-2.5 text-sm">
+              {[t.shopStep1, t.shopStep2, t.shopStep3].map((x, i) => (
+                <li key={x} className="flex items-center gap-3">
+                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-accent font-mono text-xs font-bold text-on-accent">{i + 1}</span>
+                  <span className="text-on-stage/80">{x}</span>
+                </li>
+              ))}
+            </ol>
+            {mine && mine.codes.length > 0 && (
+              <div className="mt-6 flex max-w-sm flex-col gap-1.5 text-ink">
+                <span className="text-sm font-semibold text-on-stage">{t.whichCode}</span>
+                <Select label={t.whichCode} value={code?.id ?? mine.codes[0].id} onChange={setCodeId} options={mine.codes.map((c) => ({ id: c.id, label: c.title ?? c.id }))} />
+              </div>
+            )}
+          </div>
+          <div className="relative mx-auto w-full max-w-[240px] sm:max-w-[340px]">
+            <div aria-hidden className="x-ring" />
+            <div className="relative overflow-hidden rounded-[1.75rem] shadow-[0_40px_80px_-30px_rgba(198,255,46,0.45)]">
+              <Mockup product="stickers" variant={PRODUCTS.stickers.variants[0]} qr={qr} />
+            </div>
+          </div>
+        </div>
+      </section>
       {done && (
         <p className="mt-5 rounded-2xl bg-ok-soft p-4 text-sm font-semibold text-ok">
           ✓ {t.shopOrdered} — {t[`product.${done.product}`]}, ${done.total}
         </p>
       )}
-      <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <ul className="mt-8 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         {PRODUCT_IDS.map((p) => (
-          <li key={p} className="overflow-hidden rounded-2xl border border-line bg-card">
-            <Mockup product={p} variant={PRODUCTS[p].variants[0]} qr={qr} />
-            <div className="p-4">
-              <div className="flex items-baseline justify-between gap-2">
-                <span className="font-heading font-bold">{t[`product.${p}`]}</span>
-                <span className="shrink-0 font-heading font-extrabold">
+          <li
+            key={p}
+            className={`group flex flex-col overflow-hidden rounded-3xl shadow-[0_18px_40px_-24px_rgba(0,0,0,0.6)] transition-all duration-300 ${
+              open === p ? "col-span-2 bg-card ring-2 ring-accent lg:row-span-2" : "bg-stage text-on-stage hover:-translate-y-1.5 hover:shadow-[0_30px_60px_-24px_rgba(0,0,0,0.7)]"
+            }`}
+          >
+            <div className="overflow-hidden transition-transform duration-500 group-hover:scale-[1.02]">
+              <Mockup product={p} variant={(open === p && shown[p]) || PRODUCTS[p].variants[0]} qr={qr} />
+            </div>
+            <div className="flex flex-1 flex-col p-4">
+              <div className="flex flex-wrap items-start justify-between gap-1.5">
+                <span className="font-heading text-sm font-bold leading-tight [hyphens:manual] sm:text-base">{t[`product.${p}`]}</span>
+                <span className="shrink-0 rounded-lg bg-accent px-2 py-0.5 font-heading text-sm font-extrabold text-on-accent">
                   {PRODUCTS[p].prices && `${t.fromPrice} `}${PRODUCTS[p].price}
                 </span>
               </div>
-              <p className="mt-1 text-xs text-muted">{t[`productHint.${p}`]}</p>
+              <p className={`mt-1.5 flex-1 text-xs ${open === p ? "text-muted" : "text-on-stage/60"}`}>{t[`productHint.${p}`]}</p>
               {open === p && code ? (
                 <div className="mt-4">
                   <OrderForm
@@ -207,6 +247,7 @@ export function ShopPage() {
                     t={t}
                     product={p}
                     code={code}
+                    onVariant={(v) => setShown((x) => ({ ...x, [p]: v }))}
                     onDone={(o) => {
                       setDone(o);
                       setOpen(null);
@@ -215,15 +256,15 @@ export function ShopPage() {
                   />
                 </div>
               ) : !ready ? null : !me ? (
-                <Link href="/login?next=/shop" className="mt-3 grid min-h-11 place-items-center rounded-xl border border-line bg-field px-4 text-sm font-semibold hover:border-muted">
+                <Link href="/login?next=/shop" className="mt-4 grid min-h-11 place-items-center rounded-xl border border-stage-line px-4 text-sm font-semibold hover:border-on-stage/60">
                   {t.loginToOrder}
                 </Link>
               ) : mine && !mine.codes.length ? (
-                <Link href="/codes" className="mt-3 grid min-h-11 place-items-center rounded-xl border border-line bg-field px-4 text-sm font-semibold hover:border-muted">
+                <Link href="/#make" className="mt-4 grid min-h-11 place-items-center rounded-xl border border-stage-line px-4 text-sm font-semibold hover:border-on-stage/60">
                   {t.newCode}
                 </Link>
               ) : (
-                <button type="button" disabled={!code} onClick={() => setOpen(p)} className="mt-3 min-h-11 w-full rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent disabled:opacity-40">
+                <button type="button" disabled={!code} onClick={() => setOpen(p)} className="mt-4 min-h-12 w-full rounded-xl bg-accent px-4 font-heading text-sm font-bold text-on-accent hover:brightness-95 disabled:opacity-40">
                   {t.orderThis}
                 </button>
               )}
