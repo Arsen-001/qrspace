@@ -802,6 +802,7 @@ export const es: Dict = {
   captionHint: "Hasta 40 caracteres, del ancho del código: «Escanéame», el nombre del café, «Wi-Fi para invitados»",
   styleLockedTitle: "El diseño está fijado",
   styleLockedText: "Este código ya se descargó: su aspecto ya no cambia, así los impresos siempre coinciden. Cambia el contenido y quién lo ve cuando quieras. ¿Otro aspecto? Crea un código nuevo.",
+  captionPhone: "Teléfono bajo el código",
   logoQuick: "Logo en el centro",
   logoQuickHint: "Redes, mensajería, pagos: toca uno y se coloca en el centro del código",
   logoAll: "Todos los logos",

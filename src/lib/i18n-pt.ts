@@ -802,6 +802,7 @@ export const pt: Dict = {
   captionHint: "Até 40 caracteres, da largura do código: «Me escaneie», o nome do café, «Wi-Fi para convidados»",
   styleLockedTitle: "O visual está fixo",
   styleLockedText: "Este código já foi baixado: o visual não muda mais, para os impressos sempre baterem. Mude o conteúdo e quem vê quando quiser. Quer outro visual? Crie um código novo.",
+  captionPhone: "Telefone sob o código",
   logoQuick: "Logo no centro",
   logoQuickHint: "Redes, mensageiros, pagamentos — toque em um e ele vai para o centro do código",
   logoAll: "Todos os logos",

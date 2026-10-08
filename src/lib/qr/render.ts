@@ -32,8 +32,9 @@ export type QrStyle = {
   /** Свой значок в центре углов — тиснением (чуть светлее центра), strength — насколько светлее. */
   eyeIcon?: { mask: IconMask; strength: number } | null;
   logo?: { src: string; scale: number } | null;
-  /** Текст под кодом — по ширине кода (владелец 08.10.2026). */
+  /** Текст под кодом — по ширине кода (владелец 08.10.2026); второй строкой — номер телефона. */
   caption?: string | null;
+  captionPhone?: string | null;
   /** QR-картинка: фото под кодом, от каждой клетки остаётся точка в центре. */
   picture?: { src: string; dotSize: number; tones?: Tones } | null;
 };
@@ -435,10 +436,11 @@ export function buildDrawing(text: string, style: QrStyle): Drawing {
   const eyeColor = style.eyeColor || style.fg;
   const ballColor = style.eyeBallColor || eyeColor;
 
-  // Подпись под кодом: полоса снизу; шрифт — чтобы строка заняла ширину кода, но не крупнее 3,6 клетки.
-  const caption = (style.caption ?? "").trim().slice(0, CAPTION_MAX);
-  const capFont = caption ? Math.min(3.6, (count * 0.98) / (caption.length * 0.66)) : 0;
-  const height = caption ? size + capFont + 1.6 : size;
+  // Подпись под кодом: до двух строк (текст и номер телефона); шрифт каждой — чтобы строка заняла ширину кода,
+  // но не крупнее 3,6 клетки.
+  const lines = [style.caption, style.captionPhone].map((x) => (x ?? "").trim().slice(0, CAPTION_MAX)).filter(Boolean);
+  const fonts = lines.map((l) => Math.min(3.6, (count * 0.98) / (l.length * 0.66)));
+  const height = lines.length ? size + fonts.reduce((a, f) => a + f * 1.12, 0) + 1.4 : size;
   shapes.push({ kind: "path", d: rectPath(0, 0, size, height), fill: style.bg, fixed: true });
   if (style.texture && !style.picture) shapes.push({ kind: "image", src: style.texture, x: 0, y: 0, w: size, h: height, fixed: true });
   const fx: Effect | undefined = style.effect && style.effect !== "none" ? style.effect : undefined;
@@ -556,9 +558,13 @@ export function buildDrawing(text: string, style: QrStyle): Drawing {
     shapes.push({ kind: "image", src: style.logo.src, x: QUIET + x + 0.3, y: QUIET + x + 0.3, w: w - 0.6, h: w - 0.6, fixed: true });
   }
 
-  if (caption) shapes.push({ kind: "text", text: caption, x: size / 2, y: size - QUIET / 2 + capFont * 0.82, size: capFont, fill: style.eyeColor || style.fg, fixed: true });
+  let y = size - QUIET / 2;
+  lines.forEach((text, i) => {
+    y += fonts[i] * (i ? 1.12 : 0.82);
+    shapes.push({ kind: "text", text, x: size / 2, y, size: fonts[i], fill: style.eyeColor || style.fg, fixed: true });
+  });
 
-  return { size, shapes, rotate, ...(caption && { height }) };
+  return { size, shapes, rotate, ...(lines.length && { height }) };
 }
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");

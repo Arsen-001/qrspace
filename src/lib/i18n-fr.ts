@@ -802,6 +802,7 @@ export const fr: Dict = {
   captionHint: "Jusqu’à 40 caractères, de la largeur du code : « Scannez-moi », le nom du café, « Wi-Fi invités »",
   styleLockedTitle: "Le style est figé",
   styleLockedText: "Ce code a déjà été téléchargé : son aspect ne change plus, pour que les codes imprimés correspondent toujours. Modifiez le contenu et qui le voit quand vous voulez. Un autre style ? Créez un nouveau code.",
+  captionPhone: "Téléphone sous le code",
   logoQuick: "Logo au centre",
   logoQuickHint: "Réseaux, messageries, paiements : touchez-en un et il se place au centre du code",
   logoAll: "Tous les logos",

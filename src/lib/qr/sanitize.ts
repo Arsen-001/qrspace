@@ -71,5 +71,7 @@ export function sanitizeStyle(v: unknown): SavedStyle | null {
   }
   // Подпись под кодом: обычный текст, до 40 знаков, без управляющих символов.
   const caption = typeof v.caption === "string" ? v.caption.replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 40) : "";
-  return { fg, bg, eyeColor, eyeBallColor, dot, eye, eyeBall, gradient, rotate, effect, texture, eyeIcon, logo, picture, ...(caption && { caption }) };
+  // Номер под кодом: цифры, пробелы, плюс, скобки, дефисы.
+  const captionPhone = typeof v.captionPhone === "string" ? v.captionPhone.replace(/[^\d+()\s-]/g, "").trim().slice(0, 24) : "";
+  return { fg, bg, eyeColor, eyeBallColor, dot, eye, eyeBall, gradient, rotate, effect, texture, eyeIcon, logo, picture, ...(caption && { caption }), ...(captionPhone && { captionPhone }) };
 }

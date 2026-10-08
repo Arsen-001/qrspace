@@ -88,6 +88,7 @@ export function toQrStyle(s: StyleState): QrStyle {
     eyeBall: s.eyeBall,
     logo: s.logo,
     caption: s.caption,
+    captionPhone: s.captionPhone,
     picture: s.picture && { src: s.picture.src, dotSize: s.picture.dotSize, tones: s.picture.tones },
   };
 }

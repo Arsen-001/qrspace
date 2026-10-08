@@ -27,8 +27,9 @@ export type StyleState = {
   eyeIcon: { mask: IconMask; preview: string; strength: number } | null;
   logo: { src: string; scale: number; band?: boolean } | null;
   picture: PictureState | null;
-  /** Текст под кодом (по ширине кода). */
+  /** Текст под кодом (по ширине кода) и номер телефона второй строкой. */
   caption?: string | null;
+  captionPhone?: string | null;
 };
 
 const PRESETS: [string, string][] = [
@@ -218,6 +219,20 @@ export function StylePanel({
           <span className="font-mono text-xs text-muted">
             {(s.caption ?? "").length}/{CAPTION_MAX}
           </span>
+        </div>
+        <div className="mt-2 flex min-h-11 max-w-md items-center rounded-xl border border-line bg-field focus-within:border-accent">
+          <span aria-hidden className="pl-3.5 text-muted">
+            ☎
+          </span>
+          <input
+            value={s.captionPhone ?? ""}
+            maxLength={24}
+            inputMode="tel"
+            onChange={(e) => set({ captionPhone: e.target.value.replace(/[^\d+()\s-]/g, "") || null })}
+            placeholder="+374 91 123456"
+            aria-label={t.captionPhone}
+            className="min-w-0 flex-1 bg-transparent px-3 font-heading font-bold outline-none"
+          />
         </div>
       </div>
 
