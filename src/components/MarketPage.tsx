@@ -8,6 +8,7 @@ import { useLang } from "@/lib/lang";
 import { catalog, type Design } from "@/lib/market";
 import { useMe } from "@/lib/me";
 import { CodePacks, OneQrBanner } from "./CodePacks";
+import { HeroSlider } from "./HeroSlider";
 import { LotCards, useLots } from "./Lots";
 import { QrThumb } from "./QrThumb";
 import { Shell } from "./Shell";
@@ -134,74 +135,60 @@ export function MarketPage() {
     .filter((d) => (filter === "edition" ? d.edition !== null : filter === "open" ? d.edition === null : filter === "collab" ? !!d.collab : true))
     .sort((a, b) => (sort === "cheap" ? a.price - b.price : sort === "expensive" ? b.price - a.price : 0));
   const dropSold = sold ? (sold[drop.id] ?? 0) : undefined;
-  const all = [drop, ...rest];
   const chip = (on: boolean) => `min-h-10 shrink-0 rounded-full px-4 text-sm font-semibold transition-colors ${on ? "bg-stage text-on-stage" : "border border-line bg-card text-muted hover:text-ink"}`;
 
   return (
     <Shell t={t} lang={lang}>
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">{t.mktKicker}</p>
-          <h1 className="mt-2 font-heading text-4xl font-extrabold tracking-tight sm:text-6xl">{t.marketTitle}</h1>
-          <p className="mt-3 max-w-2xl text-muted">{t.marketHint}</p>
-        </div>
-        <div className="flex gap-2 font-mono text-xs">
-          <span className="rounded-full border border-line bg-card px-3 py-1.5">
-            <b className="text-ink">{all.length}</b> {t.mktDesigns}
-          </span>
-          {all.some((d) => d.collab) && (
-            <span className="rounded-full border border-line bg-card px-3 py-1.5">
-              <b className="text-ink">{all.filter((d) => d.collab).length}</b> {t.mktCollabs}
-            </span>
-          )}
-        </div>
-      </div>
+      {/* Надпись «Коллекционные QR-коды / Маркет кодов / …» сверху убрана (владелец 09.10.2026) — заголовок только для чтения с экрана. */}
+      <h1 className="sr-only">{t.marketTitle}</h1>
 
-      <OneQrBanner t={t} />
-
-      {/* Дроп дня — витрина: код на подсвеченном постаменте, тираж полоской, покупка крупно. */}
-      <section className="relative mt-8 overflow-hidden rounded-[2rem] bg-stage text-on-stage">
-        <div aria-hidden className="pointer-events-none absolute inset-0">
-          <div className="x-stage-grid" />
-        </div>
-        <div className="relative grid items-center gap-8 p-6 sm:p-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:p-14">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-xs font-bold uppercase tracking-wider text-on-accent">
-                <span className="x-blink h-1.5 w-1.5 rounded-full bg-on-accent" />
-                {t.dropOfDay}
-              </span>
-              <Countdown t={t} />
-            </div>
-            <h2 className="mt-5 font-heading text-5xl font-extrabold leading-[1.02] tracking-tight sm:text-7xl">{tr(drop.name, lang)}</h2>
-            <p className="mt-4 max-w-md text-on-stage/70">{tr(drop.about, lang)}</p>
-            {drop.edition !== null && (
-              <div className="mt-6 max-w-sm space-y-2">
-                <EditionBar d={drop} sold={dropSold} dark />
-                <EditionNote t={t} d={drop} sold={dropSold} className="block font-mono text-xs !text-on-stage/80" />
-              </div>
-            )}
-            <div className="mt-7 flex flex-wrap items-center gap-3">
-              <Link href={`/market/${drop.id}`} className="inline-flex min-h-13 items-center gap-3 rounded-xl bg-accent px-6 font-heading text-base font-bold text-on-accent hover:brightness-95">
-                {t.buyFor} ${drop.price} <span aria-hidden>→</span>
-              </Link>
-              <Link href={`/market/${drop.id}`} className="inline-flex min-h-13 items-center rounded-xl border border-stage-line px-6 font-heading text-sm font-bold hover:border-on-stage/60">
-                {t.seeMore}
-              </Link>
-            </div>
+      {/* Верх — слайдер: «1 QR — $1» и дроп дня (владелец 09.10.2026). */}
+      <HeroSlider>
+        <OneQrBanner t={t} />
+        {/* Дроп дня — витрина: код на подсвеченном постаменте, тираж полоской, покупка крупно. */}
+        <section className="relative overflow-hidden bg-stage text-on-stage">
+          <div aria-hidden className="pointer-events-none absolute inset-0">
+            <div className="x-stage-grid" />
           </div>
-          <Link href={`/market/${drop.id}`} className="relative mx-auto block w-full max-w-[340px]" aria-label={tr(drop.name, lang)}>
-            <div aria-hidden className="x-ring" />
-            <div className="relative rotate-[-4deg] rounded-[1.75rem] p-4 shadow-[0_40px_80px_-30px_rgba(198,255,46,0.45)] transition-transform duration-500 hover:rotate-0" style={{ background: drop.style.bg }}>
-              <QrThumb link={link} style={drop.style} className="w-full rounded-2xl" />
-              <div className="mt-3 flex items-center justify-between px-1 font-mono text-[11px] font-bold uppercase tracking-wider" style={{ color: drop.style.fg }}>
-                <span>QR SPACE</span>
-                <span>{drop.edition !== null ? `1 / ${drop.edition}` : "∞"}</span>
+          <div className="relative grid items-center gap-6 p-6 sm:p-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:px-14 lg:py-10">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-xs font-bold uppercase tracking-wider text-on-accent">
+                  <span className="x-blink h-1.5 w-1.5 rounded-full bg-on-accent" />
+                  {t.dropOfDay}
+                </span>
+                <Countdown t={t} />
+              </div>
+              <h2 className="mt-4 font-heading text-5xl font-extrabold leading-[1.02] tracking-tight sm:text-6xl">{tr(drop.name, lang)}</h2>
+              <p className="mt-3 max-w-md text-on-stage/70">{tr(drop.about, lang)}</p>
+              {drop.edition !== null && (
+                <div className="mt-5 max-w-sm space-y-2">
+                  <EditionBar d={drop} sold={dropSold} dark />
+                  <EditionNote t={t} d={drop} sold={dropSold} className="block font-mono text-xs !text-on-stage/80" />
+                </div>
+              )}
+              <div className="mt-6 flex flex-wrap items-center gap-3">
+                <Link href={`/market/${drop.id}`} className="inline-flex min-h-13 items-center gap-3 rounded-xl bg-accent px-6 font-heading text-base font-bold text-on-accent hover:brightness-95">
+                  {t.buyFor} ${drop.price} <span aria-hidden>→</span>
+                </Link>
+                <Link href={`/market/${drop.id}`} className="inline-flex min-h-13 items-center rounded-xl border border-stage-line px-6 font-heading text-sm font-bold hover:border-on-stage/60">
+                  {t.seeMore}
+                </Link>
               </div>
             </div>
-          </Link>
-        </div>
-      </section>
+            <Link href={`/market/${drop.id}`} className="relative mx-auto block w-full max-w-[170px] sm:max-w-[260px]" aria-label={tr(drop.name, lang)}>
+              <div aria-hidden className="x-ring" />
+              <div className="relative rotate-[-4deg] rounded-[1.75rem] p-4 shadow-[0_40px_80px_-30px_rgba(198,255,46,0.45)] transition-transform duration-500 hover:rotate-0" style={{ background: drop.style.bg }}>
+                <QrThumb link={link} style={drop.style} className="w-full rounded-2xl" />
+                <div className="mt-3 flex items-center justify-between px-1 font-mono text-[11px] font-bold uppercase tracking-wider" style={{ color: drop.style.fg }}>
+                  <span>QR SPACE</span>
+                  <span>{drop.edition !== null ? `1 / ${drop.edition}` : "∞"}</span>
+                </div>
+              </div>
+            </Link>
+          </div>
+        </section>
+      </HeroSlider>
 
       <CodePacks t={t} lang={lang} />
 

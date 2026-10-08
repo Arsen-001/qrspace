@@ -176,32 +176,34 @@ export function CodePacks({ t, lang }: { t: Dict; lang: Lang }) {
   );
 }
 
-/** Верхний баннер маркета (владелец 09.10.2026): один QR — один доллар. */
+/** Слайд «1 QR — $1» в верхнем слайдере маркета (владелец 09.10.2026), рядом с «Дропом дня». */
 export function OneQrBanner({ t }: { t: Dict }) {
   return (
-    <section className="relative mt-8 overflow-hidden rounded-[2rem] bg-stage text-on-stage">
+    <section className="relative overflow-hidden bg-stage text-on-stage">
       <div aria-hidden className="pointer-events-none absolute inset-0">
         <div className="x-stage-grid" />
       </div>
-      <div className="relative flex flex-col gap-6 p-6 sm:flex-row sm:items-center sm:gap-10 sm:p-10">
-        <span aria-hidden className="x-cell block w-32 shrink-0 rounded-3xl bg-white/[0.06] p-4 shadow-[0_30px_60px_-30px_rgba(198,255,46,0.6)] sm:w-40">
-          <MiniQr seed={7} />
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-            <h2 className="font-heading text-5xl font-extrabold tracking-tight sm:text-7xl">
-              1 <span className="text-accent">QR</span>
-            </h2>
-            <span className="font-heading text-5xl font-extrabold tracking-tight sm:text-7xl">
-              <span aria-hidden className="text-on-stage/40">— </span>
-              <span className="text-accent">${CODE_PRICE}</span>
-            </span>
-          </div>
-          <p className="mt-3 max-w-xl text-on-stage/70">{t.oneQrText}</p>
+      <div className="relative grid h-full items-center gap-6 p-6 sm:p-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:px-14 lg:py-10">
+        <div className="min-w-0">
+          <span className="inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-xs font-bold uppercase tracking-wider text-on-accent">
+            <span className="h-1.5 w-1.5 rounded-full bg-on-accent" />
+            {t.oneQrKicker}
+          </span>
+          {/* «QR-код за $1» — словами, не «1 QR / $1» (владелец 09.10.2026: «очень некрасиво, непонятно»). */}
+          <h2 className="mt-4 font-heading text-5xl font-extrabold leading-[1.02] tracking-tight [hyphens:manual] sm:text-6xl">
+            {t.oneQrTitle} <span className="whitespace-nowrap text-accent">${CODE_PRICE}</span>
+          </h2>
+          <p className="mt-4 max-w-md text-on-stage/70">{t.oneQrText}</p>
+          <Link href="/#make" className="mt-6 inline-flex min-h-13 items-center gap-3 rounded-xl bg-accent px-6 font-heading text-base font-bold text-on-accent hover:brightness-95">
+            {t.homeCta} <span aria-hidden>→</span>
+          </Link>
         </div>
-        <Link href="/#make" className="inline-flex min-h-13 shrink-0 items-center justify-center gap-3 self-start rounded-xl bg-accent px-6 font-heading text-base font-bold text-on-accent hover:brightness-95 sm:self-center">
-          {t.homeCta} <span aria-hidden>→</span>
-        </Link>
+        <span aria-hidden className="relative mx-auto block w-full max-w-[150px] sm:max-w-[220px]">
+          <span className="x-ring" />
+          <span className="relative block rotate-[4deg] rounded-[1.75rem] bg-white/[0.06] p-6 shadow-[0_40px_80px_-30px_rgba(198,255,46,0.45)] transition-transform duration-500 hover:rotate-0">
+            <MiniQr seed={7} />
+          </span>
+        </span>
       </div>
     </section>
   );

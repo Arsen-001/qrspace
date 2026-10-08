@@ -258,3 +258,22 @@ button:not(:disabled) {
     animation: none;
   }
 }
+
+/* Полоска слайдера маркета заполняется, пока показан слайд (HeroSlider.tsx, 7 с). */
+@keyframes x-fill {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+.x-fill {
+  animation: x-fill 7s linear both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .x-fill {
+    animation: none;
+    width: 100%;
+  }
+}
