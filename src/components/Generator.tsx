@@ -10,7 +10,7 @@ import { useLang } from "@/lib/lang";
 import { useMe } from "@/lib/me";
 import { isDesigner } from "@/lib/people";
 import { CodeDesigner } from "./CodeDesigner";
-import { HomeFeatures, HomeHero, HomeTicker } from "./HomeHero";
+import { HomeBackdrop, HomeFeatures, HomeHero, HomeTicker } from "./HomeHero";
 import { ContentForm } from "./ContentForm";
 import { PublishBox } from "./PublishBox";
 import { SiteFooter } from "./SiteFooter";
@@ -41,6 +41,7 @@ export function Generator() {
       <div className="mx-auto w-full max-w-6xl px-4 pb-16 sm:px-6">
         <SiteHeader t={t} lang={lang} />
 
+        <HomeBackdrop />
         <HomeHero t={t} />
         <HomeTicker t={t} />
 

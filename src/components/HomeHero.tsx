@@ -59,7 +59,11 @@ function BigCode() {
 export function HomeHero({ t }: { t: Dict }) {
   return (
     <section className="relative overflow-hidden rounded-3xl border border-stage-line bg-stage text-on-stage">
-      <div className="grid items-center gap-10 p-6 sm:p-10 lg:grid-cols-[1.25fr_1fr] lg:p-14">
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div className="x-stage-grid" />
+        <div className="x-stage-glow" />
+      </div>
+      <div className="relative grid items-center gap-10 p-6 sm:p-10 lg:grid-cols-[1.25fr_1fr] lg:p-14">
         <div className="min-w-0">
           <p className="inline-flex items-center gap-2 rounded-full border border-stage-line px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.14em] text-on-stage/70">
             <span className="x-blink h-2 w-2 rounded-full bg-accent" />
@@ -85,8 +89,9 @@ export function HomeHero({ t }: { t: Dict }) {
           </div>
         </div>
         <div className="relative mx-auto w-full max-w-sm lg:max-w-none">
-          <div className="aspect-square rounded-2xl border border-stage-line p-5 sm:p-7">
+          <div className="relative aspect-square overflow-hidden rounded-2xl border border-stage-line bg-stage p-5 sm:p-7">
             <BigCode />
+            <div aria-hidden className="x-scan pointer-events-none" />
           </div>
           <span className="absolute -top-3 right-6 rounded-md bg-accent px-2.5 py-1 font-heading text-xs font-bold text-on-accent">№ 000 777</span>
           <span className="absolute -bottom-3 left-6 rounded-md border border-stage-line bg-stage px-2.5 py-1 font-mono text-xs text-on-stage/80">
@@ -95,6 +100,30 @@ export function HomeHero({ t }: { t: Dict }) {
         </div>
       </div>
     </section>
+  );
+}
+
+/** Всплывающие модули на фоне главной: места и скорости заданы заранее — одинаково на сервере и в браузере. */
+const FLOATERS = (() => {
+  let seed = 11;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  return Array.from({ length: 16 }, (_, i) => {
+    const dur = 22 + rnd() * 20;
+    return { left: rnd() * 100, size: 8 + Math.round(rnd() * 14), dur, delay: -rnd() * dur, lime: i % 3 === 0 };
+  });
+})();
+
+export function HomeBackdrop() {
+  return (
+    <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+      {FLOATERS.map((f, i) => (
+        <span
+          key={i}
+          className={`x-float ${f.lime ? "bg-accent" : "border border-ink/25 bg-ink/10"}`}
+          style={{ left: `${f.left}%`, width: f.size, height: f.size, animationDuration: `${f.dur}s`, animationDelay: `${f.delay}s` }}
+        />
+      ))}
+    </div>
   );
 }
 

@@ -134,9 +134,79 @@ button:not(:disabled) {
   animation: x-blink 3.2s ease-in-out infinite;
 }
 
+/* Живой фон главной (владелец, 08.10.2026). Двигаем только transform и opacity — это делает видеокарта,
+   страница не тормозит. */
+
+/* Чёрная сцена: сетка точек-модулей медленно плывёт по диагонали, лаймовое свечение гуляет, сверху вниз идёт луч скана. */
+.x-stage-grid {
+  position: absolute;
+  inset: -24px 0 0 -24px;
+  width: calc(100% + 48px);
+  height: calc(100% + 48px);
+  background-image: radial-gradient(color-mix(in oklab, var(--on-stage) 16%, transparent) 1px, transparent 1.4px);
+  background-size: 24px 24px;
+  mask-image: radial-gradient(120% 90% at 70% 40%, #000 30%, transparent 85%);
+  animation: x-drift 9s linear infinite;
+}
+@keyframes x-drift {
+  to {
+    transform: translate(24px, 24px);
+  }
+}
+.x-stage-glow {
+  position: absolute;
+  width: 60%;
+  aspect-ratio: 1;
+  right: -10%;
+  top: -25%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in oklab, var(--accent) 22%, transparent), transparent);
+  animation: x-roam 16s ease-in-out infinite alternate;
+}
+@keyframes x-roam {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-45%, 35%) scale(1.15); }
+  100% { transform: translate(-90%, 70%) scale(0.9); }
+}
+.x-scan {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 28%;
+  background: linear-gradient(to bottom, transparent, color-mix(in oklab, var(--accent) 14%, transparent) 85%, color-mix(in oklab, var(--accent) 70%, transparent) 99%, transparent);
+  animation: x-scan 4.5s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+@keyframes x-scan {
+  0% { transform: translateY(-100%); opacity: 0; }
+  10% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { transform: translateY(360%); opacity: 0; }
+}
+
+/* Светлый фон страницы: модули всплывают снизу вверх и поворачиваются, некоторые — лаймовые. */
+.x-float {
+  position: absolute;
+  bottom: -40px;
+  border-radius: 3px;
+  animation: x-float linear infinite;
+  will-change: transform;
+}
+@keyframes x-float {
+  from { transform: translateY(0) rotate(0deg); }
+  to { transform: translateY(calc(-100vh - 80px)) rotate(180deg); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .x-marquee,
-  .x-blink {
+  .x-blink,
+  .x-stage-grid,
+  .x-stage-glow,
+  .x-float {
     animation: none;
+  }
+  .x-scan,
+  .x-float {
+    display: none;
   }
 }
