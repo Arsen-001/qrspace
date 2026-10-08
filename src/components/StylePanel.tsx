@@ -12,6 +12,8 @@ import type { PictureState } from "./PicturePicker";
 import { Card, ColorField, GhostButton, Label, Segmented, Slider, UploadButton } from "./ui";
 
 type Tab = "colors" | "shape" | "bg" | "media";
+/** Табличка с номером — крупнее логотипа: сколько выдерживает код (проверено). */
+const NUMBER_SCALE = 0.34;
 
 export type StyleState = {
   fg: string;
@@ -26,7 +28,7 @@ export type StyleState = {
   effect: Effect;
   texture: TextureId | null;
   eyeIcon: { mask: IconMask; preview: string; strength: number } | null;
-  logo: { src: string; scale: number } | null;
+  logo: { src: string; scale: number; band?: boolean } | null;
   picture: PictureState | null;
 };
 
@@ -151,7 +153,7 @@ export function StylePanel({
   t: Dict;
   s: StyleState;
   set: (patch: Partial<StyleState>) => void;
-  onLogo: (f: File, scale?: number) => void;
+  onLogo: (f: File, scale?: number, band?: boolean) => void;
   onEyeIcon: (f: File) => void;
   picturePicker: ReactNode;
   lowContrast: boolean;
@@ -168,7 +170,7 @@ export function StylePanel({
   const putNumber = () => {
     if (!num) return;
     setLogoId("number");
-    onLogo(new File([numberSvg(num, s.fg, s.bg)], `n${num}.svg`, { type: "image/svg+xml" }), 0.28);
+    onLogo(new File([numberSvg(num, s.fg, s.bg)], `n${num}.svg`, { type: "image/svg+xml" }), NUMBER_SCALE);
   };
   const picked = s.logo ? (logoId ?? "own") : null;
   const logoProps = {
@@ -219,22 +221,20 @@ export function StylePanel({
           }}
         >
           <span className="flex min-h-11 min-w-0 flex-1 items-center rounded-xl border border-line bg-field pl-3.5 focus-within:border-accent">
-            <span aria-hidden className="font-heading font-bold text-muted">
-              №
-            </span>
             <input
               value={num}
               onChange={(e) => setNum(e.target.value.replace(/\D/g, "").slice(0, 7))}
               inputMode="numeric"
               placeholder="777"
               aria-label={t.numberCenter}
-              className="min-w-0 flex-1 bg-transparent px-2 font-heading text-lg font-bold outline-none"
+              className="min-w-0 flex-1 bg-transparent pr-2 font-heading text-lg font-bold outline-none"
             />
           </span>
           <button type="submit" disabled={!num} className="min-h-11 rounded-xl bg-stage px-4 font-heading text-sm font-bold text-on-stage disabled:opacity-40">
             {t.numberPut}
           </button>
         </form>
+
       </div>
 
       <div className="mt-6 border-t border-line pt-5">
