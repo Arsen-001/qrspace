@@ -20,6 +20,8 @@ export type User = {
   createdAt: string;
   /** Порядок «Моих кодов» (перетаскивание): id кодов; новых тут ещё нет — они идут первыми. */
   codeOrder?: string[];
+  /** Последние цвета (точки и фон) — после скачивания; первыми в «Тонкой настройке». */
+  recentColors?: { fg: string; bg: string }[];
 };
 
 export const demoEnabled = () => process.env.DEMO_LOGIN !== "off";

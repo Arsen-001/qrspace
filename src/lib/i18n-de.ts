@@ -803,6 +803,7 @@ export const de: Dict = {
   styleLockedTitle: "Das Aussehen ist fest",
   styleLockedText: "Dieser Code wurde schon heruntergeladen – sein Aussehen ändert sich nicht mehr, damit gedruckte Codes immer passen. Inhalt und wer ihn sieht kannst du jederzeit ändern. Anderes Aussehen? Mach einen neuen Code.",
   captionPhone: "Telefonnummer unter dem Code",
+  recentColors: "Zuletzt verwendet",
   logoQuick: "Logo in der Mitte",
   logoQuickHint: "Netzwerke, Messenger, Bezahlen – antippen, und es steht in der Mitte des Codes",
   logoAll: "Alle Logos",

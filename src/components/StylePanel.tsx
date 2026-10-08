@@ -6,6 +6,7 @@ import { buildDrawing, CAPTION_MAX, toSvg } from "@/lib/qr/render";
 import { isPreset, STYLE_PRESETS, type StylePreset } from "@/lib/qr/presets";
 import { DEFAULT_STYLE, toQrStyle } from "@/lib/qr/style";
 import { TEXTURE_INK, TEXTURES, textureSrc, type TextureId } from "@/lib/qr/textures";
+import { useMe } from "@/lib/me";
 import { LogoPicker, logoFile } from "./LogoPicker";
 import type { PictureState } from "./PicturePicker";
 import { Card, ColorField, GhostButton, Label, Segmented, Slider, UploadButton } from "./ui";
@@ -163,6 +164,7 @@ export function StylePanel({
   suggestLogo?: string;
 }) {
   const [tab, setTab] = useState<Tab>("colors");
+  const { colors } = useMe();
   // Какой готовый логотип выбран (свой файл — «own»; логотипа нет — null).
   const [logoId, setLogoId] = useState<string | null>(null);
   const picked = s.logo ? (logoId ?? "own") : null;
@@ -257,7 +259,30 @@ export function StylePanel({
 
         <div {...panel("colors")}>
           <div>
-            <div className="mb-3 flex flex-wrap gap-2" aria-label={t.presets}>
+            {colors.length > 0 && (
+            <div className="mb-3">
+              <div className="mb-1.5 text-xs font-semibold text-muted">{t.recentColors}</div>
+              <div className="flex flex-wrap gap-2">
+                {colors.map(({ fg, bg }) => {
+                  const on = s.fg === fg && s.bg === bg;
+                  return (
+                    <button
+                      key={fg + bg}
+                      type="button"
+                      aria-label={`${t.recentColors}: ${fg} / ${bg}`}
+                      aria-pressed={on}
+                      onClick={() => set({ fg, bg, eyeColor: fg, eyeBallColor: fg, texture: null })}
+                      className={`grid h-10 w-10 place-items-center rounded-xl border-2 ${on ? "border-accent" : "border-line"}`}
+                      style={{ background: bg }}
+                    >
+                      <span className="h-4 w-4 rounded" style={{ background: fg }} />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          <div className="mb-3 flex flex-wrap gap-2" aria-label={t.presets}>
               {PRESETS.map(([fg, bg]) => {
                 const on = s.fg === fg && s.bg === bg;
                 return (

@@ -1,4 +1,4 @@
-import { directory, isAdminId, linkBase } from "@/server/db";
+import { directory, findUser, isAdminId, linkBase } from "@/server/db";
 import { currentPerson, endSession, startSession } from "@/server/session";
 import { demoEnabled } from "@/server/users";
 import { PEOPLE } from "@/lib/people";
@@ -7,7 +7,8 @@ import { providers } from "@/server/oauth";
 /** Кто я, адрес сайта для ссылок, имена людей, какие входы включены. */
 export async function GET(req: Request) {
   const me = await currentPerson();
-  return Response.json({ me, base: linkBase(req), people: await directory(me), demo: demoEnabled(), providers: providers(), admin: await isAdminId(me) });
+  const colors = (me && (await findUser(me))?.recentColors) || [];
+  return Response.json({ me, base: linkBase(req), people: await directory(me), demo: demoEnabled(), providers: providers(), admin: await isAdminId(me), colors });
 }
 
 /** Демо-вход (выбрать человека) — только пока DEMO_LOGIN не выключен; personId: null — выйти. */

@@ -8,7 +8,7 @@ import { LOGO_FOR } from "@/lib/qr/logo-art";
 import { codeKey, tierOf } from "@/lib/pricing";
 import { DEFAULT_STYLE, fromSaved, toQrStyle, toSaved } from "@/lib/qr/style";
 import { useLang } from "@/lib/lang";
-import { useMe } from "@/lib/me";
+import { rememberColors, useMe } from "@/lib/me";
 import { isDesigner } from "@/lib/people";
 import { CodeDesigner } from "./CodeDesigner";
 import { HomeBackdrop, HomeFeatures, HomeHero, HomeTicker } from "./HomeHero";
@@ -50,7 +50,14 @@ export function Generator() {
     /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
   const raw = buildPayload(type, fields[type]);
-  const { me, base } = useMe();
+  const { me, base, colors } = useMe();
+  // Последние цвета аккаунта — по умолчанию (владелец 08.10.2026), если человек ещё ничего не менял.
+  const recent = colors[0];
+  const [usedRecent, setUsedRecent] = useState<string | null>(null);
+  if (recent && usedRecent !== me && style === DEFAULT_STYLE) {
+    setUsedRecent(me);
+    setStyle({ ...DEFAULT_STYLE, fg: recent.fg, bg: recent.bg, eyeColor: recent.fg, eyeBallColor: recent.fg });
+  }
   // Любой наш код ведёт через нашу короткую ссылку, скан открывает нашу страницу с содержимым и кнопками (и Wi-Fi,
   // контакт, событие — решение владельца 08.10.2026). В предпросмотре — образец той же длины, настоящая — при скачивании.
   const sample = `${(base || "https://qrspace.co").toUpperCase()}/K/XXXXXX`;
@@ -89,6 +96,7 @@ export function Generator() {
             tier,
             key: () => codeKey(raw, toSaved(style)),
             beforeLogin: saveDraft,
+            onSaved: () => rememberColors(style.fg, style.bg),
             finalize: async () => {
               const { link } = await api.quick({ content: { type, fields: fields[type] }, style: toSaved(style) });
               return { drawing: buildDrawing(link, toQrStyle(style)), payload: link };

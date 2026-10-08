@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { api, linkOf, type CodePatch, type CodeView } from "@/lib/codes";
 import type { Dict, Lang } from "@/lib/i18n";
 import { useLang } from "@/lib/lang";
-import { refreshPeople, useMe } from "@/lib/me";
+import { refreshPeople, useMe, rememberColors } from "@/lib/me";
 import { tierOf } from "@/lib/pricing";
 import { DEFAULT_STYLE, fromSaved, toSaved } from "@/lib/qr/style";
 import { AccessPanel } from "./AccessPanel";
@@ -35,7 +35,7 @@ function LookTab({ t, code, link, save, onSaved }: { t: Dict; code: CodeView; li
     return () => clearTimeout(id);
   }, [style, save]);
   // Код с памятью оплачивается один раз за код (ссылка в нём не меняется); стиль красивее — доплата разницы.
-  return <CodeDesigner t={t} payload={link} style={style} setStyle={setStyle} fileName={`qr-${code.id}`} gate={{ tier: tierOf(style), key: () => `code:${code.id}`, onSaved }}
+  return <CodeDesigner t={t} payload={link} style={style} setStyle={setStyle} fileName={`qr-${code.id}`} gate={{ tier: tierOf(style), key: () => `code:${code.id}`, onSaved: () => { rememberColors(style.fg, style.bg); onSaved(); } }}
     locked={code.styleLocked}
     top={code.styleLocked ? undefined :
       <section className="rounded-2xl border border-line bg-card p-5">

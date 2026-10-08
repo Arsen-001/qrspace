@@ -195,7 +195,7 @@ export type CodePatch = Partial<Pick<CodeRecord, "title" | "visibility" | "peopl
 };
 
 export const api = {
-  me: () => call<{ me: string | null; base: string; people: Person[]; demo: boolean; providers: { google: boolean; apple: boolean }; admin: boolean }>("/api/me"),
+  me: () => call<{ me: string | null; base: string; people: Person[]; demo: boolean; providers: { google: boolean; apple: boolean }; admin: boolean; colors?: { fg: string; bg: string }[] }>("/api/me"),
   lookup: (email: string) => call<{ id: string }>(`/api/people/lookup?email=${encodeURIComponent(email)}`),
   login: (personId: string | null) => call<{ me: string | null }>("/api/me", json("POST", { personId })),
   list: () => call<CodeList>("/api/codes"),
