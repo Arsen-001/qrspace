@@ -4,6 +4,7 @@ import { media } from "@/server/media";
 import { currentPerson } from "@/server/session";
 import { usable } from "@/server/users";
 import { validTarget, type CodePatch } from "@/lib/codes";
+import { cleanContent } from "@/lib/qr/payload";
 import { readContact, readPeople, readShort, readStyle, readTitle, readVisibility } from "../validate";
 
 /** Код глазами текущего человека; ?visit=1 — это скан, пишем в историю (кроме хозяина). */
@@ -55,6 +56,13 @@ export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/codes/[id]
       const t = typeof body.target === "string" ? body.target.trim() : "";
       if (t && !validTarget(t)) return 400;
       c.target = t || undefined;
+    }
+    if ("content" in body) {
+      // Что в коде (сайт, телефон, Wi-Fi…): только поля этого вида и безопасные ссылки — увидит каждый, кто сканирует.
+      const ct = cleanContent(body.content);
+      if (!ct) return 400;
+      c.content = ct;
+      c.target = undefined;
     }
     if ("publicAdd" in body) c.publicAdd = body.publicAdd === true;
     if ("showOwner" in body) c.showOwner = body.showOwner === true;

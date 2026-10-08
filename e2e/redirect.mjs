@@ -1,5 +1,5 @@
-// Наш код ведёт только через нашу короткую ссылку (решение владельца 07.10.2026): сайт, звонок, текст из генератора →
-// в картинке HTTPS://<сайт>/K/XXXXXX, скан сразу переадресует (один переход). Wi-Fi — прямо в коде и только простой.
+// Наш код ведёт только через нашу короткую ссылку: в картинке HTTPS://<сайт>/K/XXXXXX, скан открывает нашу страницу
+// с содержимым и кнопками — сайт, звонок, текст и Wi-Fi тоже (решения владельца 07.10 и 08.10.2026).
 import fs from "node:fs";
 import { chromium } from "playwright";
 import { prepareZXingModule, readBarcodes } from "zxing-wasm/reader";
@@ -47,14 +47,25 @@ await p.goto(`${B}/login?next=/`);
 await p.getByRole("button", { name: /Лилит/ }).click();
 await p.waitForURL(B + "/");
 
+// Любой код из генератора → наша короткая ссылка → наша страница с содержимым и кнопками (владелец 08.10.2026).
+const guest = await (await browser.newContext({ locale: "ru-RU" })).newPage();
+const scan = async (link) => {
+  const h = await hop(link);
+  ok(h.status === 307 && /^\/c\/\w+$/.test(h.to ?? ""), `/K → our page (${h.status} ${h.to})`);
+  await guest.goto(B + h.to, { waitUntil: "networkidle" });
+  return guest;
+};
+const has = async (g, sel, m) => ok(await g.locator(sel).first().isVisible({ timeout: 10000 }).catch(() => false), m);
+
 // Сайт
 await p.getByLabel("Адрес сайта").fill("example.com/menu");
 await ready();
-ok(await p.locator("text=Адрес можно поменять").count() === 1, "note: address can be changed");
+ok(await p.locator("text=Под вашим контролем").count() === 1, "note: you stay in control");
 const site = await download();
 ok(/^HTTPS?:\/\/[^/]+\/K\/[A-Z2-9]{6}$/.test(site ?? ""), `site code holds our short link: ${site}`);
-const h1 = await hop(site);
-ok(h1.status === 307 && h1.to === "https://example.com/menu", `scan → straight to the site in one hop (${h1.status} ${h1.to})`);
+let g = await scan(site);
+await has(g, "a:has-text('Открыть сайт')", "site page: «Открыть сайт»");
+ok((await g.locator("a:has-text('Открыть сайт')").getAttribute("href")) === "https://example.com/menu", "«Открыть сайт» leads to the site");
 ok((await download()) === site, "same address again — same code, same short link");
 
 // Звонок
@@ -62,38 +73,36 @@ await p.getByRole("radio", { name: "Телефон", exact: true }).click();
 await p.getByLabel("Номер телефона").fill("+374 91 123456");
 await ready();
 const tel = await download();
-const h2 = await hop(tel);
-ok(tel !== site && h2.status === 307 && h2.to === "tel:+37491123456", `phone code → tel: (${h2.to})`);
+ok(tel !== site, "phone — its own code");
+g = await scan(tel);
+ok((await g.locator("a:has-text('Позвонить')").getAttribute("href")) === "tel:+37491123456", "phone page: «Позвонить» → tel:");
+await has(g, "button:has-text('Скопировать номер')", "phone page: «Скопировать номер»");
 
-// Текст — страница кода, видна всем
+// Текст
 await p.getByRole("radio", { name: "Текст", exact: true }).click();
 await p.getByLabel("Текст").fill("Сбор у входа в 10:00");
 await ready();
-const text = await download();
-const h3 = await hop(text);
-ok(h3.status === 307 && /^\/c\/\w+$/.test(h3.to ?? ""), `text code → our page (${h3.to})`);
-const guest = await (await browser.newContext({ locale: "ru-RU" })).newPage();
-await guest.goto(B + h3.to);
-await guest.waitForSelector("text=Сбор у входа в 10:00", { timeout: 15000 }).then(() => ok(true, "guest sees the text"), () => ok(false, "guest sees the text"));
+g = await scan(await download());
+await has(g, "text=Сбор у входа в 10:00", "guest sees the text");
 
-// Wi-Fi — прямо в коде, красивый вид нельзя
+// Wi-Fi — тоже через нас, и красивый вид можно
 await p.getByRole("radio", { name: "Wi-Fi", exact: true }).click();
 await p.getByLabel("Название сети").fill("Dacha");
 await p.getByLabel("Пароль").fill("secret123");
-await ready();
-ok(await p.locator("text=Напрямую в телефон").count() === 1, "wifi note: straight to the phone");
-const wifi = await download();
-ok(wifi === "WIFI:T:WPA;S:Dacha;P:secret123;;", `wifi stays in the code: ${wifi}`);
 await p.getByRole("tab", { name: "Форма", exact: true }).click();
 await p.getByRole("radio", { name: "Звёзды", exact: true }).click();
-await p.waitForSelector("text=только в простом виде. Выберите");
-ok(await p.getByRole("button", { name: /Скачать PNG/ }).isDisabled(), "styled wifi cannot be downloaded");
+await ready();
+const wifi = await download();
+ok(/\/K\/[A-Z2-9]{6}$/.test(wifi ?? ""), `styled wifi downloads with our link: ${wifi}`);
+g = await scan(wifi);
+await has(g, "text=Dacha", "wifi page: network name");
+await has(g, "button:has-text('Скопировать пароль')", "wifi page: «Скопировать пароль»");
 await p.screenshot({ path: out + "r-wifi-styled.png", fullPage: true });
 
 // Коды появились в «Мои коды»
 const mine = (await (await p.request.get(B + "/api/codes")).json()).mine;
-ok(mine.some((c) => c.kind === "link" && c.target === "https://example.com/menu") && mine.some((c) => c.kind === "link" && c.target === "tel:+37491123456"), "codes are in My codes");
-ok(mine.filter((c) => c.target === "https://example.com/menu").length === 1, "no duplicates");
+ok(mine.some((c) => c.content?.type === "url") && mine.some((c) => c.content?.type === "phone") && mine.some((c) => c.content?.type === "wifi"), "codes are in My codes");
+ok(mine.filter((c) => c.content?.type === "url" && c.content.fields.url === "example.com/menu").length === 1, "no duplicates");
 console.log("errors:", errors.length ? errors : "none");
 await browser.close();
 process.exit(errors.length ? 1 : 0);

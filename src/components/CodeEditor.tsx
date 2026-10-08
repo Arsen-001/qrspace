@@ -167,6 +167,8 @@ function Editor({ t, lang, me, base, initial }: { t: Dict; lang: Lang; me: strin
     code.kind === "link"
       ? [
           { id: "link", label: t.tabLink },
+          // Кто видит — у любого кода (владелец 08.10.2026: все / выбранные / только я).
+          { id: "access", label: t.tabAccess, badge: requests },
           { id: "look", label: t.tabLook },
         ]
       : [

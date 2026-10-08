@@ -28,6 +28,7 @@ export function ContentForm({
   onType,
   onField,
   step,
+  footer,
 }: {
   t: Dict;
   type: ContentType;
@@ -36,6 +37,8 @@ export function ContentForm({
   onField: (k: string, v: string) => void;
   /** Номер шага в генераторе. */
   step?: number;
+  /** Что под полями (в коде — «Сохранить»). */
+  footer?: React.ReactNode;
 }) {
   const [showPass, setShowPass] = useState(false);
   return (
@@ -112,6 +115,7 @@ export function ContentForm({
           );
         })}
       </div>
+      {footer}
     </Card>
   );
 }

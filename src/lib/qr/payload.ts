@@ -150,15 +150,59 @@ export function buildPayload(type: ContentType, f: Fields): string {
   }
 }
 
-/** Wi-Fi, контакт и событие телефон понимает только из самого кода — их не провести через нашу ссылку. */
-export const DIRECT_TYPES: readonly ContentType[] = ["wifi", "contact", "event"];
-export const isDirect = (type: ContentType) => DIRECT_TYPES.includes(type);
+/** Что лежит в коде из генератора: вид и поля. Скан любого нашего кода открывает нашу страницу (решение владельца
+ * 08.10.2026: «чтобы созданным у нас кодом нельзя было пользоваться без нас»), там — это содержимое и кнопки. */
+export type Content = { type: ContentType; fields: Fields };
 
-/** Куда переадресует наша короткая ссылка (готовая строка → адрес). Текст переадресовать некуда — он на странице кода. */
-export function linkTarget(type: ContentType, payload: string): string | null {
-  if (!payload || type === "text" || isDirect(type)) return null;
+/** Ссылка для главной кнопки на нашей странице (открыть сайт, позвонить, написать…). У текста, Wi-Fi, контакта и события — нет. */
+export function actionHref(c: Content): string | null {
+  if (c.type === "text" || c.type === "wifi" || c.type === "contact" || c.type === "event") return null;
+  const p = buildPayload(c.type, c.fields);
+  if (!p) return null;
   // «SMSTO:номер:текст» понимают только камеры; браузеру нужен sms:номер?body=текст.
-  const sms = /^SMSTO:([^:]*):([\s\S]*)$/.exec(payload);
+  const sms = /^SMSTO:([^:]*):([\s\S]*)$/.exec(p);
   if (sms) return `sms:${sms[1]}${sms[2] ? `?body=${encodeURIComponent(sms[2])}` : ""}`;
-  return payload;
+  return /^(https?:|tel:|mailto:|viber:)/i.test(p) ? p : null;
+}
+
+const LIMIT: Record<string, number> = { text: 2000, body: 2000, notes: 1000, message: 1000 };
+
+/** Проверка содержимого с сервера: только поля этого вида, длина ограничена, ссылки — только безопасные. */
+export function cleanContent(raw: unknown): Content | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as { type?: unknown; fields?: unknown };
+  if (typeof r.type !== "string" || !(CONTENT_TYPES as string[]).includes(r.type)) return null;
+  const type = r.type as ContentType;
+  const src = (r.fields && typeof r.fields === "object" ? r.fields : {}) as Record<string, unknown>;
+  const fields: Fields = {};
+  for (const k of FIELDS[type]) {
+    const v = src[k];
+    if (typeof v === "string" && v.trim()) fields[k] = v.slice(0, LIMIT[k] ?? 300);
+  }
+  if (!buildPayload(type, fields)) return null;
+  if (!["text", "wifi", "contact", "event"].includes(type) && !actionHref({ type, fields })) return null;
+  return { type, fields };
+}
+
+/** Файл «Сохранить в контакты» (.vcf) и «Добавить в календарь» (.ics). */
+export const vcardOf = (f: Fields) => buildPayload("contact", f);
+export const icsOf = (f: Fields) => `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//QR Space//EN\n${buildPayload("event", f)}\nEND:VCALENDAR`;
+/** Сайт из карточки контакта — ссылкой, только http(s). */
+export const safeUrl = (s: string) => {
+  const u = normalizeUrl(s);
+  return /^https?:\/\//i.test(u) ? u : null;
+};
+
+/** Название кода в «Моих кодах»: главное поле без лишнего. */
+export function titleOfContent(c: Content): string {
+  const f = c.fields;
+  const main =
+    c.type === "contact"
+      ? [f.firstName, f.lastName].filter(Boolean).join(" ") || f.phone
+      : c.type === "event"
+        ? f.title
+        : c.type === "wifi"
+          ? f.ssid
+          : (f.url ?? f.phone ?? f.email ?? f.username ?? f.place ?? f.text ?? "");
+  return (main ?? "").replace(/^https?:\/\//i, "").replace(/\s+/g, " ").trim().slice(0, 60) || c.type;
 }

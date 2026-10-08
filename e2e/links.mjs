@@ -12,57 +12,52 @@ const mk = async (w) => {
   return page;
 };
 const shot = async (p, name) => { await p.waitForTimeout(300); await p.screenshot({ path: out + name + ".png", fullPage: true }); const o = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth); console.log(name, o ? `OVERFLOW ${o}` : "ok"); };
-// Куда сервер отправляет по ссылке (сам переход на чужой сайт не делаем).
-let guestScans = 1; // первый — гость увидел «не настроено»
-const where = async (p, path) => {
-  const r = await p.request.get(B + path, { maxRedirects: 0 });
-  if (/^\/(c|K)\//.test(path)) guestScans += 1; // каждый переход гостя по /c и /K — это скан
-  return r.status() === 307 || r.status() === 308 ? r.headers()["location"] : `${r.status()}`;
+// Скан любого кода открывает нашу страницу с кнопками (владелец 08.10.2026) — считаем открытия страницы гостем.
+let guestScans = 0;
+const scan = async (p, id) => {
+  await p.goto(`${B}/c/${id}`, { waitUntil: "networkidle" });
+  guestScans += 1;
 };
-// Ждём, пока сервер сохранит адрес: интерфейс показывает новый адрес сразу, ещё до ответа сервера.
-const whereSoon = async (p, path, want) => {
-  for (let i = 0; i < 40; i++) {
-    const w = await where(p, path);
-    if (w === want) return w;
-    await p.waitForTimeout(250);
-  }
-  return where(p, path);
-};
+const openHref = (p) => p.locator("a:has-text('Открыть сайт')").getAttribute("href", { timeout: 10000 }).catch(() => null);
 const ok = (c, m) => { console.log(c ? "  ✓" : "  ✗", m); if (!c) errors.push(m); };
 const login = async (p, who, next) => { await p.goto(`${B}/login?next=${encodeURIComponent(next)}`); await p.getByRole("button", { name: new RegExp(who) }).click(); await p.waitForURL((u) => !u.pathname.startsWith("/login")); };
 
 const a = await mk(1280);
-// /codes?new=link — сразу форма с шаблоном «Ссылка» (генератор теперь сам делает код-ссылку — e2e/redirect.mjs)
+// /codes?new=link — сразу форма с шаблоном «Ссылка»
 await login(a, "Арман", "/codes?new=link");
 await a.waitForURL(/\/codes\?new=link/);
 ok((await a.getByRole("radio", { name: /^Ссылка/ }).getAttribute("aria-checked")) === "true", "/codes?new=link opens with «Link» chosen");
 await a.getByLabel("Название кода").fill("Меню кафе");
 await a.getByRole("button", { name: "Создать" }).click();
 await a.waitForURL(/\/codes\/\w+/);
-await a.waitForSelector("text=Куда ведёт код");
+await a.waitForSelector("text=Что будет в коде");
 const id = a.url().split("/").pop();
-// Пока адреса нет — гость видит «ещё не настроено»
+// Пока пусто — гость видит «ещё не настроил»
 const g = await mk(390);
-await g.goto(`${B}/c/${id}`, { waitUntil: "networkidle" });
+await scan(g, id);
 await g.waitForSelector("text=Хозяин ещё не настроил");
-ok(true, "no address yet → «not set up yet»");
-// Задаём адрес (без https — допишется сам)
-await a.getByLabel("Куда ведёт код").fill("menu.example.com/autumn");
+ok(true, "nothing yet → «not set up yet»");
+// Задаём сайт (без https — допишется сам)
+await a.getByLabel("Адрес сайта").fill("menu.example.com/autumn");
 await a.getByRole("button", { name: "Сохранить" }).click();
-await a.waitForSelector("text=Сейчас ведёт на");
-ok((await whereSoon(g, `/c/${id}`, "https://menu.example.com/autumn")) === "https://menu.example.com/autumn", "scan redirects to the owner's address");
-// Короткая ссылка тоже
+await a.waitForSelector("text=✓ Сохранено");
+await scan(g, id);
+ok((await openHref(g)) === "https://menu.example.com/autumn", "scan → our page with «Открыть сайт» to the owner's address");
+// Короткая ссылка ведёт на нашу страницу кода
 const short = await a.evaluate((i) => fetch(`/api/codes/${i}`).then((r) => r.json()).then((c) => c.short), id);
-ok((await where(g, `/K/${short}`)) === "https://menu.example.com/autumn", "short /K link goes straight to the owner's address (one hop)");
-// Меняем адрес — тот же код ведёт на новый
-await a.getByLabel("Куда ведёт код").fill("https://promo.example.com/");
+const k = await g.request.get(`${B}/K/${short}`, { maxRedirects: 0 });
+ok(k.status() === 307 && k.headers()["location"] === `/c/${id}`, `short /K link → our page (${k.headers()["location"]})`);
+// Меняем адрес — тот же код показывает новый
+await a.getByLabel("Адрес сайта").fill("https://promo.example.com/");
 await a.getByRole("button", { name: "Сохранить" }).click();
-await a.waitForSelector("text=promo.example.com");
-ok((await whereSoon(g, `/c/${id}`, "https://promo.example.com/")) === "https://promo.example.com/", "changed address — same code leads to the new one");
+await a.waitForSelector("text=✓ Сохранено");
+await scan(g, id);
+ok((await openHref(g)) === "https://promo.example.com/", "changed address — same code shows the new one");
 // Опасные адреса сервер не принимает
-const bad = await a.evaluate((i) => fetch(`/api/codes/${i}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ target: "javascript:alert(1)" }) }).then((r) => r.status), id);
-ok(bad === 400, "javascript: address refused");
-// Сканы посчитаны (3 перехода гостя; хозяина не считаем)
+const patch = (body) => a.evaluate(([i, b]) => fetch(`/api/codes/${i}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(b) }).then((r) => r.status), [id, body]);
+ok((await patch({ content: { type: "url", fields: { url: "javascript:alert(1)" } } })) === 400, "javascript: address refused (content)");
+ok((await patch({ target: "javascript:alert(1)" })) === 400, "javascript: address refused (target)");
+// Сканы посчитаны (каждое открытие страницы гостем; хозяина не считаем)
 await a.reload({ waitUntil: "networkidle" });
 await a.waitForSelector("text=Всего");
 const total = await a.locator("dt:text('Всего') + dd").innerText();
@@ -77,7 +72,7 @@ await a.waitForSelector('svg[aria-label="Сканы по дням за 30 дне
 ok(true, "memory code has a Stats tab");
 const m = await mk(390);
 await login(m, "Арман", `/codes/${id}`);
-await m.waitForSelector("text=Куда ведёт код");
+await m.waitForSelector("text=Что будет в коде");
 await shot(m, "lnk-390-editor");
 console.log("errors:", errors.length ? errors : "none");
 await browser.close();

@@ -1,59 +1,57 @@
 "use client";
-// Код-ссылка: куда ведёт скан. Адрес меняется когда угодно — напечатанный код остаётся тем же.
+// Что в коде (сайт, телефон, Wi-Fi…): меняется когда угодно — напечатанный код остаётся тем же, скан покажет новое.
 import { useState } from "react";
-import { validTarget, type CodePatch, type CodeView } from "@/lib/codes";
+import type { CodePatch, CodeView } from "@/lib/codes";
 import type { Dict } from "@/lib/i18n";
-import { Card } from "./ui";
+import { buildPayload, cleanContent, CONTENT_TYPES, type ContentType, type Fields } from "@/lib/qr/payload";
+import { ContentForm } from "./ContentForm";
 
 export function LinkPanel({ t, code, save }: { t: Dict; code: CodeView; save: (p: CodePatch) => Promise<void> }) {
-  const [target, setTarget] = useState(code.target ?? "");
-  const [bad, setBad] = useState(false);
-  const commit = () => {
-    let v = target.trim();
-    // Без схемы — это сайт; звонок, почта, SMS (из генератора) оставляем как есть.
-    if (v && !/^[a-z][a-z0-9+.-]*:/i.test(v)) v = `https://${v}`;
-    if (v && !(validTarget(v) && (!/^https?:/i.test(v) || /^https?:\/\/[^\s]+\.[^\s]+/i.test(v)))) return setBad(true);
-    setBad(false);
-    setTarget(v);
-    if (v !== (code.target ?? "")) save({ target: v });
+  const initial = code.content ?? { type: "url" as const, fields: {} };
+  const [type, setType] = useState<ContentType>(initial.type);
+  const [fields, setFields] = useState(() => {
+    const f = Object.fromEntries(CONTENT_TYPES.map((k) => [k, {}])) as Record<ContentType, Fields>;
+    f.wifi = { security: "WPA" };
+    f[initial.type] = { ...f[initial.type], ...initial.fields };
+    return f;
+  });
+  const [state, setState] = useState<"idle" | "bad" | "saved">("idle");
+  const current = { type, fields: fields[type] };
+  const changed = JSON.stringify(cleanContent(current)) !== JSON.stringify(code.content);
+  const commit = async () => {
+    const ct = cleanContent(current);
+    if (!ct) return setState("bad");
+    await save({ content: ct });
+    setState("saved");
   };
   return (
-    <Card title={t.linkTitle}>
-      <p className="mb-3 text-sm text-muted">{t.linkHint}</p>
-      <form
-        className="flex flex-wrap gap-2"
-        onSubmit={(e) => {
-          e.preventDefault();
-          commit();
-        }}
-      >
-        <input
-          // Не type="url": браузер не пустил бы «menu.am» без https:// — дописываем сами.
-          type="text"
-          inputMode="url"
-          value={target}
-          placeholder="https://"
-          aria-label={t.linkTitle}
-          onChange={(e) => setTarget(e.target.value)}
-          className="min-h-11 min-w-0 flex-1 rounded-xl border border-line bg-field px-3.5 text-base outline-none focus:border-accent"
-          autoComplete="off"
-          spellCheck={false}
-        />
-        <button type="submit" className="min-h-11 rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent">
-          {t.save}
-        </button>
-      </form>
-      {bad && <p className="mt-2 text-sm text-warn">{t.linkBad}</p>}
-      {code.target ? (
-        <p className="mt-3 break-all text-xs text-muted">
-          {t.linkNow}:{" "}
-          <a href={code.target} target="_blank" rel="noreferrer" className="font-medium text-accent-ink underline underline-offset-2">
-            {code.target}
-          </a>
-        </p>
-      ) : (
-        <p className="mt-3 text-xs text-warn">{t.linkEmpty}</p>
-      )}
-    </Card>
+    <ContentForm
+      t={t}
+      type={type}
+      fields={fields[type]}
+      onType={(x) => {
+        setType(x);
+        setState("idle");
+      }}
+      onField={(k, v) => {
+        setFields((f) => ({ ...f, [type]: { ...f[type], [k]: v } }));
+        setState("idle");
+      }}
+      footer={
+        <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-line pt-4">
+          <button
+            type="button"
+            disabled={!buildPayload(type, fields[type]) || !changed}
+            onClick={commit}
+            className="min-h-11 rounded-xl bg-accent px-5 font-heading text-sm font-bold text-on-accent disabled:opacity-40"
+          >
+            {t.save}
+          </button>
+          <span className="text-sm text-muted" aria-live="polite">
+            {state === "bad" ? <span className="text-warn">{t.linkBad}</span> : state === "saved" ? `✓ ${t.saved}` : code.content ? t.linkHint : t.linkEmpty}
+          </span>
+        </div>
+      }
+    />
   );
 }

@@ -9,6 +9,7 @@ import { KindIcon } from "./KindIcon";
 import { useLang } from "@/lib/lang";
 import { refreshPeople, useMe } from "@/lib/me";
 import { Avatar, personName } from "./Avatar";
+import { ContentCard } from "./ContentCard";
 import { Memory } from "./Memory";
 import { ReportBox } from "./ReportBox";
 import { Notice, Shell } from "./Shell";
@@ -321,12 +322,14 @@ export function ScanPage({ id, invite }: { id: string; invite: string | null }) 
               </Link>
             </div>
           )}
-          {code.kind === "link" && <Notice>{t.linkNotSet}</Notice>}
+          {code.kind === "link" &&
+            code.access !== "closed" &&
+            (code.content ? <ContentCard t={t} lang={lang} content={code.content} title={code.title} /> : <Notice>{t.linkNotSet}</Notice>)}
           {code.lost && code.kind !== "item" && code.kind !== "link" && <LostBanner t={t} code={code} />}
           {code.auth && <AuthCard t={t} lang={lang} code={code} me={me} onChange={setCode} />}
-          {code.kind === "item" || code.kind === "link" ? null : code.access === "closed" && code.kind === "memory" ? (
+          {code.kind === "item" ? null : code.access === "closed" && (code.kind === "memory" || code.kind === "link") ? (
             <Closed key={me ?? ""} t={t} code={code} me={me} id={id} invite={invite} onChange={setCode} />
-          ) : (
+          ) : code.kind === "link" ? null : (
             <>
               <h1 className="flex items-start gap-2 font-heading text-3xl font-extrabold leading-tight tracking-tight">
                 {code.kind !== "memory" && <KindIcon kind={code.kind} className="mt-1.5 h-7 w-7 text-muted" />}

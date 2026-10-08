@@ -5,6 +5,7 @@ import type { Person } from "./people";
 import type { Need, Order, OrderStatus, Pkg } from "./orders";
 import type { ProductId, ShopOrder } from "./shop";
 import type { Quote, Tier } from "./pricing";
+import type { Content } from "./qr/payload";
 import type { SavedStyle } from "./qr/style";
 
 export type Visibility = "all" | "contacts" | "people" | "me";
@@ -56,8 +57,10 @@ export type CodeRecord = {
   tasks: Task[];
   /** Заблокирован администратором по жалобе: скан ничего не показывает и никуда не ведёт. */
   blocked?: { at: string; reason: string };
-  /** Код-ссылка: куда переадресует скан (меняется когда угодно — код тот же). */
+  /** Код-ссылка: прежний адрес (до 08.10.2026). Теперь — content; страница скана показывает адрес кнопкой «Открыть». */
   target?: string;
+  /** Что в коде из генератора (сайт, телефон, Wi-Fi…): скан открывает нашу страницу с этим и кнопками. */
+  content?: Content;
   /** Вещь бренда (защита от подделок): секрет под стираемым слоем, кто зарегистрировал. */
   auth?: AuthRecord;
   /** Все, кто видит и вошёл, могут добавлять записи (свадьба, праздник). */
@@ -100,6 +103,8 @@ export type CodeView = {
   publicAdd: boolean;
   /** Только хозяину. */
   target?: string | null;
+  /** Содержимое (сайт, телефон, Wi-Fi…) — тем, кому код открыт. */
+  content: Content | null;
   stats?: ScanStats;
   /** Заблокирован администратором (видят все: гостю — «заблокирован», хозяину — почему). */
   blocked: boolean;
@@ -177,7 +182,7 @@ async function call<T>(url: string, init?: RequestInit): Promise<T> {
 }
 const json = (method: string, body: unknown): RequestInit => ({ method, headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
 
-export type CodePatch = Partial<Pick<CodeRecord, "title" | "visibility" | "people" | "style" | "showOwner" | "contact" | "lost" | "reward" | "compact" | "publicAdd" | "target">> & {
+export type CodePatch = Partial<Pick<CodeRecord, "title" | "visibility" | "people" | "style" | "showOwner" | "contact" | "lost" | "reward" | "compact" | "publicAdd" | "target" | "content">> & {
   readMessages?: boolean;
   removeMessage?: string;
   approve?: string;
@@ -232,7 +237,7 @@ export const api = {
   patch: (id: string, patch: CodePatch) => call<CodeView>(`/api/codes/${id}`, json("PATCH", patch)),
   remove: (id: string) => call<{ ok: true }>(`/api/codes/${id}`, { method: "DELETE" }),
   /** Код из генератора: адрес (код-ссылка) или текст → короткая ссылка для самого кода. */
-  quick: (body: { target?: string; text?: string; style: unknown }) => call<{ id: string; link: string }>("/api/codes/quick", json("POST", body)),
+  quick: (body: { content: Content; style: unknown }) => call<{ id: string; link: string }>("/api/codes/quick", json("POST", body)),
   addBlock: (id: string, form: FormData) => call<CodeView>(`/api/codes/${id}/blocks`, { method: "POST", body: form }),
   editBlock: (id: string, blockId: string, text: string) => call<CodeView>(`/api/codes/${id}/blocks/${blockId}`, json("PATCH", { text })),
   removeBlock: (id: string, blockId: string) => call<CodeView>(`/api/codes/${id}/blocks/${blockId}`, { method: "DELETE" }),

@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { api } from "@/lib/codes";
-import { buildPayload, CONTENT_TYPES, isDirect, linkTarget, type ContentType, type Fields } from "@/lib/qr/payload";
+import { buildPayload, CONTENT_TYPES, type ContentType, type Fields } from "@/lib/qr/payload";
 import { buildDrawing } from "@/lib/qr/render";
 import { LOGO_FOR } from "@/lib/qr/logo-art";
 import { codeKey, tierOf } from "@/lib/pricing";
@@ -30,12 +30,10 @@ export function Generator() {
   const [style, setStyle] = useState<StyleState>(DEFAULT_STYLE);
   const raw = buildPayload(type, fields[type]);
   const { me, base } = useMe();
-  // Наш красивый код ведёт только через нашу короткую ссылку: в предпросмотре — образец той же длины, настоящая
-  // создаётся при скачивании (код появляется в «Мои коды»). Wi-Fi, контакт и событие — прямо в коде, только простые.
-  const direct = isDirect(type);
+  // Любой наш код ведёт через нашу короткую ссылку, скан открывает нашу страницу с содержимым и кнопками (и Wi-Fi,
+  // контакт, событие — решение владельца 08.10.2026). В предпросмотре — образец той же длины, настоящая — при скачивании.
   const sample = `${(base || "https://qrspace.co").toUpperCase()}/K/XXXXXX`;
-  // Пока ничего не ввели — в предпросмотре пример с нашей ссылкой: видно, как меняется вид, скачать нельзя.
-  const payload = direct && raw ? raw : sample;
+  const payload = sample;
   const tier = tierOf(style);
 
   return (
@@ -69,14 +67,10 @@ export function Generator() {
           gate={{
             tier,
             key: () => codeKey(raw, toSaved(style)),
-            blocked: direct && tier === "styled" ? t.directBlocked : undefined,
-            finalize: direct
-              ? undefined
-              : async () => {
-                  const target = linkTarget(type, raw);
-                  const { link } = await api.quick(target ? { target, style: toSaved(style) } : { text: raw, style: toSaved(style) });
-                  return { drawing: buildDrawing(link, toQrStyle(style)), payload: link };
-                },
+            finalize: async () => {
+              const { link } = await api.quick({ content: { type, fields: fields[type] }, style: toSaved(style) });
+              return { drawing: buildDrawing(link, toQrStyle(style)), payload: link };
+            },
           }}
           top={
             <ContentForm
@@ -94,21 +88,14 @@ export function Generator() {
             ) : (
               <section className="flex gap-4 rounded-2xl bg-stage p-5 text-on-stage">
                 <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-accent text-on-accent" aria-hidden>
-                  {direct ? (
-                    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="6.5" y="2.5" width="11" height="19" rx="2.5" />
-                      <path d="M11 18.5h2" />
-                    </svg>
-                  ) : (
-                    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4" />
-                    </svg>
-                  )}
+                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4" />
+                  </svg>
                 </span>
                 <div className="min-w-0">
-                  <h2 className="font-heading text-base font-bold">{direct ? t.directTitle : t.viaTitle}</h2>
-                  <p className="mt-1 text-sm leading-relaxed text-on-stage/70">{direct ? t.directText : t.viaText}</p>
-                  {!direct && me && (
+                  <h2 className="font-heading text-base font-bold">{t.viaTitle}</h2>
+                  <p className="mt-1 text-sm leading-relaxed text-on-stage/70">{t.viaText}</p>
+                  {me && (
                     <Link href="/codes" className="mt-3 inline-flex min-h-10 items-center gap-1.5 text-sm font-semibold text-accent hover:underline">
                       {t.viaCta} →
                     </Link>
