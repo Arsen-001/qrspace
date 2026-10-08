@@ -47,7 +47,7 @@ function MyCodes({ t, me }: { t: Dict; me: string }) {
         <li>
           <Link
             href="/#make"
-            className="flex h-full min-h-48 flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-line p-4 text-center text-sm font-semibold text-muted transition-colors hover:border-accent-ink hover:text-ink"
+            className="flex h-full min-h-48 flex-col items-center justify-center gap-3 rounded-3xl border-2 border-dashed border-line p-4 text-center text-sm font-semibold text-muted transition-all hover:-translate-y-1 hover:border-accent-ink hover:text-ink"
           >
             <span aria-hidden className="grid h-12 w-12 place-items-center rounded-xl bg-accent text-2xl text-on-accent">
               +

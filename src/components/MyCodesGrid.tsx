@@ -36,7 +36,8 @@ const saveTitle = (id: string, title: string) =>
 const stop = { onMouseDown: (e: React.SyntheticEvent) => e.stopPropagation(), onTouchStart: (e: React.SyntheticEvent) => e.stopPropagation(), onKeyDown: (e: React.SyntheticEvent) => e.stopPropagation() };
 
 function Chip({ children, tone = "plain", title }: { children: ReactNode; tone?: "plain" | "warn" | "dark" | "soft"; title?: string }) {
-  const cls = { plain: "bg-field text-muted", warn: "bg-warn text-on-warn", dark: "bg-stage text-on-stage", soft: "bg-warn-soft text-warn" }[tone];
+  // Низ карточки тёмный (как в маркете): спокойные метки — полупрозрачные, тревожные — красные, тираж — лаймом.
+  const cls = { plain: "bg-on-stage/10 text-on-stage/80", warn: "bg-warn text-on-warn", dark: "bg-accent text-on-accent", soft: "bg-warn text-on-warn" }[tone];
   return (
     <span title={title} className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${cls}`}>
       {children}
@@ -84,7 +85,7 @@ function Name({ t, code, onRename }: { t: Dict; code: CodeView; onRename: (title
             setEdit(false);
           }
         }}
-        className="w-full min-w-0 rounded-lg border border-accent bg-field px-2 py-1 font-heading text-sm font-bold outline-none"
+        className="w-full min-w-0 rounded-lg border border-accent bg-on-stage/10 px-2 py-1 font-heading text-sm font-bold text-on-stage outline-none"
       />
     );
   return (
@@ -98,7 +99,7 @@ function Name({ t, code, onRename }: { t: Dict; code: CodeView; onRename: (title
         onClick={() => setEdit(true)}
         aria-label={`${t.rename}: ${code.title}`}
         title={t.rename}
-        className="-mr-1 -mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg text-muted hover:bg-field hover:text-ink"
+        className="-mr-1 -mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg text-on-stage/50 hover:bg-on-stage/10 hover:text-on-stage"
       >
         <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
           <path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4" />
@@ -114,15 +115,23 @@ function CardBody({ t, base, code, onRename, dragging }: { t: Dict; base: string
   const notSet = code.kind === "link" && !code.content;
   return (
     <>
-      <Link href={`/codes/${code.id}`} aria-label={code.title ?? undefined} draggable={false} className="relative block" tabIndex={dragging ? -1 : undefined}>
-        <QrThumb link={linkOf(base, code)} style={code.style} className={`w-full border border-line ${code.blocked ? "opacity-40" : ""}`} />
+      {/* Код — на своём цвете, как на витрине маркета. */}
+      <Link
+        href={`/codes/${code.id}`}
+        aria-label={code.title ?? undefined}
+        draggable={false}
+        className="relative block p-3 sm:p-4"
+        style={{ background: code.style?.bg ?? "#ffffff" }}
+        tabIndex={dragging ? -1 : undefined}
+      >
+        <QrThumb link={linkOf(base, code)} style={code.style} className={`w-full rounded-xl shadow-[0_10px_30px_-14px_rgba(0,0,0,0.45)] transition-transform duration-300 group-hover:scale-[1.03] ${code.blocked ? "opacity-40" : ""}`} />
         {(unread > 0 || requests > 0) && (
-          <span className="absolute -right-1.5 -top-1.5 grid h-6 min-w-6 place-items-center rounded-full bg-warn px-1.5 text-xs font-bold text-on-warn shadow">{unread + requests}</span>
+          <span className="absolute right-2 top-2 grid h-6 min-w-6 place-items-center rounded-full bg-warn px-1.5 text-xs font-bold text-on-warn shadow">{unread + requests}</span>
         )}
       </Link>
-      <div className="mt-3 space-y-2 px-0.5">
+      <div className="flex flex-1 flex-col gap-2 p-3 sm:p-4">
         <div className="flex items-start gap-1.5">
-          <KindIcon kind={code.kind} className="mt-0.5 h-4 w-4 shrink-0 text-muted" />
+          <KindIcon kind={code.kind} className="mt-0.5 h-4 w-4 shrink-0 text-on-stage/50" />
           <div className="min-w-0 flex-1">
             <Name t={t} code={code} onRename={onRename} />
           </div>
@@ -139,10 +148,10 @@ function CardBody({ t, base, code, onRename, dragging }: { t: Dict; base: string
           {code.edition && <Chip tone="dark">{code.edition.design === "number" ? t.numberCode : `№ ${code.edition.no}${code.edition.of !== null ? `/${code.edition.of}` : ""}`}</Chip>}
           {code.lost && <Chip tone="warn">{t.lostMode}</Chip>}
         </div>
-        <div className="flex items-baseline gap-1.5 font-mono text-xs text-muted">
-          <span className="font-heading text-base font-extrabold text-ink">{code.stats?.total ?? 0}</span>
+        <div className="mt-auto flex items-baseline gap-1.5 font-mono text-xs text-on-stage/60">
+          <span className="font-heading text-lg font-extrabold text-on-stage">{code.stats?.total ?? 0}</span>
           {t.scansCount.toLowerCase()}
-          {!!code.stats?.week && <span className="font-semibold text-ok">+{code.stats.week}</span>}
+          {!!code.stats?.week && <span className="rounded-md bg-accent px-1.5 font-bold text-on-accent">+{code.stats.week}</span>}
         </div>
       </div>
     </>
@@ -166,15 +175,17 @@ function SortableCard({ t, base, code, index, count, move, onRename, guard }: { 
         }
       }}
       onContextMenu={(e) => e.preventDefault()}
-      className={`group relative flex touch-manipulation select-none flex-col rounded-2xl border border-line bg-card p-3 outline-none [-webkit-touch-callout:none] focus-visible:border-accent-ink ${isDragging ? "opacity-30" : "hover:border-muted"}`}
+      className={`group relative flex touch-manipulation select-none flex-col overflow-hidden rounded-3xl bg-stage text-on-stage shadow-[0_18px_40px_-24px_rgba(0,0,0,0.6)] outline-none transition-[transform,box-shadow] duration-300 [-webkit-touch-callout:none] focus-within:ring-2 focus-within:ring-accent ${
+        isDragging ? "opacity-30" : "hover:-translate-y-1 hover:shadow-[0_30px_60px_-24px_rgba(0,0,0,0.7)]"
+      }`}
     >
       <CardBody t={t} base={base} code={code} onRename={onRename} />
       {/* Для клавиатуры и тех, кому неудобно тащить: «выше / ниже». */}
-      <div className="mt-2 flex justify-end gap-1 opacity-60 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
-        <button type="button" {...stop} disabled={index === 0} onClick={() => move(index, index - 1)} aria-label={`${t.moveUp}: ${code.title}`} title={t.moveUp} className="grid h-8 w-8 place-items-center rounded-lg border border-line text-sm disabled:opacity-30">
+      <div className="flex justify-end gap-1 px-3 pb-3 opacity-60 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 sm:px-4">
+        <button type="button" {...stop} disabled={index === 0} onClick={() => move(index, index - 1)} aria-label={`${t.moveUp}: ${code.title}`} title={t.moveUp} className="grid h-8 w-8 place-items-center rounded-lg border border-stage-line text-sm hover:border-on-stage/60 disabled:opacity-30">
           ←
         </button>
-        <button type="button" {...stop} disabled={index === count - 1} onClick={() => move(index, index + 1)} aria-label={`${t.moveDown}: ${code.title}`} title={t.moveDown} className="grid h-8 w-8 place-items-center rounded-lg border border-line text-sm disabled:opacity-30">
+        <button type="button" {...stop} disabled={index === count - 1} onClick={() => move(index, index + 1)} aria-label={`${t.moveDown}: ${code.title}`} title={t.moveDown} className="grid h-8 w-8 place-items-center rounded-lg border border-stage-line text-sm hover:border-on-stage/60 disabled:opacity-30">
           →
         </button>
       </div>
@@ -246,7 +257,7 @@ export function MyCodesGrid({ t, base, codes, leading }: { t: Dict; base: string
         {/* Карточка «в руке»: приподнята, чуть повёрнута, с тенью. */}
         <DragOverlay dropAnimation={{ duration: 180, easing: "cubic-bezier(0.2, 0, 0, 1)" }}>
           {activeCode && (
-            <div className="flex scale-[1.04] -rotate-1 cursor-grabbing flex-col rounded-2xl border border-accent bg-card p-3 shadow-[0_24px_50px_-16px_rgba(0,0,0,0.45)]">
+            <div className="flex scale-[1.04] -rotate-2 cursor-grabbing flex-col overflow-hidden rounded-3xl bg-stage text-on-stage shadow-[0_30px_60px_-16px_rgba(0,0,0,0.55)] ring-2 ring-accent">
               <CardBody t={t} base={base} code={activeCode} onRename={async () => {}} dragging />
             </div>
           )}
