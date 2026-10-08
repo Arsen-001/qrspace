@@ -7,6 +7,7 @@ import { tr, type Dict, type Lang } from "@/lib/i18n";
 import { useLang } from "@/lib/lang";
 import { catalog, type Design } from "@/lib/market";
 import { useMe } from "@/lib/me";
+import { CodePacks } from "./CodePacks";
 import { LotCards, useLots } from "./Lots";
 import { QrThumb } from "./QrThumb";
 import { Shell } from "./Shell";
@@ -199,6 +200,8 @@ export function MarketPage() {
           </Link>
         </div>
       </section>
+
+      <CodePacks t={t} lang={lang} />
 
       {lots && lots.length > 0 && (
         <section className="mt-12">

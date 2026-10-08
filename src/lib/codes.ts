@@ -4,6 +4,7 @@ import type { Listing } from "./listings";
 import type { Person } from "./people";
 import type { Need, Order, OrderStatus, Pkg } from "./orders";
 import type { ProductId, ShopOrder } from "./shop";
+import type { Pack } from "./packs";
 import type { Quote, Tier } from "./pricing";
 import type { Content } from "./qr/payload";
 import type { SavedStyle } from "./qr/style";
@@ -183,6 +184,9 @@ export const fmtBytes = (n: number, lang: string) =>
       ? `${(n / 1024 ** 2).toLocaleString(lang, { maximumFractionDigits: 1 })} MB`
       : `${Math.max(1, Math.round(n / 1024))} KB`;
 export const buyStorage = (id: string, plan: string) => call<CodeView>(`/api/codes/${id}/storage`, json("POST", { plan }));
+/** Пакеты кодов: мои (сколько осталось) и покупка. */
+export const myPacks = () => call<{ left: number; packs: Pack[] }>("/api/packs");
+export const buyPack = (plan: string) => call<{ left: number; packs: Pack[] }>("/api/packs", json("POST", { plan }));
 export const VIDEO_TYPES: Record<string, string> = { "video/mp4": "mp4", "video/quicktime": "mov", "video/webm": "webm" };
 /** Имя видео, которое браузер кладёт прямо в хранилище: «<код>_<12 букв/цифр>.<mp4|mov|webm>». */
 export const uploadedName = (id: string, name: string) => name.startsWith(`${id}_`) && /^[A-Za-z0-9]+_[A-Za-z0-9]{12}\.(mp4|mov|webm)$/.test(name);
@@ -263,7 +267,7 @@ export const api = {
   patch: (id: string, patch: CodePatch) => call<CodeView>(`/api/codes/${id}`, json("PATCH", patch)),
   remove: (id: string) => call<{ ok: true }>(`/api/codes/${id}`, { method: "DELETE" }),
   /** Код из генератора: адрес (код-ссылка) или текст → короткая ссылка для самого кода. */
-  quick: (body: { content: Content; style: unknown }) => call<{ id: string; link: string }>("/api/codes/quick", json("POST", body)),
+  quick: (body: { content: Content; style: unknown; key?: string }) => call<{ id: string; link: string }>("/api/codes/quick", json("POST", body)),
   addBlock: (id: string, form: FormData) => call<CodeView>(`/api/codes/${id}/blocks`, { method: "POST", body: form }),
   editBlock: (id: string, blockId: string, text: string) => call<CodeView>(`/api/codes/${id}/blocks/${blockId}`, json("PATCH", { text })),
   removeBlock: (id: string, blockId: string) => call<CodeView>(`/api/codes/${id}/blocks/${blockId}`, { method: "DELETE" }),

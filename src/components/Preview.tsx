@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { api } from "@/lib/codes";
+import { api, fmtBytes } from "@/lib/codes";
 import type { Dict } from "@/lib/i18n";
 import { useMe } from "@/lib/me";
 import { PRICES, type Quote, type Tier } from "@/lib/pricing";
@@ -222,11 +222,22 @@ export function Preview({
             </>
           ) : (
             <>
-              <p className="text-sm font-semibold">{pay.quote.free ? t.freeFirst : `${t.payTitle}: $${pay.quote.price}`}</p>
-              {!pay.quote.free && <p className="mt-1 text-xs text-on-stage/60">{t.buyDemo}</p>}
+              {pay.quote.pack ? (
+                <>
+                  <p className="text-sm font-semibold">{t.packFrom}</p>
+                  <p className="mt-1 font-mono text-xs text-on-stage/70">
+                    {t.packLeft}: <b className="text-accent">{pay.quote.pack.left}</b> · {fmtBytes(pay.quote.pack.bytes, lang)} {t.packRoom}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-semibold">{pay.quote.free ? t.freeFirst : `${t.payTitle}: $${pay.quote.price}`}</p>
+                  {!pay.quote.free && <p className="mt-1 text-xs text-on-stage/60">{t.buyDemo}</p>}
+                </>
+              )}
               <div className="mt-3 flex gap-2">
                 <button type="button" disabled={busy} onClick={confirm} className="min-h-11 flex-1 rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent disabled:opacity-50">
-                  {pay.quote.free ? t.downloadFree : `${t.payAndDownload} — $${pay.quote.price}`}
+                  {pay.quote.pack ? t.packDownload : pay.quote.free ? t.downloadFree : `${t.payAndDownload} — $${pay.quote.price}`}
                 </button>
                 <button type="button" onClick={() => setPay(null)} className="min-h-11 rounded-xl px-3 text-sm font-medium text-on-stage/70 hover:text-on-stage">
                   {t.cancel}

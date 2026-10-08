@@ -6,8 +6,8 @@ import type { SavedStyle } from "./qr/style";
 
 export type Tier = "simple" | "styled";
 export const PRICES: Record<Tier, number> = { simple: 1, styled: 5 };
-export type Purchase = { person: string; key: string; tier: Tier; price: number; free: boolean; at: string };
-export type Quote = { paid: boolean; price: number; free: boolean };
+export type Purchase = { person: string; key: string; tier: Tier; price: number; free: boolean; at: string; /** Скачан из пакета. */ pack?: string; bytes?: number };
+export type Quote = { paid: boolean; price: number; free: boolean; /** Можно взять из пакета: сколько кодов осталось и место под кодом. */ pack?: { left: number; bytes: number } };
 
 const SIMPLE_DOTS = ["square", "rounded", "dots"];
 const SIMPLE_EYES = ["square", "rounded", "circle"];

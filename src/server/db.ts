@@ -9,12 +9,13 @@ import { DESIGNS, SEED_SALES, type Design } from "@/lib/market";
 import type { Listing } from "@/lib/listings";
 import type { Order } from "@/lib/orders";
 import type { Purchase } from "@/lib/pricing";
+import type { Pack } from "@/lib/packs";
 import type { ShopOrder } from "@/lib/shop";
 import { demoEnabled, demoUsers, publicPerson, usable, type User } from "./users";
 import { DEFAULT_STYLE, type SavedStyle } from "@/lib/qr/style";
 
 
-export type Db = { codes: CodeRecord[]; sales: Record<string, number>; designs: Design[]; purchases: Purchase[]; orders: Order[]; listings: Listing[]; shop: ShopOrder[]; users: User[]; notifications: Notice[]; reports: Report[] };
+export type Db = { codes: CodeRecord[]; sales: Record<string, number>; designs: Design[]; purchases: Purchase[]; packs: Pack[]; orders: Order[]; listings: Listing[]; shop: ShopOrder[]; users: User[]; notifications: Notice[]; reports: Report[] };
 
 const ALPHABET = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 // Без похожих (0/O, 1/I) — короткий номер иногда вводят руками.
@@ -76,6 +77,7 @@ function seed(): Db {
     sales: { ...SEED_SALES },
     designs: [],
     purchases: [],
+    packs: [],
     orders: [],
     codes: [
       parchment,
@@ -201,6 +203,7 @@ function normalize(db: Db): Db {
   db.sales ??= { ...SEED_SALES };
   db.designs ??= [];
   db.purchases ??= [];
+  db.packs ??= [];
   db.orders ??= [];
   db.listings ??= [];
   db.shop ??= [];
@@ -305,6 +308,10 @@ export async function noticesFor(person: string) {
 
 export async function allOrders(): Promise<Order[]> {
   return (await read()).orders;
+}
+
+export async function packsOf(person: string): Promise<Pack[]> {
+  return (await read()).packs.filter((p) => p.person === person);
 }
 
 export async function purchasesOf(person: string): Promise<Purchase[]> {
