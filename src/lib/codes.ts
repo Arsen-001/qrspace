@@ -38,7 +38,8 @@ export type Task = { id: string; text: string; due: string; every: Repeat; done:
 /** Расписание номера: виден только с from до to (по времени хозяина, tz); через полночь — тоже можно (22:00–07:00). */
 export type Schedule = { on: boolean; from: string; to: string; tz: string };
 export type Contact = { enabled: boolean; phone: string; showPhone: boolean; schedule?: Schedule };
-export type Block = { id: string; kind: "text" | "photo" | "video"; text: string; media: string | null; author: string; at: string };
+/** size — сколько байт занимает запись (файл и текст): из этого складывается место под кодом. */
+export type Block = { id: string; kind: "text" | "photo" | "video"; text: string; media: string | null; author: string; at: string; size?: number };
 export type Visit = { personId: string | null; at: string; allowed: boolean };
 
 export type CodeRecord = {
@@ -63,6 +64,8 @@ export type CodeRecord = {
   content?: Content;
   /** Оформление закреплено: код уже скачан (или куплен) — вид больше не меняется (владелец 08.10.2026). */
   styleLocked?: boolean;
+  /** Место под кодом, байт (владелец 08.10.2026: 1 МБ бесплатно, больше — платно); нет — 1 МБ. */
+  storage?: number;
   /** Вещь бренда (защита от подделок): секрет под стираемым слоем, кто зарегистрировал. */
   auth?: AuthRecord;
   /** Все, кто видит и вошёл, могут добавлять записи (свадьба, праздник). */
@@ -109,6 +112,8 @@ export type CodeView = {
   content: Content | null;
   /** Вид закреплён — менять нельзя (скачан, куплен в маркете, вещь бренда). */
   styleLocked: boolean;
+  /** Место под кодом: занято и всего, байт (хозяину и тем, кто дописывает). */
+  storage?: { used: number; quota: number };
   stats?: ScanStats;
   /** Заблокирован администратором (видят все: гостю — «заблокирован», хозяину — почему). */
   blocked: boolean;
@@ -161,6 +166,23 @@ export type Lot = Listing & { view: Pick<CodeView, "title" | "style" | "edition"
 
 export const MAX_PHOTO_PX = 1600;
 export const MAX_VIDEO_MB = 50;
+
+/** Место под каждым кодом (владелец 08.10.2026): 1 МБ бесплатно; больше — пакетами (цены демо, владелец не утверждал). */
+export const FREE_STORAGE = 1024 * 1024;
+export const STORAGE_PLANS = [
+  { id: "s10", bytes: 10 * 1024 * 1024, price: 1 },
+  { id: "s100", bytes: 100 * 1024 * 1024, price: 3 },
+  { id: "s1000", bytes: 1024 * 1024 * 1024, price: 9 },
+] as const;
+export const storageOf = (c: Pick<CodeRecord, "storage" | "blocks">) => ({ used: c.blocks.reduce((s, b) => s + (b.size ?? 0), 0), quota: c.storage ?? FREE_STORAGE });
+/** «0,4 МБ», «120 КБ». */
+export const fmtBytes = (n: number, lang: string) =>
+  n >= 1024 * 1024 * 1024
+    ? `${(n / 1024 ** 3).toLocaleString(lang, { maximumFractionDigits: 1 })} GB`
+    : n >= 1024 * 1024
+      ? `${(n / 1024 ** 2).toLocaleString(lang, { maximumFractionDigits: 1 })} MB`
+      : `${Math.max(1, Math.round(n / 1024))} KB`;
+export const buyStorage = (id: string, plan: string) => call<CodeView>(`/api/codes/${id}/storage`, json("POST", { plan }));
 export const VIDEO_TYPES: Record<string, string> = { "video/mp4": "mp4", "video/quicktime": "mov", "video/webm": "webm" };
 /** Имя видео, которое браузер кладёт прямо в хранилище: «<код>_<12 букв/цифр>.<mp4|mov|webm>». */
 export const uploadedName = (id: string, name: string) => name.startsWith(`${id}_`) && /^[A-Za-z0-9]+_[A-Za-z0-9]{12}\.(mp4|mov|webm)$/.test(name);

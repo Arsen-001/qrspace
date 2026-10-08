@@ -4,7 +4,7 @@ import { randomBytes } from "node:crypto";
 import { networkInterfaces } from "node:os";
 import { media as mediaStore } from "./media";
 import { store } from "./store";
-import { inSchedule, ymd, type Report, type AccessLevel, type CodeRecord, type CodeView, type Kind, type Notice } from "@/lib/codes";
+import { inSchedule, ymd, type Report, type AccessLevel, type CodeRecord, type CodeView, type Kind, type Notice, storageOf } from "@/lib/codes";
 import { DESIGNS, SEED_SALES, type Design } from "@/lib/market";
 import type { Listing } from "@/lib/listings";
 import type { Order } from "@/lib/orders";
@@ -416,6 +416,7 @@ export function viewOf(code: CodeRecord, me: string | null): CodeView {
     requested: !!me && code.requests.some((r) => r.personId === me),
     style: owner || access !== "closed" ? code.style : null,
     styleLocked: !!(code.styleLocked || code.edition || code.auth),
+    ...((owner || access === "edit") && { storage: storageOf(code) }),
     // Прежний код-ссылка без содержимого — его адрес как «сайт».
     // Заблокированный по жалобе — содержимое (куда ведёт) только хозяину.
     content: access === "closed" || (code.blocked && !owner) ? null : (code.content ?? (code.target ? { type: "url", fields: { url: code.target } } : null)),

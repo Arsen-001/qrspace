@@ -18,6 +18,12 @@ await p.getByRole("button", { name: "Создать" }).click();
 await p.waitForURL(/\/codes\/\w+/);
 const id = p.url().split("/").pop();
 const direct = (await (await p.request.get(`${B}/api/codes/${id}/upload`)).json()).direct;
+// Место под кодом — 1 МБ бесплатно (владелец 08.10.2026): видео 6 МБ не влезет, пока не взять пакет побольше.
+const st0 = (await (await p.request.get(`${B}/api/codes/${id}`)).json()).storage;
+console.log(st0?.quota === 1048576 ? "  ✓" : "  ✗", "free space under a code is 1 MB");
+const bought = await p.evaluate((u) => fetch(u, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ plan: "s10" }) }).then((r) => r.json()), `/api/codes/${id}/storage`);
+console.log(bought.storage?.quota === 10485760 ? "  ✓" : "  ✗", "bought 10 MB under the code");
+await p.reload({ waitUntil: "networkidle" });
 console.log("  · прямая загрузка в хранилище:", direct);
 await p.getByRole("radio", { name: "Видео" }).click();
 const size = 6 * 1024 * 1024;

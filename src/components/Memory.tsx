@@ -1,7 +1,7 @@
 "use client";
 // Память под кодом: записи (текст, фото, видео) и форма «дописать». Одна и та же в настройках и после скана.
 import { useRef, useState } from "react";
-import { api, MAX_PHOTO_PX, MAX_VIDEO_MB, mediaUrl, VIDEO_TYPES, type Block, type CodeView } from "@/lib/codes";
+import { api, buyStorage, fmtBytes, MAX_PHOTO_PX, MAX_VIDEO_MB, mediaUrl, STORAGE_PLANS, VIDEO_TYPES, type Block, type CodeView } from "@/lib/codes";
 import { fmtDateTime } from "@/lib/format";
 import type { Dict, Lang } from "@/lib/i18n";
 import { prepareImage } from "@/lib/qr/raster";
@@ -79,11 +79,14 @@ function Composer({ t, code, onChange }: { t: Dict; code: CodeView; onChange: (v
         if (uploaded) form.set("uploaded", uploaded);
         else form.set("file", sentFile);
       }
+      // Не влезает в место под кодом — говорим сразу, не загружая файл.
+      const need = (form.get("file") instanceof Blob ? (form.get("file") as Blob).size : sentFile && kind === "video" ? sentFile.size : 0) + new Blob([sentText]).size;
+      if (code.storage && code.storage.used + need > code.storage.quota) throw new Error("413");
       onChange(await api.addBlock(code.id, form));
       setText((t) => (t === sentText ? "" : t));
       setFile((f) => (f === sentFile ? null : f));
-    } catch {
-      setError(t.uploadError);
+    } catch (e) {
+      setError((e as Error).message === "413" ? t.storageFull : t.uploadError);
     } finally {
       setBusy(false);
       setProgress(null);
@@ -230,6 +233,61 @@ function Entry({ t, lang, code, block, me, onChange }: { t: Dict; lang: Lang; co
   );
 }
 
+/** Место под кодом (владелец 08.10.2026): шкала «занято из всего» и пакеты побольше (хозяину). */
+function StorageBar({ t, lang, code, onChange }: { t: Dict; lang: Lang; code: CodeView; onChange: (v: CodeView) => void }) {
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const st = code.storage;
+  if (!st) return null;
+  const k = Math.min(1, st.used / st.quota);
+  const buy = async (plan: string) => {
+    setBusy(true);
+    try {
+      onChange(await buyStorage(code.id, plan));
+      setOpen(false);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <section className="rounded-2xl border border-line bg-card p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <div className="text-sm font-semibold">{t.storageTitle}</div>
+          <div className="font-mono text-xs text-muted">
+            {fmtBytes(st.used, lang)} / {fmtBytes(st.quota, lang)}
+          </div>
+        </div>
+        {code.access === "owner" && (
+          <button type="button" onClick={() => setOpen((v) => !v)} className="min-h-10 shrink-0 rounded-xl bg-stage px-3.5 font-heading text-sm font-bold text-on-stage">
+            {t.storageMore}
+          </button>
+        )}
+      </div>
+      <div className="mt-2 h-2 overflow-hidden rounded-full bg-line">
+        <div className={`h-full rounded-full ${k > 0.9 ? "bg-warn" : "bg-accent"}`} style={{ width: `${Math.max(2, k * 100)}%` }} />
+      </div>
+      {open && (
+        <div className="mt-3 grid gap-2 sm:grid-cols-3">
+          {STORAGE_PLANS.filter((p) => p.bytes > st.quota).map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              disabled={busy}
+              onClick={() => buy(p.id)}
+              className="flex items-center justify-between rounded-xl border border-line bg-field px-3.5 py-3 text-left hover:border-muted disabled:opacity-50"
+            >
+              <span className="font-heading text-lg font-extrabold">{fmtBytes(p.bytes, lang)}</span>
+              <span className="rounded-lg bg-accent px-2 py-0.5 font-heading text-sm font-bold text-on-accent">${p.price}</span>
+            </button>
+          ))}
+          <p className="text-xs text-muted sm:col-span-3">{t.buyDemo}</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
 export function Memory({ t, lang, code, me, onChange }: { t: Dict; lang: Lang; code: CodeView; me: string | null; onChange: (v: CodeView) => void }) {
   const blocks = code.blocks ?? [];
   const canAdd = code.access === "owner" || code.access === "edit";
@@ -247,6 +305,7 @@ export function Memory({ t, lang, code, me, onChange }: { t: Dict; lang: Lang; c
       {canAdd && (
         <>
           {blocks.length === 0 && <p className="text-sm text-muted">{t.memoryEmpty}</p>}
+          <StorageBar t={t} lang={lang} code={code} onChange={onChange} />
           <Composer t={t} code={code} onChange={onChange} />
         </>
       )}

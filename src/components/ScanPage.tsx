@@ -325,6 +325,12 @@ export function ScanPage({ id, invite }: { id: string; invite: string | null }) 
           {code.kind === "link" &&
             code.access !== "closed" &&
             (code.content ? <ContentCard t={t} lang={lang} content={code.content} title={code.title} /> : <Notice>{t.linkNotSet}</Notice>)}
+          {/* Под любым кодом — память (владелец 08.10.2026): у кода из генератора — под карточкой. */}
+          {code.kind === "link" && code.access !== "closed" && (!!code.blocks?.length || code.access === "owner" || code.access === "edit") && (
+            <div className="mt-5">
+              <Memory t={t} lang={lang} code={code} me={me} onChange={setCode} />
+            </div>
+          )}
           {code.lost && code.kind !== "item" && code.kind !== "link" && <LostBanner t={t} code={code} />}
           {code.auth && <AuthCard t={t} lang={lang} code={code} me={me} onChange={setCode} />}
           {code.kind === "item" ? null : code.access === "closed" && (code.kind === "memory" || code.kind === "link") ? (

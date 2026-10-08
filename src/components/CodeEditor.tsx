@@ -163,12 +163,13 @@ function Editor({ t, lang, me, base, initial }: { t: Dict; lang: Lang; me: strin
   const unread = code.messages?.filter((m) => !m.read).length ?? 0;
   // У машины, ключей и питомца главное — связь: эта вкладка первая.
   const contactTab = { id: "contact" as const, label: t.tabContact, badge: unread };
-  // Код-ссылке память и «кто видит» не нужны: скан сразу уходит на адрес хозяина.
+  // У кода-ссылки первая вкладка — что в коде; память и «кто видит» есть у любого кода.
   const tabs: { id: Tab; label: string; badge?: number }[] =
     code.kind === "link"
       ? [
           { id: "link", label: t.tabLink },
-          // Кто видит — у любого кода (владелец 08.10.2026: все / выбранные / только я).
+          // Память и «кто видит» — у любого кода (владелец 08.10.2026).
+          { id: "memory", label: t.tabMemory },
           { id: "access", label: t.tabAccess, badge: requests },
           { id: "look", label: t.tabLook },
         ]

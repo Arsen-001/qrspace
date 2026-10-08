@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { accessOf, mutate, newId, viewOf } from "@/server/db";
 import { media as files } from "@/server/media";
 import { currentPerson } from "@/server/session";
-import { MAX_VIDEO_MB, uploadedName, type Block } from "@/lib/codes";
+import { MAX_VIDEO_MB, storageOf, uploadedName, type Block } from "@/lib/codes";
 import { readText } from "../../validate";
 
 const TYPES: Record<string, { kind: "photo" | "video"; ext: string }> = {
@@ -22,18 +22,18 @@ export async function POST(req: NextRequest, ctx: RouteContext<"/api/codes/[id]/
   if (!me || !form) return Response.json({ error: "bad" }, { status: 400 });
   const text = readText(form.get("text"));
   const file = form.get("file");
-  let media: { name: string; kind: "photo" | "video" } | null = null;
+  let media: { name: string; kind: "photo" | "video"; size: number } | null = null;
   if (file instanceof File && file.size > 0) {
     const t = TYPES[file.type];
     if (!t || file.size > MAX_VIDEO_MB * 1024 * 1024) return Response.json({ error: "file" }, { status: 400 });
-    media = { name: `${id}_${newId(12)}.${t.ext}`, kind: t.kind };
+    media = { name: `${id}_${newId(12)}.${t.ext}`, kind: t.kind, size: file.size };
   }
   // Видео, которое браузер уже положил прямо в хранилище (/api/codes/<id>/upload) — проверяем, что оно есть и не больше нормы.
   const uploaded = form.get("uploaded");
   if (!media && typeof uploaded === "string" && uploaded) {
     const f = uploadedName(id, uploaded) && (await files.open(uploaded, { start: 0, end: 0 }));
     if (!f || f.size > MAX_VIDEO_MB * 1024 * 1024) return Response.json({ error: "file" }, { status: 400 });
-    media = { name: uploaded, kind: "video" };
+    media = { name: uploaded, kind: "video", size: f.size };
   }
   if (!text && !media) return Response.json({ error: "empty" }, { status: 400 });
 
@@ -46,13 +46,17 @@ export async function POST(req: NextRequest, ctx: RouteContext<"/api/codes/[id]/
     const level = accessOf(c, me);
     if (level !== "owner" && level !== "edit") return 403;
     if (media && c.blocks.some((b) => b.media === media!.name)) return 409;
-    const block: Block = { id: newId(), kind: media?.kind ?? "text", text, media: media?.name ?? null, author: me, at: new Date().toISOString() };
+    // Место под кодом (1 МБ бесплатно, больше — купить): не влезает — не берём.
+    const size = (media?.size ?? 0) + Buffer.byteLength(text);
+    const { used, quota } = storageOf(c);
+    if (used + size > quota) return 413;
+    const block: Block = { id: newId(), kind: media?.kind ?? "text", text, media: media?.name ?? null, author: me, at: new Date().toISOString(), size };
     c.blocks.push(block);
     return viewOf(c, me);
   });
   if (typeof result === "number") {
     if (media) await files.remove(media.name);
-    return Response.json({ error: result }, { status: result });
+    return Response.json({ error: result === 413 ? "storage" : result }, { status: result });
   }
   return Response.json(result);
 }
