@@ -45,6 +45,7 @@ export function CodeDesigner({
   sample,
   steps,
   suggestLogo,
+  locked,
 }: {
   t: Dict;
   payload: string;
@@ -61,6 +62,8 @@ export function CodeDesigner({
   steps?: boolean;
   /** Готовый логотип под вид содержимого (генератор). */
   suggestLogo?: string;
+  /** Вид закреплён (код уже скачан) — вместо настроек объяснение; скачать снова можно. */
+  locked?: boolean;
 }) {
   const [imageError, setImageError] = useState(false);
   const patchStyle = (p: Partial<StyleState>) => setStyle((s) => ({ ...s, ...p }));
@@ -170,36 +173,51 @@ export function CodeDesigner({
         {bar}
         {top && <div className="order-1 min-w-0">{top}</div>}
         <div className={`min-w-0 ${steps ? "order-2" : "order-3"}`}>
-          <StylePanel
-            t={t}
-            s={style}
-            set={patchStyle}
-            onLogo={onLogo}
-            onEyeIcon={onEyeIcon}
-            picturePicker={
-              <PicturePicker
-                t={t}
-                picture={pic}
-                limitHit={limitHit}
-                onAdd={onAddPhotos}
-                onFiles={onPhotos}
-                onLayout={(id) => {
-                  if (!pic) return;
-                  patchStyle({ picture: { ...pic, layout: id } }); // переключатель отвечает сразу, коллаж догонит
-                  rebuildPicture(pic.files, id, pic.mono);
-                }}
-                onMono={(m) => {
-                  if (!pic) return;
-                  patchStyle({ picture: { ...pic, mono: m } });
-                  rebuildPicture(pic.files, pic.layout, m);
-                }}
-                onDotSize={(dotSize) => pic && patchStyle({ picture: { ...pic, dotSize } })}
-              />
-            }
-            lowContrast={lowContrast}
-            step={steps ? 2 : undefined}
-            suggestLogo={suggestLogo}
-          />
+          {locked ? (
+            <section className="flex gap-4 rounded-2xl bg-stage p-5 text-on-stage sm:p-6">
+              <span aria-hidden className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-accent text-on-accent">
+                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="5" y="11" width="14" height="10" rx="2" />
+                  <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+                </svg>
+              </span>
+              <div>
+                <h2 className="font-heading text-lg font-bold">{t.styleLockedTitle}</h2>
+                <p className="mt-1 text-sm leading-relaxed text-on-stage/70">{t.styleLockedText}</p>
+              </div>
+            </section>
+          ) : (
+            <StylePanel
+              t={t}
+              s={style}
+              set={patchStyle}
+              onLogo={onLogo}
+              onEyeIcon={onEyeIcon}
+              picturePicker={
+                <PicturePicker
+                  t={t}
+                  picture={pic}
+                  limitHit={limitHit}
+                  onAdd={onAddPhotos}
+                  onFiles={onPhotos}
+                  onLayout={(id) => {
+                    if (!pic) return;
+                    patchStyle({ picture: { ...pic, layout: id } }); // переключатель отвечает сразу, коллаж догонит
+                    rebuildPicture(pic.files, id, pic.mono);
+                  }}
+                  onMono={(m) => {
+                    if (!pic) return;
+                    patchStyle({ picture: { ...pic, mono: m } });
+                    rebuildPicture(pic.files, pic.layout, m);
+                  }}
+                  onDotSize={(dotSize) => pic && patchStyle({ picture: { ...pic, dotSize } })}
+                />
+              }
+              lowContrast={lowContrast}
+              step={steps ? 2 : undefined}
+              suggestLogo={suggestLogo}
+            />
+          )}
           {imageError && <p className="mt-2 text-sm text-warn">{t.imageError}</p>}
         </div>
       </div>

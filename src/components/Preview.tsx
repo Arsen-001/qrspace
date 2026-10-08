@@ -20,7 +20,7 @@ export type ScanState = "idle" | "checking" | "ok" | "bad";
  * finalize — перед сохранением получить настоящий код (генератор: короткая ссылка вместо образца);
  * blocked — скачать нельзя, вместо кнопок — объяснение.
  */
-export type Gate = { tier: Tier; key: () => string; finalize?: () => Promise<{ drawing: Drawing; payload: string }>; blocked?: string; beforeLogin?: () => void };
+export type Gate = { tier: Tier; key: () => string; finalize?: () => Promise<{ drawing: Drawing; payload: string }>; blocked?: string; beforeLogin?: () => void; onSaved?: () => void };
 type Format = "png" | "svg" | "live";
 
 /** sample — показываем пример (человек ещё ничего не ввёл): видно оформление, скачать нельзя. step — номер шага в генераторе. */
@@ -66,6 +66,7 @@ export function Preview({
       if (!f) return setFailed(true);
       ({ drawing: d, payload: text } = f);
     }
+    gate?.onSaved?.();
     if (format === "png") return downloadPng(d, 2048, name);
     if (format === "svg") return downloadSvg(d, name);
     // Живой код пишется в реальном времени (4 с) — показываем, сколько осталось.

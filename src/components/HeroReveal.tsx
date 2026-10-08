@@ -4,23 +4,42 @@
 import { useRef, useState, type ReactNode } from "react";
 import type { Dict } from "@/lib/i18n";
 
-/** Что «под кодом»: пример памяти — фото, видео, слова. */
+/** Что «под кодом»: живой пример памяти — как её увидит тот, кто отсканировал (фото, видео, слова, кто видит). */
 function MemoryUnder({ t }: { t: Dict }) {
+  const photo = "relative grid place-items-center overflow-hidden rounded-lg text-2xl sm:text-3xl";
   return (
-    <div className="flex h-full flex-col gap-2.5 p-4 sm:p-6">
-      <div className="grid flex-1 grid-cols-3 grid-rows-2 gap-2">
-        <span className="col-span-2 row-span-2 rounded-xl bg-[linear-gradient(135deg,#ffb38a,#ff6f91_55%,#962fbf)]" />
-        <span className="relative grid place-items-center rounded-xl bg-[linear-gradient(135deg,#7ad7f0,#4c6ef5)]">
-          <span className="grid h-8 w-8 place-items-center rounded-full bg-white/90 text-xs text-[#111]">▶</span>
-        </span>
-        <span className="rounded-xl bg-[linear-gradient(135deg,#c6ff2e,#3ecf8e)]" />
-      </div>
-      <div className="rounded-xl bg-white/10 p-3">
-        <div className="flex items-center justify-between gap-2">
-          <span className="font-heading text-sm font-bold sm:text-base">{t.heroMemTitle}</span>
-          <span className="font-mono text-[11px] text-on-stage/60">♥ 128</span>
+    <div className="flex h-full flex-col gap-2 p-3.5 text-left sm:gap-2.5 sm:p-5">
+      <div className="flex items-center gap-2.5">
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-accent font-heading text-sm font-extrabold text-on-accent">А</span>
+        <div className="min-w-0">
+          <div className="truncate font-heading text-sm font-bold sm:text-base">{t.heroMemTitle}</div>
+          <div className="font-mono text-[10px] text-on-stage/50">08.10 · {t.heroMemPhotos}</div>
         </div>
-        <p className="mt-1 text-xs leading-relaxed text-on-stage/70 sm:text-sm">{t.heroMemText}</p>
+      </div>
+      <div className="grid flex-1 grid-cols-3 gap-1.5">
+        <span className={`${photo} col-span-2 row-span-2 bg-[linear-gradient(160deg,#ffd48a,#ff8a5c_60%,#e2557a)]`}>
+          <span aria-hidden className="text-5xl sm:text-6xl">🌻</span>
+        </span>
+        <span className={`${photo} bg-[linear-gradient(160deg,#8fd3ff,#4c6ef5)]`}>
+          <span aria-hidden>🌊</span>
+        </span>
+        <span className={`${photo} bg-[linear-gradient(160deg,#ffe1ec,#ff9db8)]`}>
+          <span aria-hidden>🎂</span>
+        </span>
+      </div>
+      <div className="flex items-center gap-2.5 rounded-xl bg-white/10 p-2">
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-on-stage text-xs text-stage">▶</span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-xs font-semibold sm:text-sm">{t.heroMemVideo}</span>
+          <span className="mt-1 block h-1 overflow-hidden rounded-full bg-white/15">
+            <span className="block h-full w-1/3 rounded-full bg-accent" />
+          </span>
+        </span>
+      </div>
+      <p className="rounded-xl rounded-bl-sm bg-accent px-3 py-2 text-xs font-medium leading-snug text-on-accent sm:text-sm">{t.heroMemText}</p>
+      <div className="flex items-center justify-between font-mono text-[10px] text-on-stage/60">
+        <span className="flex items-center gap-1">🔒 {t.heroMemWho}</span>
+        <span>♥ 12</span>
       </div>
     </div>
   );

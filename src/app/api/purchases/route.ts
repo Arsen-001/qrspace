@@ -27,6 +27,9 @@ export async function POST(req: Request) {
   const q = await mutate((db) => {
     const q = quote(db.purchases.filter((p) => p.person === me), key, tier);
     if (!q.paid) db.purchases.push({ person: me, key, tier, price: q.price, free: q.free, at: new Date().toISOString() });
+    // Скачали свой код с памятью — его вид закрепляется.
+    const code = key.startsWith("code:") ? db.codes.find((c) => c.id === key.slice(5) && c.owner === me) : null;
+    if (code) code.styleLocked = true;
     return q;
   });
   return Response.json({ ok: true, price: q.price });

@@ -415,6 +415,7 @@ export function viewOf(code: CodeRecord, me: string | null): CodeView {
     blocks: access === "closed" ? null : owner || code.showOwner ? code.blocks : code.blocks.map((b) => (b.author === code.owner ? { ...b, author: "" } : b)),
     requested: !!me && code.requests.some((r) => r.personId === me),
     style: owner || access !== "closed" ? code.style : null,
+    styleLocked: !!(code.styleLocked || code.edition || code.auth),
     // Прежний код-ссылка без содержимого — его адрес как «сайт».
     // Заблокированный по жалобе — содержимое (куда ведёт) только хозяину.
     content: access === "closed" || (code.blocked && !owner) ? null : (code.content ?? (code.target ? { type: "url", fields: { url: code.target } } : null)),

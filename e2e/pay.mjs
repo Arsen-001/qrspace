@@ -51,15 +51,15 @@ await ready();
 await p.getByRole("button", { name: /Скачать PNG/ }).click();
 await p.waitForSelector("text=Ваш первый простой код — бесплатно");
 await dl(() => p.getByRole("button", { name: "Скачать бесплатно" }).click());
-await p.getByRole("tab", { name: "Форма", exact: true }).click();
-await p.getByRole("radio", { name: "Звёзды", exact: true }).click();
-await ready();
-await p.getByRole("button", { name: /Скачать PNG/ }).click();
-await p.waitForSelector("text=К оплате: $5");
-ok(true, "memory code upgrade simple→styled: free simple → styled costs full $5 (nothing was paid)");
-await dl(() => p.getByRole("button", { name: /Оплатить и скачать — \$5/ }).click());
-await p.getByRole("radio", { name: "Сердечки", exact: true }).click();
-await ready();
-ok((await dl(() => p.getByRole("button", { name: /Скачать PNG/ }).click())).endsWith(".png"), "paid memory code: any style downloads free afterwards");
+// Скачанный код — вид закреплён (владелец 08.10.2026): настроек нет, сервер вид не меняет, скачать снова — бесплатно
+await p.waitForSelector("text=Вид закреплён");
+ok((await p.getByRole("tab", { name: "Форма", exact: true }).count()) === 0, "downloaded code: style settings are gone");
+const codeId = p.url().split("/").pop().split("#")[0];
+const st = await p.evaluate(async (id) => {
+  const c = await fetch(`/api/codes/${id}`).then((r) => r.json());
+  return fetch(`/api/codes/${id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ style: { ...c.style, dot: "star" } }) }).then((r) => r.status);
+}, codeId);
+ok(st === 409, `server refuses to change a locked look (${st})`);
+ok((await dl(() => p.getByRole("button", { name: /Скачать PNG/ }).click())).endsWith(".png"), "the same code downloads again for free");
 console.log("errors:", errors.length ? errors : "none");
 await browser.close();

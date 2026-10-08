@@ -26,7 +26,7 @@ type Tab = "memory" | "contact" | "access" | "look" | "link" | "stats";
 type Status = "idle" | "saving" | "saved" | "error";
 
 /** Вид кода: тот же конструктор, что в генераторе; изменения сохраняются сами через секунду. */
-function LookTab({ t, code, link, save }: { t: Dict; code: CodeView; link: string; save: (p: CodePatch) => Promise<void> }) {
+function LookTab({ t, code, link, save, onSaved }: { t: Dict; code: CodeView; link: string; save: (p: CodePatch) => Promise<void>; onSaved: () => void }) {
   const [style, setStyle] = useState<StyleState>(() => (code.style ? fromSaved(code.style) : DEFAULT_STYLE));
   const first = useRef(style);
   useEffect(() => {
@@ -35,8 +35,9 @@ function LookTab({ t, code, link, save }: { t: Dict; code: CodeView; link: strin
     return () => clearTimeout(id);
   }, [style, save]);
   // Код с памятью оплачивается один раз за код (ссылка в нём не меняется); стиль красивее — доплата разницы.
-  return <CodeDesigner t={t} payload={link} style={style} setStyle={setStyle} fileName={`qr-${code.id}`} gate={{ tier: tierOf(style), key: () => `code:${code.id}` }}
-    top={
+  return <CodeDesigner t={t} payload={link} style={style} setStyle={setStyle} fileName={`qr-${code.id}`} gate={{ tier: tierOf(style), key: () => `code:${code.id}`, onSaved }}
+    locked={code.styleLocked}
+    top={code.styleLocked ? undefined :
       <section className="rounded-2xl border border-line bg-card p-5">
         <Switch label={t.compactCode} hint={t.compactHint} checked={code.compact} onChange={(compact) => save({ compact })} />
       </section>
@@ -227,7 +228,7 @@ function Editor({ t, lang, me, base, initial }: { t: Dict; lang: Lang; me: strin
 
       <div className="mt-5">
         {tab === "look" ? (
-          <LookTab t={t} code={code} link={link} save={save} />
+          <LookTab t={t} code={code} link={link} save={save} onSaved={() => api.get(code.id).then(setCode, () => {})} />
         ) : (
           <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
             <div className="min-w-0">

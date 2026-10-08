@@ -5,6 +5,7 @@ import { currentPerson } from "@/server/session";
 import { usable } from "@/server/users";
 import { validTarget, type CodePatch } from "@/lib/codes";
 import { cleanContent } from "@/lib/qr/payload";
+import { canon } from "@/lib/canon";
 import { readContact, readPeople, readShort, readStyle, readTitle, readVisibility } from "../validate";
 
 /** Код глазами текущего человека; ?visit=1 — это скан, пишем в историю (кроме хозяина). */
@@ -48,9 +49,15 @@ export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/codes/[id]
     }
     if ("style" in body) {
       if (body.style !== null && !style) return 400;
+      // Скачанный (купленный) код — вид закреплён: напечатанное должно совпадать с тем, что в «Моих кодах».
+      if ((c.styleLocked || c.edition || c.auth) && canon(style) !== canon(c.style)) return 409;
       c.style = style;
     }
-    if ("compact" in body) c.compact = body.compact === true;
+    if ("compact" in body) {
+      // «Маленький код» меняет рисунок — у закреплённого вида тоже нельзя.
+      if ((c.styleLocked || c.edition || c.auth) && (body.compact === true) !== !!c.compact) return 409;
+      c.compact = body.compact === true;
+    }
     if ("target" in body) {
       // Сайт, звонок, почта, SMS, Viber (validTarget): javascript: и прочее не пускаем — туда уйдёт каждый, кто сканирует.
       const t = typeof body.target === "string" ? body.target.trim() : "";
