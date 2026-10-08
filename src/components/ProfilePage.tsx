@@ -3,14 +3,87 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { api, linkOf, type CodeList, type CodeView } from "@/lib/codes";
 import { fmtDateTime } from "@/lib/format";
+import type { Dict } from "@/lib/i18n";
 import { useLang } from "@/lib/lang";
 import { refreshPeople, signIn, useMe } from "@/lib/me";
 import type { Purchase } from "@/lib/pricing";
 import { Avatar } from "./Avatar";
+import { KindIcon } from "./KindIcon";
+import { QrThumb } from "./QrThumb";
 import { Notice, Shell } from "./Shell";
 
 type Profile = { id: string; name: string; email: string; provider: "google" | "apple" | "demo"; designer: boolean; codes: number; purchases: Purchase[] };
+
+/** Мой код в профиле: сам код крупно, название, сколько сканов и быстрые действия. */
+function MyCode({ t, base, code }: { t: Dict; base: string; code: CodeView }) {
+  return (
+    <li className="group flex flex-col rounded-2xl border border-line bg-card p-3 transition-colors hover:border-muted">
+      <Link href={`/codes/${code.id}`} className="block">
+        <QrThumb link={linkOf(base, code)} style={code.style} className="w-full border border-line" />
+        <span className="mt-3 flex items-start gap-1.5 px-1">
+          <KindIcon kind={code.kind} className="mt-0.5 h-4 w-4 shrink-0 text-muted" />
+          <span className="line-clamp-2 font-heading text-sm font-bold leading-snug">{code.title}</span>
+        </span>
+      </Link>
+      <span className="mt-1 px-1 font-mono text-xs text-muted">
+        {t.scansCount}: {code.stats?.total ?? 0}
+      </span>
+      <span className="mt-3 grid grid-cols-2 gap-1.5">
+        <Link href={`/codes/${code.id}`} className="grid min-h-10 place-items-center rounded-lg bg-stage px-2 text-xs font-semibold text-on-stage">
+          {t.openShort}
+        </Link>
+        <Link href={`/codes/${code.id}#look`} className="grid min-h-10 place-items-center rounded-lg border border-line bg-field px-2 text-xs font-semibold hover:border-muted">
+          {t.download}
+        </Link>
+      </span>
+    </li>
+  );
+}
+
+/** Сразу при входе в профиль — мои коды (владелец: «зашёл — как будто ничего не поменялось»). */
+function MyCodes({ t, me }: { t: Dict; me: string }) {
+  const [list, setList] = useState<{ me: string; data: CodeList } | null>(null);
+  useEffect(() => {
+    let live = true;
+    api.list().then((data) => live && setList({ me, data }), () => {});
+    return () => {
+      live = false;
+    };
+  }, [me]);
+  const data = list?.me === me ? list.data : null;
+  if (!data) return <Notice>{t.loading}</Notice>;
+  if (!data.mine.length)
+    return (
+      <Link href="/#make" className="group relative block overflow-hidden rounded-2xl bg-stage p-8 text-on-stage sm:p-10">
+        <div aria-hidden className="x-stage-glow" />
+        <span className="relative block font-heading text-2xl font-extrabold sm:text-3xl">{t.firstCodeTitle}</span>
+        <span className="relative mt-2 block max-w-md text-sm text-on-stage/70">{t.firstCodeText}</span>
+        <span className="relative mt-6 inline-flex min-h-12 items-center gap-2 rounded-xl bg-accent px-5 font-heading text-sm font-bold text-on-accent">
+          {t.firstCodeCta} <span className="transition-transform group-hover:translate-x-1">→</span>
+        </span>
+      </Link>
+    );
+  return (
+    <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      <li>
+        <Link
+          href="/#make"
+          className="flex h-full min-h-48 flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-line p-4 text-center text-sm font-semibold text-muted transition-colors hover:border-accent-ink hover:text-ink"
+        >
+          <span aria-hidden className="grid h-12 w-12 place-items-center rounded-xl bg-accent text-2xl text-on-accent">
+            +
+          </span>
+          {t.newCode}
+        </Link>
+      </li>
+      {data.mine.map((c) => (
+        <MyCode key={c.id} t={t} base={data.base} code={c} />
+      ))}
+    </ul>
+  );
+}
 
 export function ProfilePage() {
   const { lang, t } = useLang((t) => `${t.profileTitle} — ${t.appName}`);
@@ -55,8 +128,7 @@ export function ProfilePage() {
   };
 
   return (
-    <Shell t={t} lang={lang} narrow>
-      <h1 className="font-heading text-3xl font-extrabold tracking-tight">{t.profileTitle}</h1>
+    <Shell t={t} lang={lang}>
       {!ready ? null : !me ? (
         <div className="mt-6 rounded-2xl border border-line bg-card p-6 text-center">
           <Link href="/login?next=/profile" className="inline-grid min-h-11 place-items-center rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent">
@@ -68,17 +140,36 @@ export function ProfilePage() {
           <Notice>{t.loading}</Notice>
         </div>
       ) : (
-        <div className="mt-6 space-y-5">
-          <section className="flex items-center gap-4 rounded-2xl border border-line bg-card p-5">
-            <Avatar id={profile.id} lang={lang} size={56} />
-            <div className="min-w-0">
-              <div className="truncate font-heading text-xl font-bold">{profile.name}</div>
-              <div className="truncate text-sm text-muted">
-                {profile.provider === "demo" ? t.demoAccount : `${profile.provider === "google" ? "Google" : "Apple"} · ${profile.email}`}
-                {profile.designer && ` · ${t.designerRole}`}
+        <div className="space-y-8">
+          <section className="relative overflow-hidden rounded-2xl bg-stage p-5 text-on-stage sm:p-7">
+            <div aria-hidden className="x-stage-glow" />
+            <div className="relative flex flex-wrap items-center gap-4">
+              <Avatar id={profile.id} lang={lang} size={64} />
+              <div className="min-w-0 flex-1 basis-40">
+                <h1 className="truncate font-heading text-2xl font-extrabold sm:text-3xl">{profile.name}</h1>
+                <div className="truncate text-sm text-on-stage/70">
+                  {profile.provider === "demo" ? t.demoAccount : `${profile.provider === "google" ? "Google" : "Apple"} · ${profile.email}`}
+                  {profile.designer && ` · ${t.designerRole}`}
+                </div>
               </div>
+              <Link href="/#make" className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-accent px-5 font-heading text-sm font-bold text-on-accent sm:w-auto">
+                + {t.newCode}
+              </Link>
             </div>
           </section>
+
+          <section>
+            <div className="mb-4 flex items-end justify-between gap-3">
+              <h2 className="font-heading text-2xl font-extrabold">{t.navCodes}</h2>
+              <Link href="/codes" className="text-sm font-semibold text-accent-ink">
+                {t.allCodes} →
+              </Link>
+            </div>
+            <MyCodes t={t} me={me} />
+          </section>
+
+          <h2 className="border-t border-line pt-6 font-heading text-xl font-extrabold">{t.settingsTitle}</h2>
+          <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
 
           <section className="rounded-2xl border border-line bg-card p-5">
             <label htmlFor="pname" className="mb-1.5 block text-sm font-medium text-muted">
@@ -120,7 +211,8 @@ export function ProfilePage() {
             )}
           </section>
 
-          <section className="space-y-3 rounded-2xl border border-line bg-card p-5">
+          </div>
+          <section className="space-y-3 rounded-2xl border border-line bg-card p-5 lg:max-w-md">
             <button type="button" onClick={() => signIn(null).then(() => router.replace("/"))} className="min-h-11 w-full rounded-xl border border-line bg-field px-4 text-sm font-semibold hover:border-muted">
               {t.logout}
             </button>

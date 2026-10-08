@@ -112,7 +112,8 @@ export function SiteHeader({ t, lang }: { t: Dict; lang: Lang }) {
               </Link>
             ) : (
               <Link
-                href={`/login?next=${encodeURIComponent(path)}`}
+                // С главной после входа — в профиль с моими кодами (иначе «вошёл — как будто ничего не поменялось»).
+                href={`/login?next=${encodeURIComponent(path === "/" ? "/profile" : path)}`}
                 className="grid min-h-10 place-items-center rounded-xl bg-accent px-3 text-sm font-semibold text-on-accent"
               >
                 {t.login}

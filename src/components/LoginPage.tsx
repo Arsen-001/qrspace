@@ -51,11 +51,29 @@ export function LoginPage({ next, error }: { next: string | null; error: string 
 
   const btn = "flex min-h-13 w-full items-center justify-center gap-3 rounded-xl px-5 py-3 text-base font-semibold transition-opacity";
   return (
-    <Shell t={t} lang={lang} narrow>
-      <h1 className="font-heading text-3xl font-extrabold tracking-tight">{t.loginTitle}</h1>
-      <p className="mt-2 text-sm text-muted">{t.loginOnlyHint}</p>
-      {error && <p className="mt-4 rounded-xl bg-warn-soft p-3 text-sm text-warn">{error.endsWith("-off") ? t.providerOff : t.loginFailed}</p>}
-      <div className="mt-6 space-y-3">
+    <Shell t={t} lang={lang}>
+      <div className="mx-auto grid max-w-5xl gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-stretch">
+      {/* Зачем входить — коротко, на чёрной «сцене», как на главной. */}
+      <section className="relative overflow-hidden rounded-2xl bg-stage p-6 text-on-stage sm:p-8">
+        <div aria-hidden className="x-stage-glow" />
+        <div className="relative">
+          <h1 className="font-heading text-3xl font-extrabold tracking-tight sm:text-4xl">{t.loginTitle}</h1>
+          <p className="mt-2 text-sm text-on-stage/70">{t.loginOnlyHint}</p>
+          <ul className="mt-6 space-y-3 text-sm">
+            {[t.loginPerk1, t.loginPerk2, t.loginPerk3].map((x) => (
+              <li key={x} className="flex items-start gap-3">
+                <span aria-hidden className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-md bg-accent text-[11px] font-bold text-on-accent">
+                  ✓
+                </span>
+                {x}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+      <section className="rounded-2xl border border-line bg-card p-6 sm:p-8">
+      {error && <p className="mb-4 rounded-xl bg-warn-soft p-3 text-sm text-warn">{error.endsWith("-off") ? t.providerOff : t.loginFailed}</p>}
+      <div className="space-y-3">
         {/* Обычные ссылки: вход уходит на страницу Google/Apple и возвращается к нам. */}
         <a href={`/api/auth/google${q}`} className={`${btn} border border-[#dadce0] bg-white text-[#1f1f1f] hover:bg-[#f8f9fa]`}>
           <GoogleIcon />
@@ -83,12 +101,14 @@ export function LoginPage({ next, error }: { next: string | null; error: string 
           {t.logout}
         </button>
       )}
+      </section>
+      </div>
 
       {demo && (
-        <section className="mt-10 border-t border-line pt-6">
+        <section className="mx-auto mt-8 max-w-5xl border-t border-line pt-6">
           <h2 className="font-heading text-lg font-bold">{t.demoLoginTitle}</h2>
           <p className="mt-1 text-sm text-muted">{t.loginHint}</p>
-          <ul className="mt-4 grid gap-2">
+          <ul className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {PEOPLE.map((p) => (
               <li key={p.id}>
                 <button
