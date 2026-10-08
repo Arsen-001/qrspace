@@ -15,10 +15,12 @@ import { Notice, Shell } from "./Shell";
 
 function Lock() {
   return (
-    <svg viewBox="0 0 24 24" className="mx-auto h-12 w-12 text-muted" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
-      <rect x="5" y="11" width="14" height="10" rx="2" />
-      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
-    </svg>
+    <span aria-hidden className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-accent text-on-accent">
+      <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+        <rect x="5" y="11" width="14" height="10" rx="2" />
+        <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+      </svg>
+    </span>
   );
 }
 
@@ -39,10 +41,12 @@ function Closed({ t, code, me, id, invite, onChange }: { t: Dict; code: CodeView
     }
   };
   return (
-    <div className="rounded-2xl border border-line bg-card p-6 text-center sm:p-8">
+    <div className="relative overflow-hidden rounded-2xl bg-stage p-7 text-center text-on-stage sm:p-10">
+      <div aria-hidden className="x-stage-glow" />
+      <div className="relative">
       <Lock />
-      <h1 className="mt-3 font-heading text-2xl font-extrabold">{invite && !inviteBad ? t.inviteJoin : t.closedTitle}</h1>
-      {!(invite && !inviteBad) && <p className="mt-2 text-sm text-muted">{code.visibility === "me" ? t.closedMe : t.closedHint}</p>}
+      <h1 className="mt-4 font-heading text-2xl font-extrabold sm:text-3xl">{invite && !inviteBad ? t.inviteJoin : t.closedTitle}</h1>
+      {!(invite && !inviteBad) && <p className="mt-2 text-sm text-on-stage/70">{code.visibility === "me" ? t.closedMe : t.closedHint}</p>}
       {inviteBad && <p className="mt-2 text-sm text-warn">{t.inviteBad}</p>}
       <div className="mt-5">
         {!me ? (
@@ -50,19 +54,20 @@ function Closed({ t, code, me, id, invite, onChange }: { t: Dict; code: CodeView
             <Link href={`/login?next=${encodeURIComponent(next)}`} className={primary}>
               {invite ? t.login : t.loginToAsk}
             </Link>
-            <p className="mt-3 text-xs text-muted">{t.loginToAskHint}</p>
+            <p className="mt-3 text-xs text-on-stage/60">{t.loginToAskHint}</p>
           </>
         ) : invite && !inviteBad ? (
           <button type="button" disabled={busy} onClick={() => run(() => api.join(id, invite))} className={primary}>
             {t.accept}
           </button>
         ) : code.requested ? (
-          <p className="text-sm font-medium text-ok">✓ {t.asked}</p>
+          <p className="text-sm font-medium text-accent">✓ {t.asked}</p>
         ) : (
           <button type="button" disabled={busy} onClick={() => run(() => api.request(id))} className={primary}>
             {t.askAccess}
           </button>
         )}
+      </div>
       </div>
     </div>
   );
@@ -350,10 +355,22 @@ export function ScanPage({ id, invite }: { id: string; invite: string | null }) 
         </>
       )}
 
-      <footer className="mt-10 flex flex-col items-center gap-2 text-center text-sm text-muted">
-        <span>{t.madeWith}</span>
-        <Link href="/" className="font-semibold text-accent-ink">
-          {t.makeYours} →
+      <footer className="mt-10 flex flex-col items-center gap-3 text-center text-sm text-muted">
+        {/* Кто отсканировал чужой код — главный будущий клиент: приглашение крупно, на тёмной карточке. */}
+        <Link href="/#make" className="group flex w-full items-center gap-4 rounded-2xl bg-stage p-4 text-left text-on-stage sm:p-5">
+          <span aria-hidden className="grid h-12 w-12 shrink-0 grid-cols-2 gap-1 rounded-xl border border-stage-line p-2.5">
+            <span className="rounded-sm border-2 border-on-stage" />
+            <span className="rounded-sm border-2 border-on-stage" />
+            <span className="rounded-sm border-2 border-on-stage" />
+            <span className="rounded-sm bg-accent" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-xs text-on-stage/60">{t.madeWith}</span>
+            <span className="block font-heading text-base font-bold">{t.makeYours}</span>
+          </span>
+          <span aria-hidden className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-accent text-on-accent transition-transform group-hover:translate-x-1">
+            →
+          </span>
         </Link>
         {loaded?.code && loaded.code.access !== "owner" && !loaded.code.blocked && <ReportBox t={t} id={id} />}
       </footer>
