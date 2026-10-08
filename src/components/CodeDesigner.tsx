@@ -94,11 +94,11 @@ export function CodeDesigner({
     }
   };
 
-  const onLogo = async (f: File) => {
+  const onLogo = async (f: File, scale?: number) => {
     try {
       const src = await prepareImage(f, { px: 256, square: false, type: "image/png" });
       setImageError(false);
-      patchStyle({ logo: { src, scale: style.logo?.scale ?? 0.22 } });
+      patchStyle({ logo: { src, scale: scale ?? style.logo?.scale ?? 0.22 } });
     } catch {
       setImageError(true);
     }
