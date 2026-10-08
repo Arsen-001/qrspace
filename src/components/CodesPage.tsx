@@ -14,6 +14,7 @@ import { KindIcon } from "./KindIcon";
 import { QrThumb } from "./QrThumb";
 import { DueNote } from "./Tasks";
 import { Notice, Shell } from "./Shell";
+import { MyCodesGrid } from "./MyCodesGrid";
 import { DoneCheck } from "./ui";
 import { VisBadge } from "./VisBadge";
 
@@ -258,11 +259,7 @@ export function CodesPage({ startNew = null }: { startNew?: Kind | null }) {
           <>
             <Upcoming t={t} lang={lang} codes={[...list.mine, ...list.shared]} onDone={() => setReload((n) => n + 1)} />
             {list.mine.length ? (
-              <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {list.mine.map((c) => (
-                  <CodeCard key={c.id} t={t} lang={lang} base={list.base} code={c} />
-                ))}
-              </ul>
+              <MyCodesGrid key={reload} t={t} base={list.base} codes={list.mine} />
             ) : (
               <Notice>{t.emptyCodes}</Notice>
             )}

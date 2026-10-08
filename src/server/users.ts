@@ -18,6 +18,8 @@ export type User = {
   /** «Мои контакты»: кого человек добавил (по почте). Код с «Мои контакты» видят только они. */
   contacts?: string[];
   createdAt: string;
+  /** Порядок «Моих кодов» (перетаскивание): id кодов; новых тут ещё нет — они идут первыми. */
+  codeOrder?: string[];
 };
 
 export const demoEnabled = () => process.env.DEMO_LOGIN !== "off";

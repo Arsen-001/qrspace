@@ -3,44 +3,17 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { api, linkOf, type CodeList, type CodeView } from "@/lib/codes";
+import { api, type CodeList } from "@/lib/codes";
 import { fmtDateTime } from "@/lib/format";
 import type { Dict } from "@/lib/i18n";
 import { useLang } from "@/lib/lang";
 import { refreshPeople, signIn, useMe } from "@/lib/me";
 import type { Purchase } from "@/lib/pricing";
 import { Avatar } from "./Avatar";
-import { KindIcon } from "./KindIcon";
-import { QrThumb } from "./QrThumb";
+import { MyCodesGrid } from "./MyCodesGrid";
 import { Notice, Shell } from "./Shell";
 
 type Profile = { id: string; name: string; email: string; provider: "google" | "apple" | "demo"; designer: boolean; codes: number; purchases: Purchase[] };
-
-/** Мой код в профиле: сам код крупно, название, сколько сканов и быстрые действия. */
-function MyCode({ t, base, code }: { t: Dict; base: string; code: CodeView }) {
-  return (
-    <li className="group flex flex-col rounded-2xl border border-line bg-card p-3 transition-colors hover:border-muted">
-      <Link href={`/codes/${code.id}`} className="block">
-        <QrThumb link={linkOf(base, code)} style={code.style} className="w-full border border-line" />
-        <span className="mt-3 flex items-start gap-1.5 px-1">
-          <KindIcon kind={code.kind} className="mt-0.5 h-4 w-4 shrink-0 text-muted" />
-          <span className="line-clamp-2 font-heading text-sm font-bold leading-snug">{code.title}</span>
-        </span>
-      </Link>
-      <span className="mt-1 px-1 font-mono text-xs text-muted">
-        {t.scansCount}: {code.stats?.total ?? 0}
-      </span>
-      <span className="mt-3 grid grid-cols-2 gap-1.5">
-        <Link href={`/codes/${code.id}`} className="grid min-h-10 place-items-center rounded-lg bg-stage px-2 text-xs font-semibold text-on-stage">
-          {t.openShort}
-        </Link>
-        <Link href={`/codes/${code.id}#look`} className="grid min-h-10 place-items-center rounded-lg border border-line bg-field px-2 text-xs font-semibold hover:border-muted">
-          {t.download}
-        </Link>
-      </span>
-    </li>
-  );
-}
 
 /** Сразу при входе в профиль — мои коды (владелец: «зашёл — как будто ничего не поменялось»). */
 function MyCodes({ t, me }: { t: Dict; me: string }) {
@@ -66,22 +39,24 @@ function MyCodes({ t, me }: { t: Dict; me: string }) {
       </Link>
     );
   return (
-    <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-      <li>
-        <Link
-          href="/#make"
-          className="flex h-full min-h-48 flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-line p-4 text-center text-sm font-semibold text-muted transition-colors hover:border-accent-ink hover:text-ink"
-        >
-          <span aria-hidden className="grid h-12 w-12 place-items-center rounded-xl bg-accent text-2xl text-on-accent">
-            +
-          </span>
-          {t.newCode}
-        </Link>
-      </li>
-      {data.mine.map((c) => (
-        <MyCode key={c.id} t={t} base={data.base} code={c} />
-      ))}
-    </ul>
+    <MyCodesGrid
+      t={t}
+      base={data.base}
+      codes={data.mine}
+      leading={
+        <li>
+          <Link
+            href="/#make"
+            className="flex h-full min-h-48 flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-line p-4 text-center text-sm font-semibold text-muted transition-colors hover:border-accent-ink hover:text-ink"
+          >
+            <span aria-hidden className="grid h-12 w-12 place-items-center rounded-xl bg-accent text-2xl text-on-accent">
+              +
+            </span>
+            {t.newCode}
+          </Link>
+        </li>
+      }
+    />
   );
 }
 

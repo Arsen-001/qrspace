@@ -1,4 +1,4 @@
-import { accessOf, allCodes, kindDefaults, linkBase, mutate, newId, overDailyLimit, viewOf } from "@/server/db";
+import { accessOf, allCodes, findUser, kindDefaults, linkBase, mutate, newId, overDailyLimit, viewOf } from "@/server/db";
 import { currentPerson } from "@/server/session";
 import { ymd, type CodeRecord } from "@/lib/codes";
 import { LANGS, tr, type Lang } from "@/lib/i18n";
@@ -11,10 +11,20 @@ export async function GET(req: Request) {
   if (!me) return Response.json({ error: "login" }, { status: 401 });
   const codes = await allCodes();
   const newest = (a: CodeRecord, b: CodeRecord) => b.createdAt.localeCompare(a.createdAt);
+  // Мои коды — в порядке, который человек расставил сам; новые (ещё не в порядке) — первыми, свежие сверху.
+  const order = new Map(((await findUser(me))?.codeOrder ?? []).map((id, i) => [id, i]));
+  const mineOrder = (a: CodeRecord, b: CodeRecord) => {
+    const x = order.get(a.id);
+    const y = order.get(b.id);
+    if (x === undefined && y === undefined) return newest(a, b);
+    if (x === undefined) return -1;
+    if (y === undefined) return 1;
+    return x - y;
+  };
   return Response.json({
     base: linkBase(req),
     // Вещи партий (защита от подделок) — не в общем списке, а в «Защите от подделок».
-    mine: codes.filter((c) => c.owner === me && c.kind !== "item").sort(newest).map((c) => viewOf(c, me)),
+    mine: codes.filter((c) => c.owner === me && c.kind !== "item").sort(mineOrder).map((c) => viewOf(c, me)),
     items: codes.filter((c) => c.auth?.holder === me).map((c) => viewOf(c, me)),
     shared: codes
       .filter((c) => c.owner !== me && c.people.some((p) => p.personId === me) && accessOf(c, me) !== "closed")
