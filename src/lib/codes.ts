@@ -273,7 +273,7 @@ export const api = {
   patch: (id: string, patch: CodePatch) => call<CodeView>(`/api/codes/${id}`, json("PATCH", patch)),
   remove: (id: string) => call<{ ok: true }>(`/api/codes/${id}`, { method: "DELETE" }),
   /** Код из генератора: адрес (код-ссылка) или текст → короткая ссылка для самого кода. */
-  quick: (body: { content: Content; style: unknown }) => call<{ id: string; link: string }>("/api/codes/quick", json("POST", body)),
+  quick: (body: { content: Content; style: unknown; key: string }) => call<{ id: string; link: string }>("/api/codes/quick", json("POST", body)),
   addBlock: (id: string, form: FormData) => call<CodeView>(`/api/codes/${id}/blocks`, { method: "POST", body: form }),
   editBlock: (id: string, blockId: string, text: string) => call<CodeView>(`/api/codes/${id}/blocks/${blockId}`, json("PATCH", { text })),
   removeBlock: (id: string, blockId: string) => call<CodeView>(`/api/codes/${id}/blocks/${blockId}`, { method: "DELETE" }),

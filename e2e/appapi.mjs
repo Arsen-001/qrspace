@@ -20,6 +20,27 @@ const guest = await ctx();
 ok((await guest.get(`/api/codes/${keys.id}/image`)).status() === 403, "closed code drawing hidden from a guest");
 ok((await arman.get(`/api/codes/${keys.id}/image`)).status() === 200, "owner sees own closed code drawing");
 
+// Метка версии рисунка: тот же вид — 304, приложение берёт из кэша
+const tag = svg.headers()["etag"];
+ok(!!tag && (await arman.get(`/api/codes/${bublik.id}/image`, { headers: { "if-none-match": tag } })).status() === 304, "unchanged drawing → 304 by ETag");
+
+// Адрес загрузки большого видео для приложений: только под размер и свободное место
+const up = (data, who = arman) => who.post(`/api/codes/${bublik.id}/upload-url`, { data });
+ok((await up({ size: 3 * 1024 * 1024, type: "video/mp4" })).status() === 413, "upload URL refused when the file doesn't fit");
+ok((await up({ size: 2000, type: "image/gif" })).status() === 400, "upload URL only for video");
+const small = await up({ size: 2000, type: "video/mp4" });
+ok(small.status() === 200 && typeof (await small.json()).direct === "boolean", "upload URL for a file that fits");
+ok((await up({ size: 2000, type: "video/mp4" }, guest)).status() === 401, "guest gets no upload URL");
+
+// Код из приложения сразу с названием
+const menu = { type: "url", fields: { url: "https://example.com/app-menu" } };
+ok((await arman.post("/api/codes/quick", { data: { title: "Меню кафе", content: menu, key: "g:notpaid1" } })).status() === 402, "no code without payment");
+await arman.post("/api/purchases", { data: { key: "g:apptest1", tier: "simple" } });
+const quick = await (await arman.post("/api/codes/quick", { data: { title: "Меню кафе", content: menu, key: "g:apptest1" } })).json();
+ok((await arman.post("/api/codes/quick", { data: { content: { type: "url", fields: { url: "https://example.com/other" } }, key: "g:apptest1" } })).status() === 402, "one payment — one code");
+ok((await (await arman.post("/api/codes/quick", { data: { content: menu, key: "g:apptest1" } })).json()).id === quick.id, "same content again — same code, no new payment");
+ok((await (await arman.get(`/api/codes/${quick.id}`)).json()).title === "Меню кафе", "quick code created with a title");
+
 // Предпросмотр до создания кода
 const style = { ...((await (await arman.get(`/api/codes/${bublik.id}`)).json()).style), texture: null };
 const pv = await guest.post("/api/preview", { data: { style, format: "png", size: 200 } });

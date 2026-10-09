@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import type { NextRequest } from "next/server";
 import { accessOf, findCode, publicBase } from "@/server/db";
 import { media } from "@/server/media";
@@ -33,7 +34,11 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/api/codes/[id]/i
     svg = svg.split(`"${path}"`).join(`"data:${type};base64,${bytes.toString("base64")}"`);
   }
 
-  const headers = { "cache-control": "private, max-age=300", "x-content-type-options": "nosniff" };
+  // Метка версии: поменяли вид кода — другая метка, приложение не покажет старую картинку (If-None-Match → 304).
+  const format = req.nextUrl.searchParams.get("format") === "png" ? "png" : "svg";
+  const etag = `"${createHash("sha1").update(svg).update(format).digest("base64url")}"`;
+  const headers = { "cache-control": "private, no-cache", etag, "x-content-type-options": "nosniff" };
+  if (req.headers.get("if-none-match") === etag) return new Response(null, { status: 304, headers });
   if (req.nextUrl.searchParams.get("format") === "png") {
     // sharp ставится вместе с Next (картинки сайта); нет его — отдаём SVG, приложение это видит по content-type.
     const sharp = (await import("sharp").catch(() => null))?.default;

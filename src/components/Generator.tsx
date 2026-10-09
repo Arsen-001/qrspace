@@ -95,7 +95,7 @@ export function Generator() {
             beforeLogin: saveDraft,
             onSaved: () => rememberColors(style.fg, style.bg),
             finalize: async () => {
-              const { link } = await api.quick({ content: { type, fields: fields[type] }, style: toSaved(style) });
+              const { link } = await api.quick({ content: { type, fields: fields[type] }, style: toSaved(style), key: codeKey(raw, toSaved(style)) });
               return { drawing: buildDrawing(link, toQrStyle(style)), payload: link };
             },
           }}
