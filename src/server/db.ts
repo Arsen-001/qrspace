@@ -15,7 +15,10 @@ import { demoEnabled, demoUsers, publicPerson, usable, type User } from "./users
 import { DEFAULT_STYLE, type SavedStyle } from "@/lib/qr/style";
 
 
-export type Db = { codes: CodeRecord[]; sales: Record<string, number>; designs: Design[]; purchases: Purchase[]; packs: Pack[]; orders: Order[]; listings: Listing[]; shop: ShopOrder[]; users: User[]; notifications: Notice[]; reports: Report[] };
+/** Одноразовый код входа в приложение: браузер внутри приложения вошёл → приложение меняет код на свою сессию (5 минут). */
+export type AppToken = { token: string; person: string; until: string };
+
+export type Db = { codes: CodeRecord[]; sales: Record<string, number>; designs: Design[]; purchases: Purchase[]; packs: Pack[]; orders: Order[]; listings: Listing[]; shop: ShopOrder[]; users: User[]; notifications: Notice[]; reports: Report[]; appTokens: AppToken[] };
 
 const ALPHABET = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 // Без похожих (0/O, 1/I) — короткий номер иногда вводят руками.
@@ -78,6 +81,7 @@ function seed(): Db {
     designs: [],
     purchases: [],
     packs: [],
+    appTokens: [],
     orders: [],
     codes: [
       parchment,
@@ -204,6 +208,7 @@ function normalize(db: Db): Db {
   db.designs ??= [];
   db.purchases ??= [];
   db.packs ??= [];
+  db.appTokens ??= [];
   db.orders ??= [];
   db.listings ??= [];
   db.shop ??= [];

@@ -22,6 +22,8 @@ export type User = {
   codeOrder?: string[];
   /** Последние цвета (точки и фон) — после скачивания; первыми в «Тонкой настройке». */
   recentColors?: { fg: string; bg: string }[];
+  /** Телефоны с нашим приложением — куда слать уведомления (APNs / FCM, когда будут ключи). */
+  devices?: { token: string; platform: "ios" | "android"; at: string }[];
 };
 
 export const demoEnabled = () => process.env.DEMO_LOGIN !== "off";
