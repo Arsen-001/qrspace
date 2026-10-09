@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { fmtDate } from "@/lib/format";
 import { useLang } from "@/lib/lang";
-import { LEGAL_DOCS, LEGAL_RU, LEGAL_UPDATED, legalFor, operator, type LegalDoc } from "@/lib/legal";
+import { LEGAL_DOCS, LEGAL_RU, LEGAL_UPDATED, legalFor, operatorFor, type LegalDoc } from "@/lib/legal";
 import { Shell } from "./Shell";
 
 export function LegalPage({ doc }: { doc: LegalDoc }) {
   const { lang, t } = useLang((t) => `${LEGAL_RU[doc].title} — ${t.appName}`);
+  const op = operatorFor(lang);
   const d = legalFor(lang)[doc];
   return (
     <Shell t={t} lang={lang} narrow>
@@ -41,21 +42,15 @@ export function LegalPage({ doc }: { doc: LegalDoc }) {
         ))}
         <section id="contacts" className="rounded-2xl border border-line bg-card p-5">
           <h2 className="font-heading text-lg font-bold">{t.legalContacts}</h2>
-          {operator.name ? (
-            <div className="mt-2 space-y-1 text-sm">
-              <p className="font-semibold">{operator.name}</p>
-              {operator.address && <p>{operator.address}</p>}
-              {operator.email && (
-                <p>
-                  <a href={`mailto:${operator.email}`} className="text-accent-ink underline underline-offset-2">
-                    {operator.email}
-                  </a>
-                </p>
-              )}
-            </div>
-          ) : (
-            <p className="mt-2 text-sm text-muted">{t.legalOperatorPending}</p>
-          )}
+          <div className="mt-2 space-y-1 text-sm">
+            <p className="font-semibold">{op.name}</p>
+            <p>{op.address}</p>
+            <p>
+              <a href={`mailto:${op.email}`} className="text-accent-ink underline underline-offset-2">
+                {op.email}
+              </a>
+            </p>
+          </div>
         </section>
       </div>
     </Shell>
