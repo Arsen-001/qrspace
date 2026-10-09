@@ -39,6 +39,10 @@
         <intent>
             <action android:name="android.intent.action.WEB_SEARCH" />
         </intent>
+        <!-- Sign-in opens in a Custom Tab. -->
+        <intent>
+            <action android:name="android.support.customtabs.action.CustomTabsService" />
+        </intent>
     </queries>
 
     <application
@@ -49,7 +53,8 @@
         android:label="@string/app_name"
         android:localeConfig="@xml/locales_config"
         android:supportsRtl="true"
-        android:theme="@style/Theme.QRSpace">
+        android:theme="@style/Theme.QRSpace"
+        android:usesCleartextTraffic="false">
 
         <activity
             android:name=".MainActivity"
@@ -84,6 +89,24 @@
                 <data android:host="QRSPACE.CO" />
                 <data android:pathPrefix="/K/" />
             </intent-filter>
+            <!-- Sign-in in a Custom Tab ends at /app/callback → qrspace://auth?token=… (one-time, 5 minutes). -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="qrspace" android:host="auth" />
+            </intent-filter>
         </activity>
+
+        <!-- Sharing a code's picture (PNG in the cache folder). -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.files"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
     </application>
 </manifest>

@@ -10,14 +10,46 @@ const { createJiti } = await import(`${WEB}/node_modules/jiti/lib/jiti.mjs`);
 const { DICTS } = await createJiti(`${WEB}/`).import("./src/lib/i18n.ts");
 const LANGS = ["en", "ru", "hy", "es", "pt", "fr", "de"];
 // Site keys used by the app (wording comes from the site).
-const SITE_KEYS = ["navCodes", "login", "loginTitle", "cancel", "sharedTitle", "sharedHint", "emptyCodes", "ownerLabel", "loading", "copy", "copied", "memoryEmpty", "notSetUp", "openShort", "closedTitle", "closedHint", "closedMe", "notFound", "notFoundHint", "logout", "accountTitle", "accPurchases", "accPacks", "accScans30", "accScansAll", "accSpace", "accOf", "accPacksLeft", "accSpent", "accFromPack", "accPackUsed", "accNoPacks", "noPurchases", "demoAccount", "accSignedWith", "accLoginText", "loginOnlyHint", "verifyOurs", "verifyForeign", "verifyNoCamera", "verifyNotFound", "verifyPhoto", "verifyOpen", "verifyAgain", "errRetry", "actCopyLink", "actCopyNumber", "actCopyText", "actCopyPassword", "actCopyNetwork", "actOpenSite", "actCall", "actSms", "actEmail", "actMap", "actSaveContact", "wifiHow", "type.url", "type.text", "type.wifi", "type.phone", "type.email", "type.contact", "type.location", "type.sms", "field.ssid", "field.password", "tpl.memory", "tpl.car", "tpl.lost", "tpl.pet", "tpl.item", "tpl.link", "notice.message", "notice.request", "notice.joined", "notice.granted", "notice.outbid", "notice.bid", "notice.sold", "notice.won", "loginHint", "codesCountLabel", "withGoogle", "withApple", "accPackItem", "field.security", "type.event", "actAddCalendar"];
-const site = Object.fromEntries(SITE_KEYS.map((k) => [k, Object.fromEntries(LANGS.map((l) => [l, DICTS[l][k] ?? DICTS.en[k]]))]));
-for (const k of SITE_KEYS) if (!DICTS.en[k]) throw new Error(`missing site key ${k}`);
+const SITE_KEYS = ["navCodes", "login", "loginTitle", "cancel", "sharedTitle", "sharedHint", "ownerLabel", "loading", "copy", "copied", "memoryEmpty", "notSetUp", "openShort", "closedTitle", "closedHint", "closedMe", "notFound", "notFoundHint", "logout", "accountTitle", "accPurchases", "accPacks", "accScans30", "accScansAll", "accSpace", "accOf", "accPacksLeft", "accSpent", "accFromPack", "accPackUsed", "accNoPacks", "noPurchases", "demoAccount", "accSignedWith", "accLoginText", "loginOnlyHint", "verifyOurs", "verifyForeign", "verifyNoCamera", "verifyNotFound", "verifyPhoto", "verifyOpen", "verifyAgain", "errRetry", "actCopyLink", "actCopyNumber", "actCopyText", "actCopyPassword", "actCopyNetwork", "actOpenSite", "actCall", "actSms", "actEmail", "actMap", "actSaveContact", "wifiHow", "type.url", "type.text", "type.wifi", "type.phone", "type.email", "type.contact", "type.location", "type.sms", "field.ssid", "field.password", "tpl.memory", "tpl.car", "tpl.lost", "tpl.pet", "tpl.item", "tpl.link", "notice.message", "notice.request", "notice.joined", "notice.granted", "notice.outbid", "notice.bid", "notice.sold", "notice.won", "loginHint", "codesCountLabel", "withGoogle", "withApple", "accPackItem", "field.security", "type.event", "actAddCalendar"];
+// Families the create/edit screens show by id (also written to ui/SiteText.kt as key → R.string maps).
+const FAMILIES = {
+  type: ["url", "text", "wifi", "contact", "location", "event", "phone", "sms", "email", "whatsapp", "telegram", "viber", "instagram", "facebook", "tiktok", "youtube", "linkedin", "x"],
+  hint: ["url", "text", "wifi", "contact", "location", "event", "phone", "sms", "email", "whatsapp", "telegram", "viber", "instagram", "facebook", "tiktok", "youtube", "linkedin", "x"],
+  field: ["url", "text", "ssid", "password", "security", "phone", "message", "username", "email", "subject", "body", "firstName", "lastName", "company", "website", "place", "title", "start", "end", "notes"],
+  group: ["main", "contact", "social"],
+  security: ["WPA", "WEP", "nopass"],
+  dot: ["square", "rounded", "dots", "diamond", "star", "heart", "plus", "liquid", "leaf", "circuit"],
+  eye: ["square", "rounded", "circle", "leaf", "drop", "dropOut", "octagon", "mixed", "dotted", "chip", "ornate"],
+  preset: ["classic", "soft", "dots", "lime", "night", "hearts", "stars", "circuit", "gradient", "raised"],
+  vis: ["all", "contacts", "people", "me"],
+  visHint: ["all", "contacts", "people", "me"],
+  tplHint: ["memory", "car", "lost", "pet"],
+};
+// Home dashboard, create, edit, room offer, sign-in (09.10.2026).
+SITE_KEYS.push(
+  "dashTitle", "dashNew", "dashWeek", "dashScansAll", "dashUnderShort", "dashAsGuest", "dashEmptyMemory", "dashEmptyMemoryHint", "edit", "heroSwitch",
+  "scansCount", "records", "upcomingTitle", "upcomingHint", "markDone", "overdue", "firstCodeTitle", "firstCodeText", "firstCodeCta", "editionNo", "lostMode",
+  "makeTitle", "step1", "step2", "showPassword", "fg", "bg", "colors", "dots", "eyes", "styleReady", "lowContrast", "firstFree",
+  "payTitle", "freeFirst", "packFrom", "packLeft", "packRoom", "buyDemo", "templateLabel", "newCodeTitle", "newCodePlaceholder", "create", "titleLabel",
+  "saveError", "save", "saved", "delete", "visTitle", "tabAccess", "tabLink", "linkHint", "tabMemory", "storageTitle", "storagePaidUntil", "composerTitle", "addText", "addPhoto",
+  "addVideo", "upload", "replace", "textPlaceholder", "captionPlaceholder", "uploading", "videoLimit", "videoTooBig", "upTooBigTitle", "upSizes", "upNeed",
+  "upPay", "upOwnerOnly", "upMax", "storageFull", "uploadError", "you", "providersPending", "tpl.pet", "downloadFree", "payAndDownload", "packDownload",
+  ...Object.entries(FAMILIES).flatMap(([f, ids]) => ids.map((id) => `${f}.${id}`)),
+);
+const SITE = [...new Set(SITE_KEYS)];
+
+const site = Object.fromEntries(SITE.map((k) => [k, Object.fromEntries(LANGS.map((l) => [l, DICTS[l][k] ?? DICTS.en[k]]))]));
+for (const k of SITE) if (!DICTS.en[k]) throw new Error(`missing site key ${k}`);
 
 // Site placeholders → Android positional args.
 const PH = {
   accScansAll: { n: "%1$d" },
   accPackUsed: { used: "%1$d", codes: "%2$d" },
+  dashWeek: { n: "%1$d" },
+  upSizes: { file: "%1$s", free: "%2$s", quota: "%3$s" },
+  upNeed: { size: "%1$s", price: "%2$s" },
+  upPay: { price: "%1$s" },
+  upMax: { max: "%1$s" },
 };
 const NOTICE = { who: "%1$s", title: "%2$s", amount: "%3$s" };
 
@@ -49,7 +81,6 @@ const APP = {
   opening_code: ["Opening the code…", "Открываем код…", "Բացում ենք կոդը…", "Abriendo el código…", "Abrindo o código…", "Ouverture du code…", "Code wird geöffnet…"],
   open_in_browser: ["Open on qrspace.co", "Открыть на qrspace.co", "Բացել qrspace.co-ում", "Abrir en qrspace.co", "Abrir em qrspace.co", "Ouvrir sur qrspace.co", "Auf qrspace.co öffnen"],
   error_network: ["No connection to qrspace.co. Check the internet.", "Нет связи с qrspace.co. Проверьте интернет.", "qrspace.co-ի հետ կապ չկա։ Ստուգեք ինտերնետը։", "Sin conexión con qrspace.co. Revisa internet.", "Sem conexão com qrspace.co. Verifique a internet.", "Pas de connexion à qrspace.co. Vérifiez internet.", "Keine Verbindung zu qrspace.co. Prüfe das Internet."],
-  signin_soon: ["Google and Apple sign-in in the app is coming soon. For now, try the demo accounts.", "Вход через Google и Apple в приложении — скоро. Пока попробуйте демо-аккаунты.", "Google-ով և Apple-ով մուտքը հավելվածում՝ շուտով։ Առայժմ փորձեք դեմո հաշիվները։", "El acceso con Google y Apple en la app llegará pronto. Mientras, prueba las cuentas demo.", "Entrar com Google e Apple no app chega em breve. Por enquanto, teste as contas demo.", "La connexion Google et Apple dans l’app arrive bientôt. En attendant, essayez les comptes démo.", "Anmeldung mit Google und Apple in der App kommt bald. Probiere bis dahin die Demo-Konten."],
   notifications: ["Notifications", "Уведомления", "Ծանուցումներ", "Notificaciones", "Notificações", "Notifications", "Benachrichtigungen"],
   notifications_empty: ["No notifications", "Уведомлений нет", "Ծանուցումներ չկան", "Sin notificaciones", "Sem notificações", "Aucune notification", "Keine Benachrichtigungen"],
   tasks_due: ["Reminders due today: %1$d", "Напоминаний на сегодня: %1$d", "Այսօրվա հիշեցումներ՝ %1$d", "Recordatorios para hoy: %1$d", "Lembretes para hoje: %1$d", "Rappels pour aujourd’hui : %1$d", "Erinnerungen für heute: %1$d"],
@@ -64,11 +95,34 @@ const APP = {
   back: ["Back", "Назад", "Հետ", "Atrás", "Voltar", "Retour", "Zurück"],
   close: ["Close", "Закрыть", "Փակել", "Cerrar", "Fechar", "Fermer", "Schließen"],
   signed_in_as: ["Signed in as %1$s", "Вы вошли как %1$s", "Մուտք եք գործել որպես %1$s", "Sesión iniciada como %1$s", "Conectado como %1$s", "Connecté en tant que %1$s", "Angemeldet als %1$s"],
-  scanned_count: ["Scans: %1$d", "Сканов: %1$d", "Սկաններ՝ %1$d", "Escaneos: %1$d", "Leituras: %1$d", "Scans : %1$d", "Scans: %1$d"],
   copied_toast: null, // filled from site "copied"
   barcode_type: ["Type: %1$s", "Тип: %1$s", "Տեսակ՝ %1$s", "Tipo: %1$s", "Tipo: %1$s", "Type : %1$s", "Typ: %1$s"],
   scanner_offline: ["Works without internet", "Работает без интернета", "Աշխատում է առանց ինտերնետի", "Funciona sin internet", "Funciona sem internet", "Fonctionne sans internet", "Funktioniert ohne Internet"],
   hidden_owner: ["Owner is hidden", "Хозяин скрыт", "Տերը թաքնված է", "Propietario oculto", "Dono oculto", "Propriétaire masqué", "Besitzer verborgen"],
+  mode_content: ["QR with content", "QR с содержимым", "QR՝ բովանդակությամբ", "QR con contenido", "QR com conteúdo", "QR avec contenu", "QR mit Inhalt"],
+  mode_content_hint: ["Link, Wi‑Fi, phone, contact, text — the scan opens it", "Ссылка, Wi‑Fi, телефон, контакт, текст — скан откроет это", "Հղում, Wi‑Fi, հեռախոս, կոնտակտ, տեքստ՝ սկանը կբացի դա", "Enlace, Wi‑Fi, teléfono, contacto, texto: el escaneo lo abre", "Link, Wi‑Fi, telefone, contato, texto — a leitura abre isso", "Lien, Wi‑Fi, téléphone, contact, texte : le scan l’ouvre", "Link, WLAN, Telefon, Kontakt, Text – der Scan öffnet es"],
+  mode_memory: ["Memory code", "Код с памятью", "Հիշողությամբ կոդ", "Código con memoria", "Código com memória", "Code avec mémoire", "Code mit Erinnerung"],
+  mode_memory_hint: ["Photos, video and text under the code — add them any time", "Фото, видео и текст под кодом — добавляйте когда угодно", "Լուսանկարներ, տեսանյութ և տեքստ կոդի տակ՝ ավելացրեք ցանկացած պահի", "Fotos, vídeo y texto bajo el código: añádelos cuando quieras", "Fotos, vídeo e texto sob o código — adicione quando quiser", "Photos, vidéo et texte sous le code : ajoutez-les quand vous voulez", "Fotos, Video und Text unter dem Code – jederzeit hinzufügen"],
+  code_name_optional: ["Name in My codes (optional)", "Название в «Моих кодах» (необязательно)", "Անունը «Իմ կոդերում» (ըստ ցանկության)", "Nombre en Mis códigos (opcional)", "Nome em Meus códigos (opcional)", "Nom dans Mes codes (facultatif)", "Name in Meine Codes (optional)"],
+  create_free: ["Create for free", "Создать бесплатно", "Ստեղծել անվճար", "Crear gratis", "Criar grátis", "Créer gratuitement", "Kostenlos erstellen"],
+  create_pay: ["Pay %1$s and create", "Оплатить %1$s и создать", "Վճարել %1$s և ստեղծել", "Pagar %1$s y crear", "Pagar %1$s e criar", "Payer %1$s et créer", "%1$s zahlen und erstellen"],
+  create_from_pack: ["Create from the pack", "Создать из пакета", "Ստեղծել փաթեթից", "Crear del paquete", "Criar do pacote", "Créer depuis le pack", "Aus dem Paket erstellen"],
+  creating: ["Creating…", "Создаём…", "Ստեղծում ենք…", "Creando…", "Criando…", "Création…", "Wird erstellt…"],
+  limit_today: ["You’ve reached today’s limit of new codes — try again tomorrow.", "На сегодня новых кодов больше нельзя — попробуйте завтра.", "Այսօրվա նոր կոդերի սահմանը լրացել է՝ փորձեք վաղը։", "Has llegado al límite de códigos nuevos de hoy: inténtalo mañana.", "Você atingiu o limite de códigos novos de hoje — tente amanhã.", "Limite de nouveaux codes atteinte pour aujourd’hui : réessayez demain.", "Das Tageslimit für neue Codes ist erreicht – versuch es morgen."],
+  pick_date: ["Pick date and time", "Выбрать дату и время", "Ընտրել ամսաթիվ և ժամ", "Elegir fecha y hora", "Escolher data e hora", "Choisir la date et l’heure", "Datum und Uhrzeit wählen"],
+  login_to_create: ["Sign in to create codes — they stay yours.", "Войдите, чтобы создавать коды, — так они останутся за вами.", "Մուտք գործեք՝ կոդեր ստեղծելու համար, այդպես դրանք կմնան ձերը։", "Inicia sesión para crear códigos: así serán tuyos.", "Entre para criar códigos — assim eles ficam seus.", "Connectez-vous pour créer des codes : ils resteront à vous.", "Melde dich an, um Codes zu erstellen – so bleiben sie deine."],
+  preview_label: ["Preview of the code", "Предпросмотр кода", "Կոդի նախադիտում", "Vista previa del código", "Prévia do código", "Aperçu du code", "Vorschau des Codes"],
+  share_image: ["Share the picture", "Поделиться картинкой", "Կիսվել նկարով", "Compartir la imagen", "Compartilhar a imagem", "Partager l’image", "Bild teilen"],
+  file_unsupported: ["This file type isn’t supported: photos JPG, PNG, WebP; videos MP4, MOV, WebM.", "Такой файл не подходит: фото — JPG, PNG, WebP; видео — MP4, MOV, WebM.", "Այս ֆայլը չի համապատասխանում՝ լուսանկար՝ JPG, PNG, WebP, տեսանյութ՝ MP4, MOV, WebM։", "Este tipo de archivo no sirve: fotos JPG, PNG, WebP; vídeos MP4, MOV, WebM.", "Este tipo de arquivo não serve: fotos JPG, PNG, WebP; vídeos MP4, MOV, WebM.", "Ce type de fichier n’est pas pris en charge : photos JPG, PNG, WebP ; vidéos MP4, MOV, WebM.", "Dieser Dateityp geht nicht: Fotos JPG, PNG, WebP; Videos MP4, MOV, WebM."],
+  delete_confirm: ["Delete this entry?", "Удалить эту запись?", "Ջնջե՞լ այս գրառումը", "¿Eliminar esta entrada?", "Excluir esta entrada?", "Supprimer cette entrée ?", "Diesen Eintrag löschen?"],
+  more_on_site: ["People, messages, reminders and the look — on qrspace.co", "Люди, сообщения, напоминания и вид кода — на qrspace.co", "Մարդիկ, հաղորդագրություններ, հիշեցումներ և կոդի տեսքը՝ qrspace.co-ում", "Personas, mensajes, recordatorios y el aspecto: en qrspace.co", "Pessoas, mensagens, lembretes e o visual — em qrspace.co", "Personnes, messages, rappels et apparence : sur qrspace.co", "Personen, Nachrichten, Erinnerungen und Aussehen – auf qrspace.co"],
+  signin_site: ["Sign in on %1$s", "Войти на %1$s", "Մուտք %1$s-ում", "Entrar en %1$s", "Entrar em %1$s", "Se connecter sur %1$s", "Auf %1$s anmelden"],
+  signin_site_hint: ["Opens the site in a browser tab, then brings you back here signed in.", "Откроет сайт во вкладке браузера и вернёт сюда уже с входом.", "Կբացի կայքը դիտարկչի ներդիրում և կվերադարձնի այստեղ՝ արդեն մուտք գործած։", "Abre el sitio en una pestaña del navegador y te devuelve aquí con la sesión iniciada.", "Abre o site numa aba do navegador e traz você de volta já conectado.", "Ouvre le site dans un onglet du navigateur, puis vous ramène ici connecté.", "Öffnet die Website in einem Browser-Tab und bringt dich angemeldet zurück."],
+  signin_wait: ["Signing in…", "Входим…", "Մուտք ենք գործում…", "Iniciando sesión…", "Entrando…", "Connexion…", "Anmeldung…"],
+  signin_failed: ["Sign-in didn’t finish — try again.", "Вход не завершился — попробуйте ещё раз.", "Մուտքը չավարտվեց՝ փորձեք նորից։", "No se completó el inicio de sesión: inténtalo de nuevo.", "O login não terminou — tente de novo.", "La connexion n’a pas abouti : réessayez.", "Die Anmeldung wurde nicht abgeschlossen – versuch es noch einmal."],
+  server_title: ["Server (debug build)", "Сервер (отладочная сборка)", "Սերվեր (debug)", "Servidor (versión de depuración)", "Servidor (build de depuração)", "Serveur (version de débogage)", "Server (Debug-Build)"],
+  server_apply: ["Use", "Выбрать", "Ընտրել", "Usar", "Usar", "Utiliser", "Verwenden"],
+  unread_count: ["Unread: %1$d", "Непрочитанных: %1$d", "Չկարդացված՝ %1$d", "Sin leer: %1$d", "Não lidas: %1$d", "Non lus : %1$d", "Ungelesen: %1$d"],
   space_used: ["%1$s of %2$s", "%1$s из %2$s", "%1$s / %2$s", "%1$s de %2$s", "%1$s de %2$s", "%1$s sur %2$s", "%1$s von %2$s"],
 };
 delete APP.copied_toast;
@@ -104,8 +158,19 @@ for (const [i, l] of LANGS.entries()) {
       return `    <string name="${k}"${k === "app_name" ? ' translatable="false"' : ""}${fmt ? "" : ""}>${e}</string>`;
     })
     .filter((r, idx) => !(l !== "en" && rows[idx][0] === "app_name"));
+  const dup = rows.map(([k]) => k).filter((k, i, a) => a.indexOf(k) !== i);
+  if (dup.length) throw new Error(`duplicate string names: ${dup.join(", ")}`);
   const dir = l === "en" ? `${RES}/values` : `${RES}/values-${l}`;
   mkdirSync(dir, { recursive: true });
   writeFileSync(`${dir}/strings.xml`, `<?xml version="1.0" encoding="utf-8"?>\n<!-- Generated: site wording from src/lib/i18n*.ts + app-only strings. Edit the generator, not by hand. -->\n<resources>\n${body.join("\n")}\n</resources>\n`);
 }
+
+// Site families → R.string maps for Kotlin (ids picked at runtime: content types, fields, shapes, presets…).
+const kt = Object.entries(FAMILIES)
+  .map(([f, ids]) => `    val ${f}: Map<String, Int> = mapOf(${ids.map((id) => `"${id}" to R.string.${NAME(`${f}.${id}`)}`).join(", ")})`)
+  .join("\n");
+writeFileSync(
+  resolve(HERE, "../app/src/main/java/co/qrspace/app/ui/SiteText.kt"),
+  `// Generated by tools/gen-strings.mjs — site wording families → string resources. Edit the generator, not by hand.\npackage co.qrspace.app.ui\n\nimport co.qrspace.app.R\n\nobject SiteText {\n${kt}\n}\n`,
+);
 console.log("ok", Object.keys(APP).length + Object.keys(site).length, "strings");

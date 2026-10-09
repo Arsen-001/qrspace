@@ -45,7 +45,9 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import co.qrspace.app.account.AccountScreen
 import co.qrspace.app.codes.CodeDetailScreen
-import co.qrspace.app.codes.CodesScreen
+import co.qrspace.app.create.CreateScreen
+import co.qrspace.app.edit.EditScreen
+import co.qrspace.app.home.HomeScreen
 import co.qrspace.app.scan.HistoryScreen
 import co.qrspace.app.scan.Scan
 import co.qrspace.app.scan.ScanParser
@@ -61,13 +63,16 @@ class MainActivity : ComponentActivity() {
     /** Our link opened from outside (app link / share) → the code inside the app. */
     private val incoming = mutableStateOf<Scan.Ours?>(null)
 
+    /** Back from the sign-in Custom Tab: qrspace://auth?token=… (one-time, 5 minutes). */
+    private val authToken = mutableStateOf<String?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge(statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT))
         super.onCreate(savedInstanceState)
         handle(intent)
         setContent {
             QrTheme {
-                App(incoming.value) { incoming.value = null }
+                App(incoming.value, authToken.value, { incoming.value = null }, { authToken.value = null })
             }
         }
     }
@@ -78,6 +83,11 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handle(i: Intent?) {
+        val data = i?.data
+        if (data?.scheme == "qrspace" && data.host == "auth") {
+            data.getQueryParameter("token")?.takeIf { it.isNotBlank() }?.let { authToken.value = it }
+            return
+        }
         val url = i?.dataString ?: i?.getStringExtra(Intent.EXTRA_TEXT) ?: return
         ScanParser.ours(url.trim())?.let { incoming.value = it }
     }
@@ -85,17 +95,27 @@ class MainActivity : ComponentActivity() {
 
 private enum class Tab(val route: String, val label: Int, val icon: ImageVector) {
     Scan("scan", R.string.tab_scan, Glyphs.Qr),
-    Codes("codes", R.string.nav_codes, Glyphs.Codes),
+    Home("home", R.string.nav_codes, Glyphs.Codes),
     Account("account", R.string.account_title, Glyphs.Account),
 }
 
 fun codeRoute(s: Scan.Ours, visit: Boolean) = "code?id=${s.id ?: ""}&short=${s.short ?: ""}&visit=$visit"
 
 @Composable
-private fun App(incoming: Scan.Ours?, consumed: () -> Unit) {
+private fun App(incoming: Scan.Ours?, token: String?, consumed: () -> Unit, tokenUsed: () -> Unit) {
     val nav = rememberNavController()
-    val session = androidx.compose.ui.platform.LocalContext.current.app.session
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    val session = ctx.app.session
     LaunchedEffect(Unit) { session.refresh() }
+    // Signed in on the site in a Custom Tab → exchange the one-time code for our own session → home ("My QR codes").
+    LaunchedEffect(token) {
+        if (token == null) return@LaunchedEffect
+        android.widget.Toast.makeText(ctx, R.string.signin_wait, android.widget.Toast.LENGTH_SHORT).show()
+        runCatching { session.signInWithToken(token) }
+            .onSuccess { nav.tab(Tab.Home) }
+            .onFailure { android.widget.Toast.makeText(ctx, R.string.signin_failed, android.widget.Toast.LENGTH_LONG).show() }
+        tokenUsed()
+    }
     LaunchedEffect(incoming) {
         if (incoming != null) {
             nav.navigate(codeRoute(incoming, visit = true))
@@ -106,7 +126,7 @@ private fun App(incoming: Scan.Ours?, consumed: () -> Unit) {
     val route = entry?.destination?.route
     // Status bar icons: light on the black stage (scanner, code, account), dark on light screens.
     val view = androidx.compose.ui.platform.LocalView.current
-    val lightBg = !co.qrspace.app.ui.LocalQr.current.dark && (route == Tab.Codes.route || route == "history")
+    val lightBg = !co.qrspace.app.ui.LocalQr.current.dark && (route == Tab.Home.route || route == "history" || route == "create")
     LaunchedEffect(lightBg) {
         (view.context as? android.app.Activity)?.window?.let { w ->
             androidx.core.view.WindowCompat.getInsetsController(w, view).isAppearanceLightStatusBars = lightBg
@@ -118,10 +138,29 @@ private fun App(incoming: Scan.Ours?, consumed: () -> Unit) {
             composable(Tab.Scan.route) {
                 ScannerScreen(onOpenCode = { nav.navigate(codeRoute(it, visit = true)) }, onHistory = { nav.navigate("history") }, active = true)
             }
-            composable(Tab.Codes.route) {
-                CodesScreen(onOpen = { nav.navigate("code?id=$it&short=&visit=false") }, onSignIn = { nav.tab(Tab.Account) })
+            composable(Tab.Home.route) {
+                HomeScreen(
+                    onCreate = { nav.navigate("create") },
+                    onEdit = { nav.navigate("edit/$it") },
+                    onView = { nav.navigate("code?id=$it&short=&visit=false") },
+                    onSignIn = { nav.tab(Tab.Account) },
+                )
             }
-            composable(Tab.Account.route) { AccountScreen() }
+            composable(Tab.Account.route) { AccountScreen(onSignedIn = { nav.tab(Tab.Home) }) }
+            composable("create") {
+                CreateScreen(
+                    onBack = { nav.popBackStack() },
+                    onCreated = { id -> nav.navigate("edit/$id") { popUpTo("create") { inclusive = true } } },
+                    onSignIn = { nav.tab(Tab.Account) },
+                )
+            }
+            composable("edit/{id}", arguments = listOf(navArgument("id") { type = NavType.StringType })) { e ->
+                EditScreen(
+                    id = e.arguments?.getString("id").orEmpty(),
+                    onBack = { if (!nav.popBackStack()) nav.tab(Tab.Home) },
+                    onView = { nav.navigate("code?id=$it&short=&visit=false") },
+                )
+            }
             composable("history") {
                 HistoryScreen(onBack = { nav.popBackStack() }, onOpenCode = { nav.navigate(codeRoute(it, visit = false)) })
             }
@@ -140,6 +179,7 @@ private fun App(incoming: Scan.Ours?, consumed: () -> Unit) {
                     visit = a?.getBoolean("visit") ?: false,
                     onBack = { if (!nav.popBackStack()) nav.tab(Tab.Scan) },
                     onSignIn = { nav.tab(Tab.Account) },
+                    onEdit = { nav.navigate("edit/$it") },
                 )
             }
         }

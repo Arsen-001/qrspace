@@ -1,6 +1,7 @@
 package co.qrspace.app.account
 
 import android.widget.Toast
+import co.qrspace.app.BuildConfig
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -74,7 +75,7 @@ import co.qrspace.app.ui.fmtUsd
 import kotlinx.coroutines.launch
 
 @Composable
-fun AccountScreen() {
+fun AccountScreen(onSignedIn: () -> Unit = {}) {
     val ctx = LocalContext.current
     val session = ctx.app.session
     val me by session.me.collectAsState()
@@ -88,24 +89,39 @@ fun AccountScreen() {
             when {
                 m == null && error -> Box(Modifier.statusBarsPadding().padding(20.dp)) { ErrorBox(stringResource(R.string.error_network), { scope.launch { session.refresh() } }) }
                 m == null -> Box(Modifier.statusBarsPadding()) { Loading() }
-                m.me == null -> SignIn()
+                m.me == null -> SignIn(onSignedIn)
                 else -> Signed()
             }
+            if (BuildConfig.DEBUG) ServerSwitch()
             Spacer(Modifier.height(120.dp))
         }
     }
 }
 
-/** No OAuth in the app yet: Google/Apple buttons explain it's coming; demo people sign in now (server demo mode). */
+/** Open the site's sign-in in a Custom Tab; it comes back through qrspace://auth?token=… (MainActivity). */
+fun openSignIn(ctx: android.content.Context, url: String) {
+    val tab = androidx.browser.customtabs.CustomTabsIntent.Builder()
+        .setShowTitle(true)
+        .setDefaultColorSchemeParams(androidx.browser.customtabs.CustomTabColorSchemeParams.Builder().setToolbarColor(0xFF0B0B0C.toInt()).build())
+        .build()
+    runCatching { tab.launchUrl(ctx, android.net.Uri.parse(url)) }.onFailure { co.qrspace.app.scan.Actions.open(ctx, url) }
+}
+
+/**
+ * Sign-in: Google / Apple (only when the server has the keys — /api/me providers), "Sign in on qrspace.co" (the site's
+ * own sign-in page, demo people included) — all in a Custom Tab that returns here with a one-time code; and the
+ * in-app demo picker while the server is in demo mode.
+ */
 @Composable
-private fun SignIn() {
+private fun SignIn(onSignedIn: () -> Unit) {
     val ctx = LocalContext.current
     val q = LocalQr.current
     val session = ctx.app.session
+    val api = ctx.app.api
     val me by session.me.collectAsState()
     val scope = rememberCoroutineScope()
     var busy by remember { mutableStateOf<String?>(null) }
-    val soon = stringResource(R.string.signin_soon)
+    val providers = me?.providers
 
     Column(Modifier.fillMaxWidth().background(q.stage).dotGrid(Bone.copy(alpha = 0.07f)).statusBarsPadding().padding(20.dp)) {
         Spacer(Modifier.height(28.dp))
@@ -115,11 +131,25 @@ private fun SignIn() {
         Spacer(Modifier.height(10.dp))
         Text(stringResource(R.string.login_only_hint), style = Type.body, color = Bone.copy(alpha = 0.75f))
         Spacer(Modifier.height(22.dp))
-        // TODO(oauth): open `${api.base}/api/auth/google?next=/app/done` in a Custom Tab and return through an app link
-        //  (https://qrspace.co/app/done → this app) carrying a one-time token; needs the owner's Google/Apple keys.
-        QButton(stringResource(R.string.with_google), { Toast.makeText(ctx, soon, Toast.LENGTH_LONG).show() }, kind = BtnKind.Lime, modifier = Modifier.fillMaxWidth())
-        Spacer(Modifier.height(10.dp))
-        QButton(stringResource(R.string.with_apple), { Toast.makeText(ctx, soon, Toast.LENGTH_LONG).show() }, kind = BtnKind.Stage, modifier = Modifier.fillMaxWidth())
+        if (providers?.google == true) {
+            QButton(stringResource(R.string.with_google), { openSignIn(ctx, api.signInUrl("google")) }, kind = BtnKind.Lime, modifier = Modifier.fillMaxWidth())
+            Spacer(Modifier.height(10.dp))
+        }
+        if (providers?.apple == true) {
+            QButton(stringResource(R.string.with_apple), { openSignIn(ctx, api.signInUrl("apple")) }, kind = BtnKind.Stage, modifier = Modifier.fillMaxWidth())
+            Spacer(Modifier.height(10.dp))
+        }
+        QButton(
+            stringResource(R.string.signin_site, api.siteName), { openSignIn(ctx, api.signInUrl(null)) },
+            kind = if (providers?.google == true || providers?.apple == true) BtnKind.Stage else BtnKind.Lime,
+            icon = Glyphs.Open, modifier = Modifier.fillMaxWidth(),
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(stringResource(R.string.signin_site_hint), style = Type.small, color = Bone.copy(alpha = 0.6f))
+        if (providers != null && !providers.google && !providers.apple) {
+            Spacer(Modifier.height(10.dp))
+            Text(stringResource(R.string.providers_pending), style = Type.small, color = Bone.copy(alpha = 0.6f))
+        }
         Spacer(Modifier.height(8.dp))
     }
 
@@ -137,7 +167,7 @@ private fun SignIn() {
                     .clickable(enabled = busy == null, role = Role.Button) {
                         busy = p.id
                         scope.launch {
-                            runCatching { session.signIn(p.id) }.onFailure { Toast.makeText(ctx, R.string.error_network, Toast.LENGTH_LONG).show() }
+                            runCatching { session.signIn(p.id) }.onSuccess { onSignedIn() }.onFailure { Toast.makeText(ctx, R.string.error_network, Toast.LENGTH_LONG).show() }
                             busy = null
                         }
                     }
@@ -349,4 +379,31 @@ private fun noticeText(n: Notice, session: Session): String {
         else -> null
     } ?: return n.params["title"] ?: n.kind
     return stringResource(res, session.name(n.params["who"]) ?: "", n.params["title"] ?: "", n.params["amount"] ?: "")
+}
+
+/** Debug builds only: which server the app talks to (local web server for tests, or production). */
+@Composable
+private fun ServerSwitch() {
+    val ctx = LocalContext.current
+    val q = LocalQr.current
+    val api = ctx.app.api
+    val session = ctx.app.session
+    val scope = rememberCoroutineScope()
+    var url by remember { mutableStateOf(api.base) }
+    Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) {
+        Kicker(stringResource(R.string.server_title))
+        Spacer(Modifier.height(8.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            listOf("http://10.0.2.2:3720", "https://qrspace.co").forEach { u ->
+                co.qrspace.app.ui.Chip(u.substringAfter("://"), api.base == u, { url = u; scope.launch { session.switchServer(u) } }, Modifier.weight(1f))
+            }
+        }
+        Spacer(Modifier.height(8.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            co.qrspace.app.ui.QField(url, { url = it }, "URL", Modifier.weight(1f), keyboard = androidx.compose.ui.text.input.KeyboardType.Uri)
+            Spacer(Modifier.width(8.dp))
+            QButton(stringResource(R.string.server_apply), { scope.launch { session.switchServer(url) } }, kind = BtnKind.Ink, enabled = url.startsWith("http"))
+        }
+        Text(api.base, style = Type.small, color = q.muted, modifier = Modifier.padding(top = 4.dp))
+    }
 }

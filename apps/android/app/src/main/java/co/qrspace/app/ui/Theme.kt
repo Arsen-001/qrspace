@@ -40,7 +40,11 @@ data class QrColors(
     val onStage: Color,
     val stageLine: Color,
     val dark: Boolean,
-)
+) {
+    /** A selected choice: the black stage with lime on light; on the black page — a lime tint and lime edge. */
+    val picked: Color get() = if (dark) Lime.copy(alpha = 0.14f) else Night
+    val pickedLine: Color get() = if (dark) Lime else Night
+}
 
 val Lime = Color(0xFFC6FF2E)
 val Night = Color(0xFF0B0B0C)

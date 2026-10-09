@@ -58,4 +58,50 @@ object Glyphs {
     val Bell = icon("bell", strokes = listOf("M6,17V11a6,6 0 0 1 12,0v6l2,2H4z", "M10,21h4"))
     val Exit = icon("exit", strokes = listOf("M10,4H4v16h6", "M14,8l4,4l-4,4", "M18,12H9"))
     val Play = icon("play", fills = listOf("M8,5l11,7l-11,7z"))
+    val Plus = icon("plus", strokes = listOf("M12,5v14", "M5,12h14"))
+    val Pencil = icon("pencil", strokes = listOf("M4,20h4L19,9l-4,-4L4,16z", "M13,7l4,4"))
+    val Eye = icon("eye", strokes = listOf("M2,12s4,-7 10,-7s10,7 10,7s-4,7 -10,7s-10,-7 -10,-7z", "M12,9a3,3 0 1 1 0,6a3,3 0 1 1 0,-6z"))
+    val Globe = icon("globe", strokes = listOf("M12,3a9,9 0 1 1 0,18a9,9 0 1 1 0,-18z", "M3,12h18", "M12,3a14,14 0 0 1 0,18", "M12,3a14,14 0 0 0 0,18"))
+    val People = icon("people", strokes = listOf("M9,4.5a3.5,3.5 0 1 1 0,7a3.5,3.5 0 1 1 0,-7z", "M2.5,20a6.5,6.5 0 0 1 13,0", "M16,4.5a3.5,3.5 0 0 1 0,7", "M18,14.2a6.5,6.5 0 0 1 3.5,5.8"))
+    val Card = icon("card", strokes = listOf("M4,3h15v18H4z", "M11.5,7.4a2.6,2.6 0 1 1 0,5.2a2.6,2.6 0 1 1 0,-5.2z", "M7.5,17a4,4 0 0 1 8,0", "M19,7h2", "M19,12h2"))
+    val Check = icon("check", strokes = listOf("M5,12.5l4.5,4.5l9.5,-10"))
+    val Camera = icon("camera", strokes = listOf("M4,7h3l2,-2.5h6L17,7h3v12H4z", "M12,9.5a3.5,3.5 0 1 1 0,7a3.5,3.5 0 1 1 0,-7z"))
+    val Video = icon("video", strokes = listOf("M3,6.5h12v11H3z", "M15,10.5l6,-3.5v10l-6,-3.5"))
+    val Send = icon("send", strokes = listOf("M21,3L3,10.5l7,2.5l2.5,7z", "M21,3L10,13"))
+    val At = icon("at", strokes = listOf("M12,8a4,4 0 1 1 0,8a4,4 0 1 1 0,-8z", "M16,12v1.5a2.5,2.5 0 0 0 5,0V12a9,9 0 1 0 -3.5,7.1"))
+    val Car = icon("car", strokes = listOf("M3,13l2,-6h14l2,6v5h-3v-2H6v2H3z", "M3,13h18", "M7,16h.01", "M17,16h.01"))
+    val Key = icon("key", strokes = listOf("M7.5,10.5a3.5,3.5 0 1 1 0,7a3.5,3.5 0 1 1 0,-7z", "M11,14h10", "M18,14v3", "M15,14v2"))
+    val Heart = icon("heart", strokes = listOf("M12,20s-8,-5 -8,-11a4.5,4.5 0 0 1 8,-2.5a4.5,4.5 0 0 1 8,2.5c0,6 -8,11 -8,11z"))
+    val Book = icon("book", strokes = listOf("M4,5a2,2 0 0 1 2,-2h13v16H6a2,2 0 0 0 -2,2z", "M4,21V5", "M8,7h7"))
+
+    /** Content type → icon (TypeIcon on the site). */
+    fun type(t: String) = when (t) {
+        "url" -> Link
+        "text" -> Text
+        "wifi" -> Wifi
+        "phone", "viber" -> Phone
+        "sms", "whatsapp" -> Sms
+        "email" -> Mail
+        "contact" -> Person
+        "location" -> Pin
+        "event" -> Calendar
+        "telegram" -> Send
+        else -> At
+    }
+
+    /** Code kind → icon (KindIcon on the site). */
+    fun kind(k: String) = when (k) {
+        "car" -> Car
+        "lost", "item" -> Key
+        "pet" -> Heart
+        "link" -> Link
+        else -> Book
+    }
+
+    fun visibility(v: String) = when (v) {
+        "all" -> Globe
+        "people" -> People
+        "contacts" -> Card
+        else -> Lock
+    }
 }

@@ -1,6 +1,7 @@
 package co.qrspace.app.data
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 
 // Mirrors of the web app's JSON (src/lib/codes.ts, src/app/api/**). Unknown fields are ignored, missing ones defaulted,
 // so server additions don't break old app versions.
@@ -31,6 +32,7 @@ data class MeResponse(
     val admin: Boolean = false,
 )
 
+/** A saved code's look (src/lib/qr/style.ts SavedStyle). Pictures and logos stay as raw JSON — only for cache keys. */
 @Serializable
 data class SavedStyle(
     val fg: String = "#0b0b0c",
@@ -40,6 +42,15 @@ data class SavedStyle(
     val eyeBall: String = "auto",
     val eyeColor: String? = null,
     val eyeBallColor: String? = null,
+    val gradient: JsonElement? = null,
+    val rotate: Int = 0,
+    val effect: String = "none",
+    val texture: String? = null,
+    val logo: JsonElement? = null,
+    val eyeIcon: JsonElement? = null,
+    val picture: JsonElement? = null,
+    val caption: String? = null,
+    val captionPhone: String? = null,
 )
 
 @Serializable
@@ -56,13 +67,26 @@ data class Block(
 data class Content(val type: String, val fields: Map<String, String> = emptyMap())
 
 @Serializable
-data class Storage(val used: Long = 0, val quota: Long = 0, val plan: String? = null, val until: String? = null)
+data class StorageInfo(val used: Long = 0, val quota: Long = 0, val plan: String? = null, val until: String? = null)
 
 @Serializable
 data class Edition(val design: String, val no: Int, val of: Int? = null)
 
 @Serializable
 data class ScanStats(val days: List<Int> = emptyList(), val total: Int = 0, val week: Int = 0, val people: Int = 0)
+
+@Serializable
+data class TaskDone(val by: String = "", val at: String = "")
+
+/** A reminder on a code: what and when; every — repeat (after "Done" the date moves). */
+@Serializable
+data class Task(val id: String, val text: String = "", val due: String = "", val every: String = "none", val done: List<TaskDone> = emptyList())
+
+@Serializable
+data class CodeMessage(val id: String, val read: Boolean = true)
+
+@Serializable
+data class AccessRequest(val personId: String, val at: String = "")
 
 @Serializable
 data class CodeView(
@@ -82,9 +106,17 @@ data class CodeView(
     val lost: Boolean = false,
     val reward: String = "",
     val edition: Edition? = null,
-    val storage: Storage? = null,
+    val storage: StorageInfo? = null,
     val stats: ScanStats? = null,
-)
+    val styleLocked: Boolean = false,
+    val publicAdd: Boolean = false,
+    val tasks: List<Task>? = null,
+    val messages: List<CodeMessage>? = null,
+    val requests: List<AccessRequest>? = null,
+) {
+    /** Unread messages and access requests — a badge on the dashboard card. */
+    val unread: Int get() = (messages?.count { !it.read } ?: 0) + (requests?.size ?: 0)
+}
 
 @Serializable
 data class CodeList(
@@ -141,3 +173,29 @@ data class VerifyResult(val result: String, val id: String? = null, val kind: St
 
 @Serializable
 data class LoginBody(val personId: String?)
+
+/** What downloading (here: creating) a code costs this person (GET /api/purchases). */
+@Serializable
+data class PackQuote(val left: Int = 0, val bytes: Long = 0)
+
+@Serializable
+data class Quote(val paid: Boolean = false, val price: Double = 0.0, val free: Boolean = false, val pack: PackQuote? = null)
+
+@Serializable
+data class PayResult(val ok: Boolean = false, val price: Double = 0.0)
+
+@Serializable
+data class QuickResult(val id: String, val link: String = "")
+
+/** POST /api/codes/{id}/upload-url: locally {direct:false} (send the form); in production a one-file, exact-size PUT. */
+@Serializable
+data class UploadUrl(
+    val direct: Boolean = false,
+    val name: String = "",
+    val url: String = "",
+    val method: String = "PUT",
+    val headers: Map<String, String> = emptyMap(),
+)
+
+@Serializable
+data class TokenResult(val me: String? = null)

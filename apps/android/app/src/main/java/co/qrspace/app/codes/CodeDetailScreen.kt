@@ -1,6 +1,5 @@
 package co.qrspace.app.codes
 
-import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -24,7 +23,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -43,13 +41,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.media3.common.MediaItem
-import androidx.media3.common.util.UnstableApi
-import androidx.media3.datasource.okhttp.OkHttpDataSource
-import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
-import androidx.media3.ui.PlayerView
 import co.qrspace.app.R
 import co.qrspace.app.app
 import co.qrspace.app.data.ApiException
@@ -72,6 +63,7 @@ import co.qrspace.app.ui.QButton
 import co.qrspace.app.ui.QCard
 import co.qrspace.app.ui.Radius
 import co.qrspace.app.ui.Screen
+import co.qrspace.app.ui.StatusScrim
 import co.qrspace.app.ui.Type
 import co.qrspace.app.ui.dotGrid
 import co.qrspace.app.ui.fmtDate
@@ -88,7 +80,7 @@ private sealed interface DState {
 
 /** A code inside the app: title, owner, what's in it and the memory (text, photos, videos). */
 @Composable
-fun CodeDetailScreen(id: String?, short: String?, visit: Boolean, onBack: () -> Unit, onSignIn: () -> Unit) {
+fun CodeDetailScreen(id: String?, short: String?, visit: Boolean, onBack: () -> Unit, onSignIn: () -> Unit, onEdit: (String) -> Unit) {
     val ctx = LocalContext.current
     val api = ctx.app.api
     val session = ctx.app.session
@@ -123,10 +115,11 @@ fun CodeDetailScreen(id: String?, short: String?, visit: Boolean, onBack: () -> 
                     }
                 }
                 DState.Failed -> { TopBar(onBack, null); ErrorBox(stringResource(R.string.error_network), { scope.launch { state = DState.Busy; load() } }, Modifier.padding(20.dp)) }
-                is DState.Ok -> Detail(s.code, s.base, signedIn = me?.me != null, onBack = onBack, onSignIn = onSignIn)
+                is DState.Ok -> Detail(s.code, s.base, signedIn = me?.me != null, onBack = onBack, onSignIn = onSignIn, onEdit = onEdit) { state = DState.Ok(it, s.base) }
             }
             Spacer(Modifier.height(48.dp))
         }
+        StatusScrim(LocalQr.current.stage)
     }
 }
 
@@ -142,7 +135,7 @@ private fun TopBar(onBack: () -> Unit, share: String?, onStage: Boolean = false)
 }
 
 @Composable
-private fun Detail(c: CodeView, base: String, signedIn: Boolean, onBack: () -> Unit, onSignIn: () -> Unit) {
+private fun Detail(c: CodeView, base: String, signedIn: Boolean, onBack: () -> Unit, onSignIn: () -> Unit, onEdit: (String) -> Unit, onChange: (CodeView) -> Unit) {
     val ctx = LocalContext.current
     val q = LocalQr.current
     val session = ctx.app.session
@@ -155,7 +148,7 @@ private fun Detail(c: CodeView, base: String, signedIn: Boolean, onBack: () -> U
         Column(Modifier.padding(start = 20.dp, end = 20.dp, bottom = 24.dp)) {
             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Box(Modifier.fillMaxWidth(0.62f).aspectRatio(1f).clip(RoundedCornerShape(14.dp))) {
-                    QrImage(link, c.style, stringResource(R.string.qr_of, title), Modifier.fillMaxSize())
+                    CodeImage(c, base, stringResource(R.string.qr_of, title), Modifier.fillMaxSize())
                 }
             }
             Spacer(Modifier.height(20.dp))
@@ -205,8 +198,18 @@ private fun Detail(c: CodeView, base: String, signedIn: Boolean, onBack: () -> U
             Spacer(Modifier.height(20.dp))
         }
 
+        if (c.access == "owner") {
+            QButton(stringResource(R.string.edit), { onEdit(c.id) }, icon = Glyphs.Pencil, modifier = Modifier.fillMaxWidth())
+            Spacer(Modifier.height(20.dp))
+        }
+
         val blocks = c.blocks.orEmpty()
-        if (blocks.isNotEmpty() || c.content == null) {
+        if (c.access == "edit") {
+            // Someone who may add to this code: the same composer as the owner's (space — only the owner can buy).
+            Text(stringResource(R.string.memory), style = Type.h2, color = q.ink, modifier = Modifier.semantics { heading() })
+            Spacer(Modifier.height(12.dp))
+            co.qrspace.app.edit.MemoryEditor(c, onChange)
+        } else if (blocks.isNotEmpty() || c.content == null) {
             Text(stringResource(R.string.memory), style = Type.h2, color = q.ink, modifier = Modifier.semantics { heading() })
             Spacer(Modifier.height(12.dp))
             if (blocks.isEmpty()) {
@@ -244,7 +247,7 @@ private fun MemoryBlock(b: Block, mediaUrl: String, author: String?) {
                 contentScale = ContentScale.FillWidth,
                 modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp).background(q.field),
             )
-            "video" -> VideoBlock(mediaUrl)
+            "video" -> VideoPlayer(mediaUrl)
         }
         Column(Modifier.padding(16.dp)) {
             if (b.text.isNotEmpty()) Text(b.text, style = Type.body, color = q.ink)
@@ -255,35 +258,4 @@ private fun MemoryBlock(b: Block, mediaUrl: String, author: String?) {
             }
         }
     }
-}
-
-/** Video from /api/media (cookie-protected) — played through the same OkHttp client, starts on tap. */
-@OptIn(UnstableApi::class)
-@Composable
-private fun VideoBlock(url: String) {
-    val ctx = LocalContext.current
-    var started by remember { mutableStateOf(false) }
-    val label = stringResource(R.string.video)
-    if (!started) {
-        Box(
-            Modifier.fillMaxWidth().aspectRatio(16f / 9f).background(LocalQr.current.stage).clickable(role = Role.Button) { started = true }.semantics { contentDescription = label },
-            contentAlignment = Alignment.Center,
-        ) {
-            Box(Modifier.size(60.dp).clip(CircleShape).background(Lime), contentAlignment = Alignment.Center) {
-                Icon(Glyphs.Play, null, tint = co.qrspace.app.ui.Night, modifier = Modifier.size(28.dp))
-            }
-        }
-        return
-    }
-    val player = remember {
-        ExoPlayer.Builder(ctx)
-            .setMediaSourceFactory(DefaultMediaSourceFactory(OkHttpDataSource.Factory(ctx.app.api.client)))
-            .build()
-            .apply { setMediaItem(MediaItem.fromUri(url)); prepare(); playWhenReady = true }
-    }
-    DisposableEffect(player) { onDispose { player.release() } }
-    AndroidView(
-        factory = { PlayerView(it).apply { this.player = player } },
-        modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f).clip(Radius),
-    )
 }

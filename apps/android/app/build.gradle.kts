@@ -14,14 +14,22 @@ android {
         applicationId = "co.qrspace.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0.0"
-        // Production server; override with -PapiBase=http://10.0.2.2:3720 for a local web server.
-        buildConfigField("String", "API_BASE", "\"${(project.findProperty("apiBase") as String?) ?: "https://qrspace.co"}\"")
+        versionCode = 2
+        versionName = "1.1.0"
+        // Push (FCM) needs a Firebase project — off until the owner creates one (see data/Session.kt Push).
+        buildConfigField("boolean", "PUSH_ENABLED", "false")
     }
 
+    // Server: release → https://qrspace.co. Debug → the local web server as the emulator sees it
+    // (http://10.0.2.2:3720; cleartext only for 10.0.2.2/localhost, src/debug/res/xml/network_security_config.xml),
+    // switchable at runtime in Account → Server. Override either with -PapiBase=…
+    val apiBase = project.findProperty("apiBase") as String?
     buildTypes {
+        debug {
+            buildConfigField("String", "API_BASE", "\"${apiBase ?: "http://10.0.2.2:3720"}\"")
+        }
         release {
+            buildConfigField("String", "API_BASE", "\"${apiBase ?: "https://qrspace.co"}\"")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
@@ -84,6 +92,8 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.coil.compose)
     implementation(libs.coil.okhttp)
+    implementation(libs.coil.svg)
+    implementation(libs.androidx.browser)
     implementation(libs.media3.exoplayer)
     implementation(libs.media3.ui)
     implementation(libs.media3.okhttp)
