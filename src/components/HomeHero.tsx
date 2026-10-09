@@ -126,35 +126,42 @@ export function HomeHero({ t }: { t: Dict }) {
         <div className="x-stage-grid" />
         <div className="x-stage-glow" />
       </div>
-      <div className="relative grid items-center gap-10 p-6 sm:p-10 lg:grid-cols-[1.25fr_1fr] lg:p-14">
-        <div className="min-w-0">
+      {/* Порядок (владелец 09.10.2026: «свитчер непонятно для чего, QR внизу — не видно, что поменялось»): на телефоне
+          заголовок → код с выключателем → текст и кнопки, чтобы код был на первом экране; на компьютере код справа.
+          Выключатель — вплотную к коду, над ними — подсказка, что он делает. */}
+      <div className="relative grid items-center gap-x-10 gap-y-8 p-6 sm:p-10 lg:grid-cols-[1.25fr_1fr] lg:grid-rows-[auto_auto] lg:p-14">
+        <div className="min-w-0 lg:self-end">
           <p className="inline-flex items-center gap-2 rounded-full border border-stage-line px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.14em] text-on-stage/70">
             <span className="x-blink h-2 w-2 rounded-full bg-accent" />
             {t.homeKicker}
           </p>
-          {/* Выключатель — рядом с заголовком (владелец 08.10.2026): открывает, что под большим кодом. */}
-          <div className="mt-6 flex items-center gap-4 sm:gap-6">
-            <div className="@container min-w-0 flex-1">
-              <HeroTitle a={t.homeTitleA} b={t.homeTitleB} />
-            </div>
-            <div className="hidden sm:block">
-              <HeroSwitch t={t} open={reveal.open} toggle={reveal.toggle} />
+          <div className="@container mt-6 min-w-0">
+            <HeroTitle a={t.homeTitleA} b={t.homeTitleB} />
+          </div>
+        </div>
+        <div className="mx-auto w-full max-w-md lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:max-w-none">
+          <p aria-live="polite" className="mb-4 flex items-center gap-2 text-sm font-medium text-on-stage/80">
+            <span aria-hidden className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-bold ${reveal.open ? "bg-accent text-on-accent" : "bg-white/10 text-accent"}`}>
+              {reveal.open ? "✓" : "↓"}
+            </span>
+            {reveal.open ? t.heroHintOn : t.heroHint}
+          </p>
+          <div className="flex items-center gap-3 sm:gap-5">
+            <HeroSwitch t={t} open={reveal.open} toggle={reveal.toggle} />
+            <div className="min-w-0 flex-1">
+              <HeroCode t={t} code={<BigCode />} open={reveal.open} moving={reveal.moving} />
             </div>
           </div>
-          {/* На телефоне заголовок — во всю ширину, выключатель — рядом с текстом под ним. */}
-          <div className="mt-6 flex items-center gap-4">
-            <p className="min-w-0 flex-1 max-w-xl text-base leading-relaxed text-on-stage/70 sm:text-lg">{t.homeLead}</p>
-            <div className="sm:hidden">
-              <HeroSwitch t={t} open={reveal.open} toggle={reveal.toggle} />
-            </div>
-          </div>
+        </div>
+        <div className="min-w-0 lg:self-start">
+          <p className="max-w-xl text-base leading-relaxed text-on-stage/70 sm:text-lg">{t.homeLead}</p>
           <div className="mt-8 flex flex-wrap gap-2 sm:gap-3">
-            <a href="#make" className="group inline-flex min-h-13 items-center gap-3 rounded-xl bg-accent px-5 sm:px-6 font-heading text-sm font-bold text-on-accent">
+            <Link href="/create" className="group inline-flex min-h-13 items-center gap-3 rounded-xl bg-accent px-5 sm:px-6 font-heading text-sm font-bold text-on-accent">
               {t.homeCta}
               <span aria-hidden className="transition-transform group-hover:translate-x-1">
                 →
               </span>
-            </a>
+            </Link>
             <Link
               href="/market"
               className="inline-flex min-h-13 items-center rounded-xl border border-stage-line px-5 sm:px-6 font-heading text-sm font-bold hover:border-on-stage/60"
@@ -162,9 +169,6 @@ export function HomeHero({ t }: { t: Dict }) {
               {t.navMarket}
             </Link>
           </div>
-        </div>
-        <div className="mx-auto w-full max-w-md lg:max-w-none">
-          <HeroCode t={t} code={<BigCode />} open={reveal.open} moving={reveal.moving} />
         </div>
       </div>
     </section>

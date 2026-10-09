@@ -366,7 +366,7 @@ export function ScanPage({ id, invite }: { id: string; invite: string | null }) 
 
       <footer className="mt-10 flex flex-col items-center gap-3 text-center text-sm text-muted">
         {/* Кто отсканировал чужой код — главный будущий клиент: приглашение крупно, на тёмной карточке. */}
-        <Link href="/#make" className="group flex w-full items-center gap-4 rounded-2xl bg-stage p-4 text-left text-on-stage sm:p-5">
+        <Link href="/create" className="group flex w-full items-center gap-4 rounded-2xl bg-stage p-4 text-left text-on-stage sm:p-5">
           <span aria-hidden className="grid h-12 w-12 shrink-0 grid-cols-2 gap-1 rounded-xl border border-stage-line p-2.5">
             <span className="rounded-sm border-2 border-on-stage" />
             <span className="rounded-sm border-2 border-on-stage" />

@@ -9,9 +9,9 @@ const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 }, l
 const p = await ctx.newPage();
 p.on("pageerror", (e) => errors.push(e.message));
 p.on("console", (m) => m.type() === "error" && errors.push(m.text()));
-await p.goto(B + "/login?next=/");
+await p.goto(B + "/login?next=/create");
 await p.getByRole("button", { name: /Лилит/ }).click();
-await p.waitForURL(B + "/");
+await p.waitForURL(B + "/create");
 await p.getByLabel("Адрес сайта").fill("example.com/live");
 await p.getByRole("tab", { name: "Фон", exact: true }).click();
 await p.getByRole("radio", { name: "Космос", exact: true }).click();

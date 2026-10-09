@@ -12,7 +12,7 @@ const shot = async (name) => { await p.waitForTimeout(300); await p.screenshot({
 const ready = () => p.waitForFunction(() => /Код читается/.test(document.body.innerText), null, { timeout: 30000 });
 const dl = async (fn) => { const [d] = await Promise.all([p.waitForEvent("download", { timeout: 15000 }), fn()]); return d.suggestedFilename(); };
 
-await p.goto(B + "/", { waitUntil: "networkidle" });
+await p.goto(B + "/create", { waitUntil: "networkidle" });
 await p.getByLabel("Адрес сайта").fill("example.com/one");
 await ready();
 await p.getByRole("button", { name: /Скачать PNG/ }).click();

@@ -134,7 +134,7 @@ const linkBtn = "inline-flex min-h-11 items-center gap-2 rounded-xl px-4 font-he
 function MyCodes({ t, data }: { t: Dict; data: CodeList }) {
   if (!data.mine.length)
     return (
-      <Link href="/#make" className="group relative block overflow-hidden rounded-2xl bg-stage p-8 text-on-stage sm:p-10">
+      <Link href="/create" className="group relative block overflow-hidden rounded-2xl bg-stage p-8 text-on-stage sm:p-10">
         <div aria-hidden className="x-stage-glow" />
         <span className="relative block font-heading text-2xl font-extrabold sm:text-3xl">{t.firstCodeTitle}</span>
         <span className="relative mt-2 block max-w-md text-sm text-on-stage/70">{t.firstCodeText}</span>
@@ -151,7 +151,7 @@ function MyCodes({ t, data }: { t: Dict; data: CodeList }) {
       leading={
         <li>
           <Link
-            href="/#make"
+            href="/create"
             className="flex h-full min-h-48 flex-col items-center justify-center gap-3 rounded-3xl border-2 border-dashed border-line p-4 text-center text-sm font-semibold text-muted transition-all hover:-translate-y-1 hover:border-accent-ink hover:text-ink"
           >
             <span aria-hidden className="grid h-12 w-12 place-items-center rounded-xl bg-accent text-2xl text-on-accent">
@@ -211,7 +211,7 @@ function History({ lang, rows }: { lang: Lang; rows: Row[] }) {
 function Overview({ t, lang, p, codes, go, onDone }: { t: Dict; lang: Lang; p: Profile; codes: CodeList | null; go: (tab: AccTab) => void; onDone: () => void }) {
   const rows = rowsOf(t, p);
   const next = [
-    { href: "/#make", title: t.newCode, text: t.accNextCode, mark: "+" },
+    { href: "/create", title: t.newCode, text: t.accNextCode, mark: "+" },
     {
       tab: "packs" as const,
       title: t.packBuy,
@@ -267,7 +267,7 @@ function Overview({ t, lang, p, codes, go, onDone }: { t: Dict; lang: Lang; p: P
         ) : !codes.mine.length ? (
           <Empty
             cta={
-              <Link href="/#make" className={`${linkBtn} bg-accent text-on-accent`}>
+              <Link href="/create" className={`${linkBtn} bg-accent text-on-accent`}>
                 {t.firstCodeCta} →
               </Link>
             }
@@ -323,7 +323,7 @@ function Purchases({ t, lang, p }: { t: Dict; lang: Lang; p: Profile }) {
       ) : (
         <Empty
           cta={
-            <Link href="/#make" className={`${linkBtn} bg-accent text-on-accent`}>
+            <Link href="/create" className={`${linkBtn} bg-accent text-on-accent`}>
               {t.newCode} →
             </Link>
           }
@@ -601,7 +601,7 @@ export function AccountPage({ tab: first }: { tab: AccTab }) {
                   {profile.since && ` · ${t.accSince} ${fmtDateTime(profile.since, lang).split(",")[0]}`}
                 </div>
               </div>
-              <Link href="/#make" className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-accent px-5 font-heading text-sm font-bold text-on-accent sm:w-auto">
+              <Link href="/create" className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-accent px-5 font-heading text-sm font-bold text-on-accent sm:w-auto">
                 + {t.newCode}
               </Link>
             </div>

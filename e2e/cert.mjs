@@ -6,7 +6,7 @@ const errors = [];
 const ok = (c, m) => { console.log(c ? "  ✓" : "  ✗", m); if (!c) errors.push(m); };
 const shot = async (p, name) => { await p.waitForTimeout(400); await p.screenshot({ path: out + name + ".png", fullPage: true }); const o = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth); if (o) errors.push(`${name} overflow ${o}`); };
 const demo = async (who, next, w = 1280, locale = "ru-RU") => { const ctx = await browser.newContext({ viewport: { width: w, height: 900 }, locale }); const p = await ctx.newPage(); p.on("pageerror", (e) => errors.push(e.message)); await p.goto(`${B}/login?next=${encodeURIComponent(next)}`); await p.getByRole("button", { name: new RegExp(who) }).click(); await p.waitForURL((u) => !u.pathname.startsWith("/login")); return p; };
-const n = await demo("Наре", "/");
+const n = await demo("Наре", "/create");
 await n.getByLabel("Название дизайна", { exact: true }).fill("Кофейня");
 await n.getByText("Название на армянском и английском").click();
 await n.getByLabel("Название дизайна — Հայերեն").fill("Սրճարան");

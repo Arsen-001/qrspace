@@ -18,7 +18,7 @@ export function Oops({ retry }: { retry?: () => void }) {
               {t.errRetry}
             </button>
           ) : (
-            <Link href="/#make" className="inline-grid min-h-11 place-items-center rounded-xl bg-accent px-5 font-semibold text-on-accent">
+            <Link href="/create" className="inline-grid min-h-11 place-items-center rounded-xl bg-accent px-5 font-semibold text-on-accent">
               {t.makeYours} →
             </Link>
           )}

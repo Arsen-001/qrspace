@@ -16,6 +16,8 @@ const shot = async (p, name) => { await p.screenshot({ path: out + name + ".png"
 for (const w of [1280, 390]) {
   const p = await mk(w);
   await p.goto(B + "/", { waitUntil: "networkidle" });
+  await shot(p, `${w}-00-home`);
+  await p.goto(B + "/create", { waitUntil: "networkidle" });
   await shot(p, `${w}-01-generator`);
   await p.goto(B + "/codes", { waitUntil: "networkidle" });
   await shot(p, `${w}-02-codes-guest`);

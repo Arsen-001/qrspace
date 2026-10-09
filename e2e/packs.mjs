@@ -32,7 +32,7 @@ ok(true, "guest signs in and the pack is bought");
 await p.waitForSelector("text=Осталось в ваших пакетах");
 ok((await p.locator("text=Осталось в ваших пакетах").textContent()).includes("5"), "5 codes left");
 // Первый простой — бесплатно, как и было
-await p.goto(B + "/", { waitUntil: "networkidle" });
+await p.goto(B + "/create", { waitUntil: "networkidle" });
 await p.getByLabel("Адрес сайта").fill("example.com/pack-free");
 await ready(p);
 await p.getByRole("button", { name: /Скачать PNG/ }).click();

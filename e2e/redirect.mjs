@@ -43,9 +43,9 @@ const hop = async (link) => {
   return { status: r.status(), to: r.headers().location };
 };
 
-await p.goto(`${B}/login?next=/`);
+await p.goto(`${B}/login?next=/create`);
 await p.getByRole("button", { name: /Лилит/ }).click();
-await p.waitForURL(B + "/");
+await p.waitForURL(B + "/create");
 
 // Любой код из генератора → наша короткая ссылка → наша страница с содержимым и кнопками (владелец 08.10.2026).
 const guest = await (await browser.newContext({ locale: "ru-RU" })).newPage();

@@ -11,15 +11,15 @@ import { useLang } from "@/lib/lang";
 import { rememberColors, useMe } from "@/lib/me";
 import { isDesigner } from "@/lib/people";
 import { CodeDesigner } from "./CodeDesigner";
-import { HomeBackdrop, HomeFeatures, HomeHero, HomeTicker } from "./HomeHero";
 import { ContentForm } from "./ContentForm";
 import { PublishBox } from "./PublishBox";
 import { SiteFooter } from "./SiteFooter";
 import { SiteHeader } from "./SiteHeader";
 import type { StyleState } from "./StylePanel";
 
+/** Генератор кода: содержимое → вид → скачать. Своя страница /create; главная — витрина со ссылкой сюда. */
 export function Generator() {
-  const { lang, t } = useLang((t) => `${t.appName} — ${t.tagline}`);
+  const { lang, t } = useLang((t) => `${t.makeTitle} — ${t.appName}`);
 
   const [type, setType] = useState<ContentType>("url");
   const [fields, setFields] = useState(() => {
@@ -69,12 +69,9 @@ export function Generator() {
       <div className="mx-auto w-full max-w-6xl px-4 pb-16 sm:px-6">
         <SiteHeader t={t} lang={lang} />
 
-        <HomeBackdrop />
-        <HomeHero t={t} />
-        <HomeTicker t={t} />
-
-        <div id="make" className="scroll-mt-6 pb-6 pt-4">
-          <h2 className="font-heading text-2xl font-extrabold sm:text-4xl">{t.homeMakeTitle}</h2>
+        {/* Генератор — своя страница (владелец 09.10.2026: «хочу, чтобы генератор QR был отдельной страницей»). */}
+        <div id="make" className="scroll-mt-6 pb-6 pt-4 sm:pt-6">
+          <h1 className="font-heading text-3xl font-extrabold sm:text-5xl">{t.makeTitle}</h1>
           <p className="mt-3 flex items-center gap-2 text-sm text-muted">
             <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
               <rect x="5" y="11" width="14" height="10" rx="2" />
@@ -136,9 +133,7 @@ export function Generator() {
           }
         />
 
-        <HomeFeatures t={t} />
-
-        <SiteFooter t={t} lang={lang} lead={t.footer} />
+        <SiteFooter t={t} lang={lang} />
       </div>
     </div>
   );

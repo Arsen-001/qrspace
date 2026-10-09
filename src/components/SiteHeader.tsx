@@ -44,7 +44,7 @@ export function SiteHeader({ t, lang }: { t: Dict; lang: Lang }) {
   const path = usePathname();
   const { ready, me, admin, demo } = useMe();
   const nav = [
-    { href: "/", label: t.navGenerator, on: path === "/" },
+    { href: "/create", label: t.navGenerator, on: path === "/create" },
     { href: "/market", label: t.navMarket, on: path.startsWith("/market") },
     { href: "/codes", label: t.navCodes, on: path.startsWith("/codes") },
     ...(admin ? [{ href: "/admin", label: t.navAdmin, on: path.startsWith("/admin") }] : []),
@@ -85,8 +85,8 @@ export function SiteHeader({ t, lang }: { t: Dict; lang: Lang }) {
               <AccountMenu t={t} lang={lang} me={me} />
             ) : (
               <Link
-                // С главной после входа — в профиль с моими кодами (иначе «вошёл — как будто ничего не поменялось»).
-                href={`/login?next=${encodeURIComponent(path === "/" ? "/account" : path)}`}
+                // После входа — туда же; главная после входа — своя страница с моими кодами.
+                href={`/login?next=${encodeURIComponent(path)}`}
                 className="grid min-h-10 place-items-center rounded-xl bg-accent px-3 text-sm font-semibold text-on-accent"
               >
                 {t.login}

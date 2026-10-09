@@ -46,7 +46,7 @@ const a2 = await login("mariam.test@gmail.com", "Мариам Акопян", "g-
 const me2 = await a2.evaluate(() => fetch("/api/me").then((r) => r.json()));
 ok(me2.me === me.me, "same Google account → same user");
 // дизайнер по почте
-const d = await login("studio.designer@gmail.com", "Студия", "g-222", "/");
+const d = await login("studio.designer@gmail.com", "Студия", "g-222", "/create");
 await d.waitForSelector("text=Опубликовать в маркет");
 ok(true, "DESIGNER_EMAILS gives designer panel");
 // Арман (демо) добавляет Мариам к котлу по почте

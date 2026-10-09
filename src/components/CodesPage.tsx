@@ -281,7 +281,7 @@ export function CodesPage({ startNew = null }: { startNew?: Kind | null }) {
               <MyCodesGrid key={reload} t={t} base={list.base} codes={list.mine} />
             ) : (
               // Пусто — сцена с приглашением, как на главной: первый код делают в генераторе.
-              <Link href="/#make" className="group relative block overflow-hidden rounded-[2rem] bg-stage p-8 text-on-stage sm:p-12">
+              <Link href="/create" className="group relative block overflow-hidden rounded-[2rem] bg-stage p-8 text-on-stage sm:p-12">
                 <div aria-hidden className="pointer-events-none absolute inset-0">
                   <div className="x-stage-grid" />
                   <div className="x-stage-glow" />

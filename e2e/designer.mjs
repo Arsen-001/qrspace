@@ -14,9 +14,9 @@ const shot = async (p, name) => { await p.waitForTimeout(300); await p.screensho
 const ok = (c, m) => { console.log(c ? "  ✓" : "  ✗", m); if (!c) errors.push(m); };
 
 const p = await mk(1280);
-await p.goto(B + "/login?next=/");
+await p.goto(B + "/login?next=/create");
 await p.getByRole("button", { name: /Наре/ }).click();
-await p.waitForURL(B + "/");
+await p.waitForURL(B + "/create");
 await p.waitForSelector("text=Опубликовать в маркет");
 // нечитаемое сочетание — публикация не проходит
 await p.getByRole("tab", { name: "Форма", exact: true }).click();

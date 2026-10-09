@@ -252,7 +252,7 @@ export function Preview({
         <LoginModal
           t={t}
           lang={lang}
-          next={`${path}#make`}
+          next={path}
           beforeLeave={gate?.beforeLogin}
           onClose={() => setLogin(null)}
           onDone={() => {

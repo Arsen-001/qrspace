@@ -15,9 +15,21 @@ for (const w of [1280, 390]) {
   await p.goto(B + "/", { waitUntil: "networkidle" });
   await p.getByRole("link", { name: "Войти" }).first().click();
   await p.getByRole("button", { name: /Арман/ }).click();
-  await p.waitForURL(/\/account$/);
+  // После входа главная — своя: мои коды с выключателями и сканами (владелец 09.10.2026)
+  await p.waitForURL(B + "/");
+  await p.getByRole("heading", { name: "Мои QR-коды" }).waitFor();
+  ok(true, `${w}: login lands on my own home`);
+  const sw = p.getByRole("switch", { name: /Ключи от дома/ });
+  await sw.click();
+  ok((await sw.getAttribute("aria-checked")) === "true", `${w}: code switch opens what is under it`);
+  ok(await p.getByText("сканов").first().isVisible(), `${w}: scan count shown`);
+  ok(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${w}: home fits`);
+  await p.screenshot({ path: `${out}dash-${w}.png`, fullPage: true });
+  await p.getByRole("link", { name: "Создать новый QR" }).first().click();
+  await p.waitForURL(/\/create$/);
+  ok(true, `${w}: create button opens the generator page`);
+  await p.goto(B + "/account", { waitUntil: "networkidle" });
   await p.waitForSelector("text=Сканов за 30 дней");
-  ok(true, `${w}: login lands in the account`);
   ok(await p.getByText("Быстрые действия").isVisible(), `${w}: overview shown`);
   ok(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${w}: no horizontal scroll`);
   await p.screenshot({ path: `${out}acc-${w}-overview.png`, fullPage: true });

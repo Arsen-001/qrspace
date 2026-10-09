@@ -200,7 +200,7 @@ export function OneQrBanner({ t }: { t: Dict }) {
             {t.oneQrTitle} <span className="whitespace-nowrap text-accent">${CODE_PRICE}</span>
           </h2>
           <p className="mt-4 max-w-md text-on-stage/70">{t.oneQrText}</p>
-          <Link href="/#make" className="mt-6 inline-flex min-h-13 items-center gap-3 rounded-xl bg-accent px-6 font-heading text-base font-bold text-on-accent hover:brightness-95">
+          <Link href="/create" className="mt-6 inline-flex min-h-13 items-center gap-3 rounded-xl bg-accent px-6 font-heading text-base font-bold text-on-accent hover:brightness-95">
             {t.homeCta} <span aria-hidden>→</span>
           </Link>
         </div>

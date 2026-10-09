@@ -24,7 +24,7 @@ const google = async (email, name, sub) => {
   const u = new URL(r.headers()["location"]);
   const code = Buffer.from(JSON.stringify({ nonce: u.searchParams.get("nonce"), email, name, sub })).toString("base64url");
   await p.goto(`${u.searchParams.get("redirect_uri")}?state=${u.searchParams.get("state")}&code=${code}`);
-  await p.waitForURL(/codes|account/);
+  await p.waitForURL((u) => !u.pathname.startsWith("/login") && !u.pathname.startsWith("/api"));
   if (!p.url().includes("/codes")) await p.goto(B + "/codes", { waitUntil: "networkidle" });
   return p;
 };
