@@ -242,9 +242,11 @@ export type CodePatch = Partial<Pick<CodeRecord, "title" | "visibility" | "peopl
 };
 
 export const api = {
-  me: () => call<{ me: string | null; base: string; people: Person[]; demo: boolean; providers: { google: boolean; apple: boolean }; admin: boolean; colors?: { fg: string; bg: string }[] }>("/api/me"),
+  me: () => call<{ me: string | null; base: string; people: Person[]; demo: boolean; review?: boolean; providers: { google: boolean; apple: boolean }; admin: boolean; colors?: { fg: string; bg: string }[] }>("/api/me"),
   lookup: (email: string) => call<{ id: string }>(`/api/people/lookup?email=${encodeURIComponent(email)}`),
   login: (personId: string | null) => call<{ me: string | null }>("/api/me", json("POST", { personId })),
+  /** Вход проверяющих магазинов: логин и код; ошибка — статус (401 неверно, 429 много попыток). */
+  reviewLogin: (login: string, code: string) => call<{ me: string }>("/api/auth/review", json("POST", { login, code })),
   list: () => call<CodeList>("/api/codes"),
   create: (title: string, kind: Kind, style: SavedStyle, starter?: { id: string; lang: string }) => call<CodeView>("/api/codes", json("POST", { title, kind, style, starter })),
   quote: (key: string, tier: Tier) => call<Quote>(`/api/purchases?key=${encodeURIComponent(key)}&tier=${tier}`),

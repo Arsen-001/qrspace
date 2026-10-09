@@ -121,7 +121,7 @@ export function AdminPage() {
                 {data.newUsers.map((u) => (
                   <li key={u.id} className="flex items-center gap-3 p-3">
                     <span className="min-w-0 flex-1 truncate font-medium">{u.name}</span>
-                    <span className="text-xs text-muted">{u.provider === "google" ? "Google" : "Apple"}</span>
+                    <span className="text-xs text-muted">{u.provider === "google" ? "Google" : u.provider === "review" ? "App Review" : "Apple"}</span>
                     <span className="text-xs text-muted">{fmtDateTime(u.at, lang)}</span>
                   </li>
                 ))}

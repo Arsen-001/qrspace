@@ -10,8 +10,10 @@ import path from "node:path";
 const root = path.resolve(import.meta.dirname, "..");
 const ALL = ["flow", "order", "video", "redirect", "tags", "look", "market", "designer", "tasks", "pay", "print", "resale", "cert", "live", "security", "a11y", "starters", "verify", "links", "moderation", "legal", "langs", "packs", "account", "room", "appapi", "scan"];
 // Вход через Google проверяем с подставным сервером Google (только на этом компьютере).
-const WITH_GOOGLE = ["google", "notify", "batch1", "push", "iap"];
+const WITH_GOOGLE = ["google", "notify", "batch1", "push", "iap", "review"];
 const ENV = "GOOGLE_CLIENT_ID=test-client.apps.googleusercontent.com\nGOOGLE_CLIENT_SECRET=test-secret\nOAUTH_TEST_TOKEN_URL=http://127.0.0.1:3729/token\nDESIGNER_EMAILS=studio.designer@gmail.com\n";
+// Вход проверяющих магазинов (e2e/review.mjs).
+const REVIEW_ENV = "REVIEW_LOGIN=appreview\nREVIEW_LOGIN_CODE=test-review-code-01\n";
 // Уведомления на телефон: тестовые ключи Apple и Firebase (каждый запуск — новые) и подставные серверы (e2e/push.mjs).
 const pemLine = (k) => k.export({ type: "pkcs8", format: "pem" }).trim().replace(/\n/g, "\\n");
 const apnsKey = generateKeyPairSync("ec", { namedCurve: "P-256" }).privateKey;
@@ -35,7 +37,7 @@ for (const s of suites) {
   reset();
   const google = WITH_GOOGLE.includes(s);
   if (google) {
-    writeFileSync(path.join(root, ".env.local"), ENV + PUSH_ENV);
+    writeFileSync(path.join(root, ".env.local"), ENV + PUSH_ENV + REVIEW_ENV);
     await sleep(8000); // сервер перечитывает .env.local и перезапускается
   }
   const r = spawnSync("node", [path.join(import.meta.dirname, `${s}.mjs`)], { encoding: "utf8", timeout: 600_000 });
@@ -46,7 +48,13 @@ for (const s of suites) {
     failed.push(s);
     console.log(outText.split("\n").filter((l) => /✗|OVERFLOW|errors|Error|waiting for/.test(l)).slice(0, 6).join("\n"));
   }
-  if (google) rmSync(path.join(root, ".env.local"), { force: true });
+  // Удалённый .env.local сервер не замечает (тестовые ключи остались бы до перезапуска) — пустой файл сбрасывает их.
+  const next = suites[suites.indexOf(s) + 1];
+  if (google && !WITH_GOOGLE.includes(next)) {
+    writeFileSync(path.join(root, ".env.local"), "");
+    await sleep(8000);
+    rmSync(path.join(root, ".env.local"), { force: true });
+  }
 }
 reset();
 console.log(failed.length ? `\nНе прошли: ${failed.join(", ")}` : `\nПройдено: ${suites.length} из ${suites.length}`);

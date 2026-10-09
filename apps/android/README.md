@@ -197,9 +197,9 @@ BookTime и QR Space. В магазине разработчиком будет 
    сайте) и сверить цену «$1». В Store settings: категория Tools, почта для связи, сайт https://qrspace.co.
 7. **Анкеты (Policy → App content):**
    - Privacy policy: `https://qrspace.co/legal/privacy`.
-   - App access: часть функций работает только после входа, поэтому дать проверяющим способ войти. Пока на сайте есть
-     демо-люди — написать «Account → Demo account → Arman»; если демо-вход выключим (`DEMO_LOGIN=off`) — тестовый
-     аккаунт Google.
+   - App access: часть функций работает только после входа → «All or some functionality is restricted» → логин и код
+     проверки из `~/.qrspace/review-login.env` и путь «Account → Sign in on qrspace.co → Sign in with a review code»
+     (по шагам — `docs/store/REVIEW-LOGIN.md`).
    - Ads: рекламы нет.
    - **Data safety** — по `docs/store/PRIVACY-ANSWERS.md` (там таблица уже разложена по разделам формы) **плюс**
      сканер ML Kit: «App info and performance → Diagnostics» и «Device or other IDs» — собираются, не передаются, цель

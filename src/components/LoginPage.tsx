@@ -1,8 +1,11 @@
 "use client";
 // Вход только через Google или Apple. Демо-люди — пока не выключены (DEMO_LOGIN=off), для проверки.
+// Проверяющим App Store / Google Play — «Вход по коду проверки» (логин и код из заметок к проверке), если он включён;
+// только на входе из приложения — посетители сайта его не видят.
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import Link from "next/link";
+import { api } from "@/lib/codes";
 import { legalFor } from "@/lib/legal";
 import { tr } from "@/lib/i18n";
 import { useLang } from "@/lib/lang";
@@ -35,7 +38,7 @@ export function AppleIcon() {
 
 export function LoginPage({ next, error }: { next: string | null; error: string | null }) {
   const { lang, t } = useLang((t) => `${t.loginTitle} — ${t.appName}`);
-  const { ready, me, demo, providers } = useMe();
+  const { ready, me, demo, review, providers } = useMe();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const target = next && next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/login") ? next : "/";
@@ -55,7 +58,8 @@ export function LoginPage({ next, error }: { next: string | null; error: string 
   const btn = "flex min-h-13 w-full items-center justify-center gap-3 rounded-xl px-5 py-3 text-base font-semibold transition-opacity";
   // Вход из приложения (iOS, Android: next=/app/…) — только вход, без меню и подвала сайта: из приложения не должно
   // быть дороги в маркет и покупки на сайте (правила App Store и Google Play; агент iOS, 09.10.2026).
-  const Frame = target.startsWith("/app/") ? AppFrame : Shell;
+  const inApp = target.startsWith("/app/");
+  const Frame = inApp ? AppFrame : Shell;
   return (
     <Frame t={t} lang={lang}>
       <div className="mx-auto grid max-w-5xl gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-stretch">
@@ -101,6 +105,7 @@ export function LoginPage({ next, error }: { next: string | null; error: string 
         </p>
         {ready && (!providers.google || !providers.apple) && <p className="text-xs text-muted">{t.providersPending}</p>}
       </div>
+      {review && inApp && <ReviewLogin t={t} target={target} />}
 
       {me && (
         <button type="button" disabled={busy} onClick={() => pick(null)} className="mt-4 min-h-11 rounded-xl px-3 text-sm font-medium text-muted hover:text-ink">
@@ -135,6 +140,51 @@ export function LoginPage({ next, error }: { next: string | null; error: string 
         </section>
       )}
     </Frame>
+  );
+}
+
+/** Логин и код проверяющих (POST /api/auth/review). Дальше — полный переход: из приложения это /app/callback → приложение. */
+function ReviewLogin({ t, target }: { t: Dict; target: string }) {
+  const [login, setLogin] = useState("");
+  const [code, setCode] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    try {
+      await api.reviewLogin(login, code);
+      window.location.assign(target);
+    } catch (err) {
+      setError((err as Error).message === "429" ? t.reviewLoginTries : t.reviewLoginWrong);
+      setBusy(false);
+    }
+  };
+  const field = "mt-1.5 block min-h-11 w-full rounded-xl border border-line bg-field px-3.5 text-base outline-none focus:border-accent";
+  return (
+    <details className="mt-5 border-t border-line pt-3">
+      <summary className="flex min-h-11 cursor-pointer items-center text-sm font-medium text-muted hover:text-ink">{t.reviewLogin}</summary>
+      <form onSubmit={submit} className="mt-2 space-y-3">
+        <p className="text-xs text-muted">{t.reviewLoginHint}</p>
+        <label className="block text-sm font-medium text-muted">
+          {t.reviewLoginName}
+          <input value={login} onChange={(e) => setLogin(e.target.value)} name="username" autoComplete="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} maxLength={200} required className={field} />
+        </label>
+        <label className="block text-sm font-medium text-muted">
+          {t.reviewLoginCode}
+          <input value={code} onChange={(e) => setCode(e.target.value)} name="password" type="password" autoComplete="current-password" maxLength={200} required className={field} />
+        </label>
+        {error && (
+          <p role="alert" className="rounded-xl bg-warn-soft p-3 text-sm text-warn">
+            {error}
+          </p>
+        )}
+        <button type="submit" disabled={busy} className="min-h-11 w-full rounded-xl bg-accent px-4 text-base font-semibold text-on-accent disabled:opacity-40">
+          {t.reviewLoginGo}
+        </button>
+      </form>
+    </details>
   );
 }
 

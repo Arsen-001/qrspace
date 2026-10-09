@@ -27,7 +27,7 @@ export async function GET() {
       return {
         id: u.id,
         name: u.name,
-        email: u.provider === "demo" ? "" : u.email,
+        email: u.provider === "demo" || u.provider === "review" ? "" : u.email,
         provider: u.provider,
         designer: u.designer,
         since: u.provider === "demo" ? null : u.createdAt,

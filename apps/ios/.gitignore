@@ -15,3 +15,6 @@ fastlane/report.xml
 fastlane/README.md
 fastlane/Preview.html
 fastlane/test_output/
+# Логин и код проверяющих App Review — пишет fastlane/metadata.mjs из ~/.qrspace/review-login.env
+fastlane/metadata/review_information/demo_user.txt
+fastlane/metadata/review_information/demo_password.txt

@@ -36,7 +36,7 @@ type Profile = {
   id: string;
   name: string;
   email: string;
-  provider: "google" | "apple" | "demo";
+  provider: "google" | "apple" | "demo" | "review";
   designer: boolean;
   since: string | null;
   codes: number;
@@ -542,7 +542,7 @@ function Settings({ t, lang, p, onName }: { t: Dict; lang: Lang; p: Profile; onN
 
         <section className="rounded-2xl border border-line bg-card p-5">
           <div className="mb-1.5 text-sm font-medium text-muted">{t.accSignedWith}</div>
-          <div className="font-semibold">{p.provider === "demo" ? t.demoAccount : `${p.provider === "google" ? "Google" : "Apple"} · ${p.email}`}</div>
+          <div className="font-semibold">{signedWith(p, t)}</div>
           <div className="mb-1.5 mt-4 text-sm font-medium text-muted">{t.accLanguage}</div>
           <Select className="w-full sm:w-56" label={t.accLanguage} value={lang} onChange={(v) => saveLang(v)} options={LANGS.map((l) => ({ id: l.id, label: l.name }))} />
         </section>
@@ -654,7 +654,7 @@ export function AccountPage({ tab: first }: { tab: AccTab }) {
                 </div>
                 <h1 className="truncate font-heading text-2xl font-extrabold sm:text-3xl">{profile.name}</h1>
                 <div className="truncate text-sm text-on-stage/70">
-                  {profile.provider === "demo" ? t.demoAccount : `${profile.provider === "google" ? "Google" : "Apple"} · ${profile.email}`}
+                  {signedWith(profile, t)}
                   {profile.designer && ` · ${t.designerRole}`}
                   {profile.since && ` · ${t.accSince} ${fmtDateTime(profile.since, lang).split(",")[0]}`}
                 </div>
@@ -729,4 +729,11 @@ export function AccountPage({ tab: first }: { tab: AccTab }) {
       )}
     </Shell>
   );
+}
+
+/** «Чем вошёл»: демо, аккаунт проверки магазинов или Google / Apple с почтой. */
+function signedWith(p: Pick<Profile, "provider" | "email">, t: Dict) {
+  if (p.provider === "demo") return t.demoAccount;
+  if (p.provider === "review") return t.reviewAccount;
+  return `${p.provider === "google" ? "Google" : "Apple"} · ${p.email}`;
 }

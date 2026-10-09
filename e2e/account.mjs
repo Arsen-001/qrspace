@@ -83,6 +83,8 @@ ok(true, "logout from the menu");
 const appLogin = await (await browser.newContext({ viewport: { width: 390, height: 844 }, locale: "ru-RU" })).newPage();
 await appLogin.goto(B + "/login?next=/app/callback", { waitUntil: "networkidle" });
 ok((await appLogin.getByRole("link", { name: "Маркет" }).count()) === 0 && (await appLogin.getByRole("button", { name: /Арман/ }).count()) === 1, "in-app sign-in page has no site menu");
+// Вход проверяющих выключен, пока не заданы REVIEW_LOGIN и REVIEW_LOGIN_CODE
+ok((await appLogin.getByText("Вход по коду проверки").count()) === 0 && (await appLogin.request.post(B + "/api/auth/review", { data: { login: "appreview", code: "test-review-code-01" } })).status() === 404, "review sign-in is off without env");
 
 await browser.close();
 if (errors.length) { console.log("errors:", errors); process.exit(1); }

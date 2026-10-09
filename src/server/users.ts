@@ -1,4 +1,5 @@
-// Пользователи: вход только через Google или Apple (+ демо-люди для проверки, отключаются DEMO_LOGIN=off).
+// Пользователи: вход только через Google или Apple (+ демо-люди для проверки, отключаются DEMO_LOGIN=off;
+// + аккаунт проверяющих App Store / Google Play — вход по коду, src/server/review.ts).
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
@@ -8,7 +9,7 @@ import type { Db } from "./db";
 
 export type User = {
   id: string;
-  provider: "google" | "apple" | "demo";
+  provider: "google" | "apple" | "demo" | "review";
   /** Номер человека у Google/Apple (sub) — по нему узнаём при следующем входе. */
   sub: string;
   email: string;
@@ -29,6 +30,21 @@ export type User = {
 
 export const demoEnabled = () => process.env.DEMO_LOGIN !== "off";
 
+/**
+ * Вход проверяющих App Store / Google Play (09.10.2026, как в BookTime): логин REVIEW_LOGIN и код REVIEW_LOGIN_CODE
+ * (не короче 8 знаков). Оба заданы — на странице входа есть «Вход по коду проверки»; нет — вход выключен, и аккаунт
+ * проверки не открывается (cookie тоже перестаёт работать).
+ */
+export function reviewAccount(): { login: string; code: string } | null {
+  const login = process.env.REVIEW_LOGIN?.trim().toLowerCase() ?? "";
+  const code = process.env.REVIEW_LOGIN_CODE?.trim() ?? "";
+  return login && code.length >= 8 ? { login, code } : null;
+}
+export const reviewEnabled = () => !!reviewAccount();
+
+/** Можно ли сейчас войти этим человеком: демо — пока не выключено, проверка — пока задан код. */
+export const active = (u: User) => (u.provider !== "demo" || demoEnabled()) && (u.provider !== "review" || reviewEnabled());
+
 /** Дизайнеры: демо-Наре и почты из DESIGNER_EMAILS (через запятую). */
 const adminEmails = () => (process.env.ADMIN_EMAILS ?? "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
 const designerEmails = () => (process.env.DESIGNER_EMAILS ?? "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
@@ -44,7 +60,7 @@ export function publicPerson(u: User): Person {
 }
 
 export function usable(db: Db): User[] {
-  return db.users.filter((u) => u.provider !== "demo" || demoEnabled());
+  return db.users.filter(active);
 }
 
 /** Нашли по Google/Apple — обновили имя и почту; нет — создали. */

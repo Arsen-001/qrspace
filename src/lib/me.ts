@@ -4,8 +4,8 @@ import { useSyncExternalStore } from "react";
 import { api } from "./codes";
 import { setDirectory } from "./people";
 
-type MeState = { ready: boolean; me: string | null; base: string; demo: boolean; providers: { google: boolean; apple: boolean }; admin: boolean; colors: { fg: string; bg: string }[] };
-const SERVER: MeState = { ready: false, me: null, base: "", demo: false, providers: { google: false, apple: false }, admin: false, colors: [] };
+type MeState = { ready: boolean; me: string | null; base: string; demo: boolean; review: boolean; providers: { google: boolean; apple: boolean }; admin: boolean; colors: { fg: string; bg: string }[] };
+const SERVER: MeState = { ready: false, me: null, base: "", demo: false, review: false, providers: { google: false, apple: false }, admin: false, colors: [] };
 let state: MeState = SERVER;
 let loading = false;
 const listeners = new Set<() => void>();
@@ -18,7 +18,7 @@ function load() {
     .me()
     .then((r) => {
       setDirectory(r.people);
-      state = { ready: true, me: r.me, base: r.base, demo: r.demo, providers: r.providers, admin: r.admin, colors: r.colors ?? [] };
+      state = { ready: true, me: r.me, base: r.base, demo: r.demo, review: !!r.review, providers: r.providers, admin: r.admin, colors: r.colors ?? [] };
     })
     .catch(() => (state = { ...SERVER, ready: true, base: location.origin }))
     .finally(() => {
@@ -42,7 +42,7 @@ export async function signIn(personId: string | null) {
   // Перечитываем всё: у нового человека свои имена вокруг и своя роль (администратор).
   const r = await api.me();
   setDirectory(r.people);
-  state = { ready: true, me: r.me, base: r.base, demo: r.demo, providers: r.providers, admin: r.admin, colors: r.colors ?? [] };
+  state = { ready: true, me: r.me, base: r.base, demo: r.demo, review: !!r.review, providers: r.providers, admin: r.admin, colors: r.colors ?? [] };
   emit();
 }
 
