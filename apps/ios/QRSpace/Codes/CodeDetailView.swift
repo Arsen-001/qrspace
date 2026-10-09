@@ -31,6 +31,7 @@ struct CodeDetailView: View {
             .frame(maxWidth: 640)
             .frame(maxWidth: .infinity)
         }
+        .tabBarClearance()
         .background(ScreenBackground())
         .navigationBarTitleDisplayMode(.inline)
         .task(id: "\(source)-\(session.generation)") { await load() }

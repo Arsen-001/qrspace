@@ -15,7 +15,7 @@ struct ScanResultView: View {
                 if case .ours(let link, _) = hit.parsed {
                     CodeDetailView(source: .link(link), fromScan: true)
                 } else {
-                    ScrollView { ParsedCard(parsed: hit.parsed, symbology: hit.symbology).padding(16) }
+                    ScrollView { ParsedCard(parsed: hit.parsed, symbology: hit.symbology).padding(16) }.tabBarClearance()
                         .background(ScreenBackground())
                 }
             }

@@ -467,11 +467,13 @@ private struct Composer: View {
 /// "The file doesn't fit under the code": file size, free space, the plan it needs and its price, "Pay $X and
 /// upload". Not the owner — only the owner can buy space. More than the biggest plan — pick a smaller file.
 struct RoomOfferCard: View {
+    static let anchor = "room-offer"
     let offer: RoomOffer
     let owner: Bool
     let busy: Bool
     let onPay: (String) -> Void
     let onCancel: () -> Void
+    @Environment(\.reveal) private var reveal
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -513,6 +515,14 @@ struct RoomOfferCard: View {
         .foregroundStyle(Theme.onStage)
         .background(Theme.stage, in: RoundedRectangle(cornerRadius: 16))
         .accessibilityElement(children: .contain)
+        .id(Self.anchor)
+        // Appears below the composer, often under the tab bar — bring the "Pay and upload" button into view.
+        .onAppear { show() }
+        .onChange(of: offer) { _, _ in show() }
+    }
+
+    private func show() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { reveal?(Self.anchor) }
     }
 
     private func price(_ v: Double) -> String { v == v.rounded() ? "\(Int(v))" : String(format: "%.2f", v) }

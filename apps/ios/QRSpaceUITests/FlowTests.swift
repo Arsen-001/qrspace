@@ -181,13 +181,13 @@ final class FlowTests: XCTestCase {
         guard let video = ProcessInfo.processInfo.environment["QR_VIDEO"] else { throw XCTSkip("QR_VIDEO not set") }
         let id = try newMemoryCode()
         let app = launch(["-QRDemoPerson", "arman", "-QROpenCode", id, "-QRAttachFile", video])
-        let sizes = el(app, "room-sizes")
-        let deadline = Date().addingTimeInterval(25)
-        while !(sizes.exists && sizes.isHittable) && Date() < deadline { app.swipeUp(velocity: .slow); sleep(1) }
-        XCTAssertTrue(sizes.exists, "room offer shown for a big file")
-        shot("09-room-offer")
+        // No manual scrolling: the offer scrolls itself into view, its button above the floating tab bar.
         let pay = app.buttons["room-pay"]
-        XCTAssertTrue(pay.exists)
+        XCTAssertTrue(pay.waitForExistence(timeout: 25), "room offer shown for a big file")
+        sleep(2)
+        XCTAssertTrue(el(app, "room-sizes").exists)
+        XCTAssertLessThanOrEqual(pay.frame.maxY, tabBarTop(app) - 4, "Pay button (\(pay.frame.maxY)) above the tab bar (\(tabBarTop(app)))")
+        shot("09-room-offer")
         pay.tap()
         // Uploaded: the composer's file is gone and the space is now 10 MB.
         let file = el(app, "composer-file")
@@ -212,6 +212,52 @@ final class FlowTests: XCTestCase {
         confirm.tap()
         sleep(4)
         shot("12-share-sheet")
+    }
+
+    /// Every scrolling screen: scrolled to the end, its last control sits fully above the floating tab bar.
+    func test3_LastControlsClearTheTabBar() throws {
+        continueAfterFailure = true
+        let id = try anyCodeId()
+        var app = launch(["-QRDemoPerson", "arman", "-QRTab", "home"])
+        XCTAssertTrue(app.buttons["create-new"].waitForExistence(timeout: 20))
+        toBottom(app)
+        let shared = app.buttons.matching(identifier: "shared-tile").allElementsBoundByIndex.last
+        checkClear(shared ?? app.buttons["new-tile"], app, "home")
+        shot("18-home-bottom")
+
+        app = launch(["-QRDemoPerson", "arman", "-QRCreate", "YES"])
+        XCTAssertTrue(app.buttons["create-submit"].waitForExistence(timeout: 20))
+        toBottom(app)
+        checkClear(app.buttons["create-submit"], app, "create")
+        shot("19-create-bottom")
+
+        app = launch(["-QRDemoPerson", "arman", "-QROpenCode", id])
+        XCTAssertTrue(el(app, "edit-title").waitForExistence(timeout: 20))
+        toBottom(app)
+        checkClear(el(app, "edit-share"), app, "edit")
+        shot("20-edit-bottom")
+
+        app = launch(["-QRDemoPerson", "arman", "-QRTab", "account"])
+        XCTAssertTrue(app.buttons["sign-out"].waitForExistence(timeout: 20))
+        toBottom(app)
+        checkClear(app.buttons["sign-out"], app, "account")
+        shot("21-account-bottom")
+    }
+
+    private func tabBarTop(_ app: XCUIApplication) -> CGFloat {
+        let bar = app.tabBars.firstMatch
+        return bar.exists ? bar.frame.minY : app.frame.maxY - 100
+    }
+
+    private func toBottom(_ app: XCUIApplication) {
+        for _ in 0..<12 { app.swipeUp(velocity: .fast) }
+        sleep(2)
+    }
+
+    private func checkClear(_ e: XCUIElement, _ app: XCUIApplication, _ what: String) {
+        XCTAssertTrue(e.exists, "\(what): last control exists")
+        let top = tabBarTop(app)
+        XCTAssertLessThanOrEqual(e.frame.maxY, top - 4, "\(what): last control ends at \(e.frame.maxY), tab bar starts at \(top)")
     }
 
     // MARK: server helpers (localhost only)
@@ -242,6 +288,15 @@ final class FlowTests: XCTestCase {
         _ = try call("/api/me", method: "POST", body: ["personId": "arman"])
         let c = try call("/api/codes", method: "POST", body: ["title": "Room test \(stamp)", "kind": "memory"]) as? [String: Any]
         return try XCTUnwrap(c?["id"] as? String)
+    }
+
+    /// A code of Arman with the longest edit page (memory with entries), for layout checks.
+    private func anyCodeId() throws -> String {
+        _ = try call("/api/me", method: "POST", body: ["personId": "arman"])
+        let list = try call("/api/codes") as? [String: Any]
+        let mine = (list?["mine"] as? [[String: Any]]) ?? []
+        let rich = mine.first { ($0["kind"] as? String) == "memory" && !((($0["blocks"] as? [Any]) ?? []).isEmpty) }
+        return try XCTUnwrap((rich ?? mine.first)?["id"] as? String)
     }
 
     private func fetch(_ id: String) throws -> [String: Any] {

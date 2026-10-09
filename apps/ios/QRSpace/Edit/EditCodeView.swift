@@ -23,6 +23,7 @@ struct EditCodeView: View {
     struct ShareFile: Identifiable { let id = UUID(); let url: URL }
 
     var body: some View {
+        ScrollViewReader { proxy in
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 if let code {
@@ -54,6 +55,10 @@ struct EditCodeView: View {
             .frame(maxWidth: .infinity)
         }
         .scrollDismissesKeyboard(.interactively)
+        .tabBarClearance()
+        // The room offer (and anything else that appears below the fold) scrolls itself into view.
+        .environment(\.reveal) { id in withAnimation(.easeInOut(duration: 0.35)) { proxy.scrollTo(id, anchor: .center) } }
+        }
         .background(ScreenBackground())
         .navigationTitle(tr("edit"))
         .navigationBarTitleDisplayMode(.inline)
@@ -199,6 +204,7 @@ struct EditCodeView: View {
                 Button(action: onGuest) { Label(tr("dashAsGuest"), systemImage: "eye") }.buttonStyle(.plainField)
             }
             ShareLink(item: link) { Label(tr("result.share"), systemImage: "square.and.arrow.up") }.buttonStyle(.plainField)
+                .accessibilityIdentifier("edit-share")
         }
         .padding(.top, 4)
     }

@@ -50,6 +50,7 @@ struct CreateView: View {
             .frame(maxWidth: .infinity)
         }
         .scrollDismissesKeyboard(.interactively)
+        .tabBarClearance()
         .background(ScreenBackground())
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $gate) { g in

@@ -142,3 +142,20 @@ struct ScreenTitle: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
+
+extension View {
+    /// Extra room under the last control of a scrolling screen, so it always scrolls fully above the floating
+    /// tab bar (on top of the bar's own safe-area inset), with a clear gap.
+    func tabBarClearance() -> some View {
+        contentMargins(.bottom, 28, for: .scrollContent)
+    }
+}
+
+/// Scroll a view with this id into the middle of the screen (set by a screen's ScrollViewReader), e.g. the room offer.
+private struct RevealKey: EnvironmentKey { static let defaultValue: ((String) -> Void)? = nil }
+extension EnvironmentValues {
+    var reveal: ((String) -> Void)? {
+        get { self[RevealKey.self] }
+        set { self[RevealKey.self] = newValue }
+    }
+}

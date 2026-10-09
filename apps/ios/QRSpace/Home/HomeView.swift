@@ -86,6 +86,7 @@ struct HomeView: View {
             .frame(maxWidth: 1000)
             .frame(maxWidth: .infinity)
         }
+        .tabBarClearance()
         .background(ScreenBackground())
         .refreshable { await load() }
     }
@@ -135,6 +136,7 @@ struct HomeView: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(tr("dashNew"))
+        .accessibilityIdentifier("new-tile")
     }
 
     private var firstCode: some View {
@@ -180,6 +182,7 @@ struct HomeView: View {
                     .buttonStyle(.plain)
                     .accessibilityElement(children: .combine)
                     .accessibilityAddTraits(.isButton)
+                    .accessibilityIdentifier("shared-tile")
                 }
             }
         }

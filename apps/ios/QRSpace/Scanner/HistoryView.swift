@@ -31,6 +31,7 @@ struct HistoryView: View {
                         .onDelete { idx in idx.map { records[$0] }.forEach(db.delete) }
                     }
                     .scrollContentBackground(.hidden)
+                    .tabBarClearance()
                 }
             }
             .toolbar {
@@ -54,7 +55,7 @@ struct HistoryView: View {
         if case .ours(let link, _) = r.parsed {
             CodeDetailView(source: .link(link), fromScan: false)
         } else {
-            ScrollView { ParsedCard(parsed: r.parsed, symbology: r.symbology).padding(16) }.background(ScreenBackground())
+            ScrollView { ParsedCard(parsed: r.parsed, symbology: r.symbology).padding(16) }.tabBarClearance().background(ScreenBackground())
         }
     }
 }

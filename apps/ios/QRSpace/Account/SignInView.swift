@@ -49,6 +49,7 @@ struct SignInView: View {
             .frame(maxWidth: 640)
             .frame(maxWidth: .infinity)
         }
+        .tabBarClearance()
         .background(ScreenBackground())
         .alert(tr("loginFailed"), isPresented: $failed) { Button("OK", role: .cancel) {} }
     }

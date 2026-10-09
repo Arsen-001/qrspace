@@ -33,6 +33,7 @@ private struct SignedInAccount: View {
                     purchases(p)
                     Button(tr("logout"), role: .destructive) { confirmOut = true }
                         .buttonStyle(.plainField)
+                        .accessibilityIdentifier("sign-out")
                         .padding(.top, 6)
                     // Demo accounts can't be deleted (the server answers 403) — no button, as on the site.
                     if p.provider != "demo" { deleteAccount }
@@ -49,6 +50,7 @@ private struct SignedInAccount: View {
             }
             .padding(16)
         }
+        .tabBarClearance()
         .background(ScreenBackground())
         .refreshable { await load() }
         .task(id: session.generation) { await load() }
