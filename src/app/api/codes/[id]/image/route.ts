@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import type { NextRequest } from "next/server";
-import { accessOf, findCode, publicBase } from "@/server/db";
+import { accessOf, findCode, publicBase, purchasesOf } from "@/server/db";
 import { media } from "@/server/media";
 import { currentPerson } from "@/server/session";
 import { linkOf } from "@/lib/codes";
@@ -11,6 +11,7 @@ import { DEFAULT_STYLE, fromSaved, toQrStyle } from "@/lib/qr/style";
  * Рисунок кода для приложений (iOS, Android): тот же, что на сайте, — SVG или PNG (?format=png&size=512).
  * Картинки оформления (логотип, фото) — прямо внутри файла, чтобы рисунок открывался без сети и без входа.
  * Текстуру фона рисует браузер (canvas) — на сервере её нет, вместо неё ровный цвет фона. Видят те, кому открыт код.
+ * Неоплаченный код — только маленькая картинка для списка (до 256 px): чистый файл для печати — после оплаты.
  */
 export async function GET(req: NextRequest, ctx: RouteContext<"/api/codes/[id]/image">) {
   const { id } = await ctx.params;
@@ -20,7 +21,9 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/api/codes/[id]/i
   if (accessOf(code, me) === "closed") return Response.json({ error: "closed" }, { status: 403 });
 
   const style = code.style ? fromSaved({ ...code.style, texture: null }) : DEFAULT_STYLE;
-  const size = Math.min(1024, Math.max(64, Number(req.nextUrl.searchParams.get("size")) || 512));
+  // Оплачен: код из генератора (создаётся только по оплате), купленный в маркете, или скачан со страницы кода (code:<id>).
+  const paid = (code.compact && code.kind === "link") || !!code.edition || (await purchasesOf(code.owner)).some((p) => p.key === `code:${code.id}` || p.code === code.id);
+  const size = Math.min(paid ? 1024 : 256, Math.max(64, Number(req.nextUrl.searchParams.get("size")) || 512));
   let svg = toSvg(buildDrawing(linkOf(publicBase(req), code), toQrStyle(style)), size);
 
   // /api/asset/<отпечаток> → data:… (картинки оформления неизменны: по отпечатку содержимого).

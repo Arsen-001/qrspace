@@ -39,6 +39,10 @@ await arman.post("/api/purchases", { data: { key: "g:apptest1", tier: "simple" }
 const quick = await (await arman.post("/api/codes/quick", { data: { title: "Меню кафе", content: menu, key: "g:apptest1" } })).json();
 ok((await arman.post("/api/codes/quick", { data: { content: { type: "url", fields: { url: "https://example.com/other" } }, key: "g:apptest1" } })).status() === 402, "one payment — one code");
 ok((await (await arman.post("/api/codes/quick", { data: { content: menu, key: "g:apptest1" } })).json()).id === quick.id, "same content again — same code, no new payment");
+// Неоплаченный код — только маленькая картинка; оплаченный — до 1024 px
+const width = async (id) => (await (await arman.get(`/api/codes/${id}/image?format=png&size=1024`)).body()).readUInt32BE(16);
+ok((await width(bublik.id)) === 256, "unpaid code: only a small picture");
+ok((await width(quick.id)) === 1024, "paid code: full-size picture");
 ok((await (await arman.get(`/api/codes/${quick.id}`)).json()).title === "Меню кафе", "quick code created with a title");
 
 // Предпросмотр до создания кода
