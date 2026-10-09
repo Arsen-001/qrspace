@@ -28,7 +28,7 @@ const jws = (payload, { k = "xk.pem", x5c = [b64der("xc.pem")] } = {}) => {
   const s = sign("sha256", Buffer.from(`${h}.${p}`), { key: key(k), dsaEncoding: "ieee-p1363" }).toString("base64url");
   return `${h}.${p}.${s}`;
 };
-const tx = (productId, extra = {}) => ({ bundleId: "co.qrspace.app", productId, transactionId: String(randomBytes(6).readUIntBE(0, 6)), environment: "Xcode", signedDate: Date.now(), type: "Consumable", ...extra });
+const tx = (productId, extra = {}) => ({ bundleId: "co.qrspace.app", productId, transactionId: String(randomBytes(6).readUIntBE(0, 6)), environment: "Xcode", signedDate: Date.now(), purchaseDate: Date.now(), type: "Consumable", ...extra });
 
 // Подставной Google Play
 const consumed = new Set();
@@ -62,6 +62,10 @@ ok((await (await arman.get("/api/purchases?key=g:iapapple01&tier=styled")).json(
 const made = await arman.post("/api/codes/quick", { data: { content: { type: "url", fields: { url: "https://example.com/iap" } }, key: "g:iapapple01" } });
 ok(made.status() === 200, "code created with the store-paid key");
 ok((await buy(arman, apple(t1, { kind: "code", key: "g:iapapple02", tier: "styled" }))).status() === 409, "same Apple purchase can't be used twice");
+// Xcode начинает номера покупок заново при каждом запуске: тот же номер, другое время — новая покупка
+const again = jws(tx("co.qrspace.pack5", { transactionId: "1", purchaseDate: 1000 }));
+const again2 = jws(tx("co.qrspace.pack5", { transactionId: "1", purchaseDate: 2000 }));
+ok((await buy(arman, apple(again, { kind: "pack", plan: "p5" }))).status() === 200 && (await buy(arman, apple(again2, { kind: "pack", plan: "p5" }))).status() === 200, "Xcode test purchases with a reused number but a new time both count");
 // Подделки
 const [h, p, s] = jws(tx("co.qrspace.code")).split(".");
 const forged = `${h}.${Buffer.from(JSON.stringify({ ...JSON.parse(Buffer.from(p, "base64url")), productId: "co.qrspace.pack100" })).toString("base64url")}.${s}`;

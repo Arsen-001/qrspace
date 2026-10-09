@@ -28,7 +28,7 @@ export function verifyApple(jws: string): Verified | null {
   const [h, p, s] = jws.split(".");
   if (!h || !p || !s) return null;
   let head: { alg?: string; x5c?: string[] };
-  let tx: { bundleId?: string; productId?: string; transactionId?: string; environment?: string; revocationDate?: number; signedDate?: number };
+  let tx: { bundleId?: string; productId?: string; transactionId?: string; environment?: string; revocationDate?: number; signedDate?: number; purchaseDate?: number };
   try {
     head = JSON.parse(Buffer.from(h, "base64url").toString());
     tx = JSON.parse(Buffer.from(p, "base64url").toString());
@@ -56,7 +56,9 @@ export function verifyApple(jws: string): Verified | null {
   }
   if (!verify("sha256", Buffer.from(`${h}.${p}`), { key: leaf.publicKey, dsaEncoding: "ieee-p1363" }, Buffer.from(s, "base64url"))) return null;
   if (tx.bundleId !== APP_BUNDLE || !tx.productId || !tx.transactionId || tx.revocationDate) return null;
-  return { id: `apple:${tx.transactionId}`, product: tx.productId, test: tx.environment !== "Production" };
+  // У покупок из Xcode номера начинаются заново при каждом запуске проверок — различаем ещё и по времени покупки.
+  const id = xcode ? `apple:xcode:${tx.transactionId}:${tx.purchaseDate ?? tx.signedDate ?? 0}` : `apple:${tx.transactionId}`;
+  return { id, product: tx.productId, test: tx.environment !== "Production" };
 }
 
 /**

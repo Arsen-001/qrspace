@@ -10,6 +10,9 @@ import { signIn, useMe } from "@/lib/me";
 import { PEOPLE } from "@/lib/people";
 import { Avatar } from "./Avatar";
 import { Shell } from "./Shell";
+import { Logo } from "./SiteHeader";
+import type { ReactNode } from "react";
+import type { Dict, Lang } from "@/lib/i18n";
 
 export function GoogleIcon() {
   return (
@@ -50,8 +53,11 @@ export function LoginPage({ next, error }: { next: string | null; error: string 
   };
 
   const btn = "flex min-h-13 w-full items-center justify-center gap-3 rounded-xl px-5 py-3 text-base font-semibold transition-opacity";
+  // Вход из приложения (iOS, Android: next=/app/…) — только вход, без меню и подвала сайта: из приложения не должно
+  // быть дороги в маркет и покупки на сайте (правила App Store и Google Play; агент iOS, 09.10.2026).
+  const Frame = target.startsWith("/app/") ? AppFrame : Shell;
   return (
-    <Shell t={t} lang={lang}>
+    <Frame t={t} lang={lang}>
       <div className="mx-auto grid max-w-5xl gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-stretch">
       {/* Зачем входить — коротко, на чёрной «сцене», как на главной. */}
       <section className="relative overflow-hidden rounded-2xl bg-stage p-6 text-on-stage sm:p-8">
@@ -128,6 +134,18 @@ export function LoginPage({ next, error }: { next: string | null; error: string 
           </ul>
         </section>
       )}
-    </Shell>
+    </Frame>
+  );
+}
+
+function AppFrame({ t, children }: { t: Dict; lang: Lang; children: ReactNode }) {
+  return (
+    <div className="mx-auto w-full max-w-5xl px-4 pb-10 pt-5 sm:px-6">
+      <div className="mb-5 flex items-center gap-2.5">
+        <Logo />
+        <span className="font-heading text-lg font-extrabold">{t.appName}</span>
+      </div>
+      <main>{children}</main>
+    </div>
   );
 }

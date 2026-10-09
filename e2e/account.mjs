@@ -79,6 +79,11 @@ await p.getByRole("menuitem", { name: "Выйти" }).click();
 await p.waitForURL(B + "/");
 ok(true, "logout from the menu");
 
+// Вход из приложения — только вход: без меню сайта (маркет, покупки — правила магазинов)
+const appLogin = await (await browser.newContext({ viewport: { width: 390, height: 844 }, locale: "ru-RU" })).newPage();
+await appLogin.goto(B + "/login?next=/app/callback", { waitUntil: "networkidle" });
+ok((await appLogin.getByRole("link", { name: "Маркет" }).count()) === 0 && (await appLogin.getByRole("button", { name: /Арман/ }).count()) === 1, "in-app sign-in page has no site menu");
+
 await browser.close();
 if (errors.length) { console.log("errors:", errors); process.exit(1); }
 console.log("account: ok");
