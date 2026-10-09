@@ -1,0 +1,1 @@
+Erste Version: Scanner für QR-Codes und Barcodes, deine Codes mit Schalter und Scans, Codes erstellen, Erinnerung unter dem Code.

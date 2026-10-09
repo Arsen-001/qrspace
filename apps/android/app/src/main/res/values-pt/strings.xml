@@ -68,6 +68,13 @@
     <string name="server_apply">Usar</string>
     <string name="unread_count">Não lidas: %1$d</string>
     <string name="space_used">%1$s de %2$s</string>
+    <string name="iap_off_create">Este código ainda não pode ser criado no app. Aqui: seu primeiro código simples e os códigos dos seus pacotes.</string>
+    <string name="iap_off_picture">A imagem deste código ainda não está disponível no app.</string>
+    <string name="iap_off_space">Falta espaço sob o código. Escolha um arquivo menor ou apague algo.</string>
+    <string name="iap_unavailable">As compras não estão disponíveis agora.</string>
+    <string name="iap_pending">O pagamento está pendente — concluímos assim que o Google Play confirmar.</string>
+    <string name="iap_failed">A compra não foi concluída. Tente de novo — se o Google Play cobrou, ela será concluída depois ou reembolsada automaticamente.</string>
+    <string name="iap_off_video_limit">O vídeo precisa caber no espaço livre sob o código.</string>
     <string name="nav_codes">Meus códigos</string>
     <string name="login">Entrar</string>
     <string name="login_title">Entrar</string>
@@ -238,6 +245,9 @@
     <string name="delete_account">Excluir conta</string>
     <string name="delete_account_sure">Excluir sua conta para sempre? Todos os seus códigos, memórias, fotos e vídeos vão sumir. Não dá para desfazer.</string>
     <string name="delete_account_yes">Sim, excluir para sempre</string>
+    <string name="packs_title">Vários códigos de uma vez — de reserva</string>
+    <string name="pack_buy">Comprar pacote</string>
+    <string name="pack_bought">O pacote é seu — baixe códigos quando quiser</string>
     <string name="type_whatsapp">WhatsApp</string>
     <string name="type_telegram">Telegram</string>
     <string name="type_viber">Viber</string>
@@ -331,4 +341,6 @@
     <string name="tpl_hint_car">Escrevem para você sem ver seu número; o número fica num interruptor</string>
     <string name="tpl_hint_lost">Quem encontrar escreve para você sem saber seu nome nem endereço</string>
     <string name="tpl_hint_pet">O perfil do pet é aberto, o dono fica oculto — o contato passa por nós</string>
+    <string name="up_need_store">Precisa de %1$s de espaço — %2$s por mês.</string>
+    <string name="up_pay_store">Pagar %1$s e enviar</string>
 </resources>

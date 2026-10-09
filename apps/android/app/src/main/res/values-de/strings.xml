@@ -68,6 +68,13 @@
     <string name="server_apply">Verwenden</string>
     <string name="unread_count">Ungelesen: %1$d</string>
     <string name="space_used">%1$s von %2$s</string>
+    <string name="iap_off_create">Dieser Code lässt sich in der App noch nicht erstellen. Hier: dein erster einfacher Code und Codes aus deinen Paketen.</string>
+    <string name="iap_off_picture">Das Bild dieses Codes ist in der App noch nicht verfügbar.</string>
+    <string name="iap_off_space">Nicht genug Platz unter dem Code. Wähle eine kleinere Datei oder lösche etwas.</string>
+    <string name="iap_unavailable">Käufe sind gerade nicht verfügbar.</string>
+    <string name="iap_pending">Die Zahlung steht aus — wir schließen ab, sobald Google Play sie bestätigt.</string>
+    <string name="iap_failed">Der Kauf wurde nicht abgeschlossen. Versuch es noch einmal — falls Google Play abgebucht hat, wird er später abgeschlossen oder automatisch erstattet.</string>
+    <string name="iap_off_video_limit">Das Video muss in den freien Platz unter dem Code passen.</string>
     <string name="nav_codes">Meine Codes</string>
     <string name="login">Anmelden</string>
     <string name="login_title">Anmelden</string>
@@ -238,6 +245,9 @@
     <string name="delete_account">Konto löschen</string>
     <string name="delete_account_sure">Konto für immer löschen? Alle deine Codes, Erinnerungen, Fotos und Videos verschwinden. Das lässt sich nicht rückgängig machen.</string>
     <string name="delete_account_yes">Ja, für immer löschen</string>
+    <string name="packs_title">Mehrere Codes auf einmal — auf Vorrat</string>
+    <string name="pack_buy">Paket kaufen</string>
+    <string name="pack_bought">Das Paket gehört dir — lade Codes jederzeit herunter</string>
     <string name="type_whatsapp">WhatsApp</string>
     <string name="type_telegram">Telegram</string>
     <string name="type_viber">Viber</string>
@@ -331,4 +341,6 @@
     <string name="tpl_hint_car">Man schreibt dir, ohne deine Nummer zu sehen; die Nummer per Schalter</string>
     <string name="tpl_hint_lost">Der Finder schreibt dir, ohne Namen oder Adresse zu erfahren</string>
     <string name="tpl_hint_pet">Das Profil des Tieres ist offen, der Besitzer bleibt verborgen — Kontakt läuft über uns</string>
+    <string name="up_need_store">Nötig sind %1$s Speicher — %2$s im Monat.</string>
+    <string name="up_pay_store">%1$s zahlen und hochladen</string>
 </resources>

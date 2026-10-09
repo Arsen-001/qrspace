@@ -68,6 +68,13 @@
     <string name="server_apply">Выбрать</string>
     <string name="unread_count">Непрочитанных: %1$d</string>
     <string name="space_used">%1$s из %2$s</string>
+    <string name="iap_off_create">Этот код пока нельзя сделать в приложении. Здесь — первый простой код и коды из ваших пакетов.</string>
+    <string name="iap_off_picture">Картинку этого кода пока нельзя получить в приложении.</string>
+    <string name="iap_off_space">Под кодом не хватает места. Выберите файл поменьше или удалите что-то.</string>
+    <string name="iap_unavailable">Покупки сейчас недоступны.</string>
+    <string name="iap_pending">Оплата ещё идёт — закончим, как только Google Play её подтвердит.</string>
+    <string name="iap_failed">Покупка не завершилась. Попробуйте ещё раз — если Google Play списал деньги, покупка завершится позже или деньги вернутся сами.</string>
+    <string name="iap_off_video_limit">Видео должно поместиться в свободное место под кодом.</string>
     <string name="nav_codes">Мои коды</string>
     <string name="login">Войти</string>
     <string name="login_title">Вход</string>
@@ -238,6 +245,9 @@
     <string name="delete_account">Удалить аккаунт</string>
     <string name="delete_account_sure">Удалить аккаунт навсегда? Пропадут все ваши коды, память, фото и видео. Вернуть нельзя.</string>
     <string name="delete_account_yes">Да, удалить навсегда</string>
+    <string name="packs_title">Сразу несколько кодов — про запас</string>
+    <string name="pack_buy">Купить пакет</string>
+    <string name="pack_bought">Пакет ваш — коды уже можно скачивать</string>
     <string name="type_whatsapp">WhatsApp</string>
     <string name="type_telegram">Telegram</string>
     <string name="type_viber">Viber</string>
@@ -331,4 +341,6 @@
     <string name="tpl_hint_car">Вам напишут без вашего номера; номер — по выключателю</string>
     <string name="tpl_hint_lost">Нашедший напишет вам, не узнав ни имени, ни адреса</string>
     <string name="tpl_hint_pet">Анкета питомца открыта, хозяин скрыт — связь через нас</string>
+    <string name="up_need_store">Нужно место %1$s — %2$s в месяц.</string>
+    <string name="up_pay_store">Оплатить %1$s и загрузить</string>
 </resources>

@@ -1,0 +1,1 @@
+First release: scanner for QR codes and barcodes, your codes with a switch and scans, creating codes, memory under the code.

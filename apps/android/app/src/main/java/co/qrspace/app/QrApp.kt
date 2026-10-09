@@ -2,6 +2,7 @@ package co.qrspace.app
 
 import android.app.Application
 import android.content.Context
+import co.qrspace.app.billing.Store
 import co.qrspace.app.data.Api
 import co.qrspace.app.data.HistoryDb
 import co.qrspace.app.data.Push
@@ -17,6 +18,8 @@ class QrApp : Application(), SingletonImageLoader.Factory {
     val api by lazy { Api(this) }
     val history by lazy { HistoryDb.create(this) }
     val session by lazy { Session(api, Push(this)) }
+    /** Google Play Billing: prices, purchases, sending them to the server (billing/Store.kt). */
+    val store by lazy { Store(this, api, session) }
 
     /**
      * Images go through the API client so the session cookie opens private memory photos and closed codes' drawings.

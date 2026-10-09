@@ -24,6 +24,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
@@ -35,6 +36,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -77,6 +80,13 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Google Play: prices, and purchases the server hasn't credited yet (a pending payment went through, the app
+        // closed mid-purchase) — Google's advice is to check on every resume.
+        lifecycleScope.launch { app.store.start() }
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         handle(intent)
@@ -107,6 +117,9 @@ private fun App(incoming: Scan.Ours?, token: String?, consumed: () -> Unit, toke
     val ctx = androidx.compose.ui.platform.LocalContext.current
     val session = ctx.app.session
     LaunchedEffect(Unit) { session.refresh() }
+    // Signed in (or someone else did): purchases waiting for this person go to the server now.
+    val me by session.me.collectAsState()
+    LaunchedEffect(me?.me) { if (me?.me != null) ctx.app.store.resume() }
     // Signed in on the site in a Custom Tab → exchange the one-time code for our own session → home ("My QR codes").
     LaunchedEffect(token) {
         if (token == null) return@LaunchedEffect

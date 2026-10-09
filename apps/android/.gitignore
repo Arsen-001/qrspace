@@ -8,3 +8,12 @@ local.properties
 *.iml
 captures/
 screenshots/
+# Signing keys and Play credentials live outside the repo (~/.qrspace/); never commit them by accident.
+*.jks
+*.keystore
+android-upload.properties
+*service-account*.json
+# fastlane run output
+fastlane/report.xml
+fastlane/README.md
+fastlane/test_output/

@@ -68,6 +68,13 @@
     <string name="server_apply">Ընտրել</string>
     <string name="unread_count">Չկարդացված՝ %1$d</string>
     <string name="space_used">%1$s / %2$s</string>
+    <string name="iap_off_create">Այս կոդը դեռ հնարավոր չէ ստեղծել հավելվածում։ Այստեղ՝ ձեր առաջին պարզ կոդը և կոդերը ձեր փաթեթներից։</string>
+    <string name="iap_off_picture">Այս կոդի նկարը դեռ հասանելի չէ հավելվածում։</string>
+    <string name="iap_off_space">Կոդի տակ տեղը չի բավականացնում։ Ընտրեք ավելի փոքր ֆայլ կամ ջնջեք ինչ-որ բան։</string>
+    <string name="iap_unavailable">Գնումներն այժմ հասանելի չեն։</string>
+    <string name="iap_pending">Վճարումը դեռ ընթացքի մեջ է՝ կավարտենք, հենց Google Play-ը հաստատի։</string>
+    <string name="iap_failed">Գնումը չավարտվեց։ Փորձեք նորից՝ եթե Google Play-ը գանձել է գումարը, գնումը կավարտվի ավելի ուշ կամ գումարը կվերադարձվի ինքնաբերաբար։</string>
+    <string name="iap_off_video_limit">Տեսանյութը պետք է տեղավորվի կոդի տակ ազատ տեղում։</string>
     <string name="nav_codes">Իմ կոդերը</string>
     <string name="login">Մուտք</string>
     <string name="login_title">Մուտք</string>
@@ -238,6 +245,9 @@
     <string name="delete_account">Ջնջել հաշիվը</string>
     <string name="delete_account_sure">Ջնջե՞լ հաշիվը ընդմիշտ։ Կվերանան ձեր բոլոր կոդերը, հիշողությունը, լուսանկարները և տեսանյութերը։ Վերադարձնել հնարավոր չէ։</string>
     <string name="delete_account_yes">Այո, ջնջել ընդմիշտ</string>
+    <string name="packs_title">Միանգամից մի քանի կոդ՝ պահուստով</string>
+    <string name="pack_buy">Գնել փաթեթը</string>
+    <string name="pack_bought">Փաթեթը ձերն է՝ կոդերը կարող եք ներբեռնել</string>
     <string name="type_whatsapp">WhatsApp</string>
     <string name="type_telegram">Telegram</string>
     <string name="type_viber">Viber</string>
@@ -331,4 +341,6 @@
     <string name="tpl_hint_car">Ձեզ կգրեն առանց ձեր համարի, համարը՝ անջատիչով</string>
     <string name="tpl_hint_lost">Գտնողը կգրի ձեզ՝ չիմանալով ո՛չ անունը, ո՛չ հասցեն</string>
     <string name="tpl_hint_pet">Կենդանու էջը բաց է, տերը թաքնված է՝ կապը մեր միջոցով</string>
+    <string name="up_need_store">Պետք է %1$s տեղ՝ %2$s ամսական։</string>
+    <string name="up_pay_store">Վճարել %1$s և վերբեռնել</string>
 </resources>

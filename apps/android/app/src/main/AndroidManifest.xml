@@ -7,9 +7,9 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.VIBRATE" />
-    <!-- Wi-Fi QR: suggest the network (API 29+). -->
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <!-- Wi-Fi QR on Android 10: WifiManager.addNetworkSuggestions (11+ uses the system sheet, no permission). -->
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <!-- No storage permissions: photos and videos come through the system photo picker. -->
 
     <!-- Package visibility (API 30+): apps that can handle scan actions. -->
     <queries>
@@ -48,6 +48,7 @@
     <application
         android:name=".QrApp"
         android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -65,14 +66,25 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!-- Our printed codes: https://qrspace.co/K/{short} and /c/{id}. Verification needs
-                 https://qrspace.co/.well-known/assetlinks.json on the server (see README). -->
+            <!-- Our printed codes: https://qrspace.co/K/{short} and /c/{id} open straight in the app once
+                 https://qrspace.co/.well-known/assetlinks.json lists this app (server ANDROID_APP_LINKS, see README). -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="https" />
                 <data android:host="qrspace.co" />
+                <data android:pathPrefix="/K/" />
+                <data android:pathPrefix="/k/" />
+                <data android:pathPrefix="/c/" />
+            </intent-filter>
+            <!-- www redirects to qrspace.co, so its assetlinks.json can't verify; on Android 11 and older one failing
+                 host in an autoVerify filter un-verifies all of them — www stays a plain (not verified) filter. -->
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" />
                 <data android:host="www.qrspace.co" />
                 <data android:pathPrefix="/K/" />
                 <data android:pathPrefix="/k/" />

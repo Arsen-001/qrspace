@@ -53,6 +53,13 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import co.qrspace.app.BuildConfig
+import co.qrspace.app.billing.Buy
+import co.qrspace.app.billing.BuyResult
+import co.qrspace.app.billing.Products
+import co.qrspace.app.billing.activity
+import co.qrspace.app.billing.message
+import co.qrspace.app.create.storePrice
 import co.qrspace.app.R
 import co.qrspace.app.app
 import co.qrspace.app.codes.VideoPlayer
@@ -76,7 +83,6 @@ import co.qrspace.app.ui.Type
 import co.qrspace.app.ui.dotGrid
 import co.qrspace.app.ui.fmtBytes
 import co.qrspace.app.ui.fmtDate
-import co.qrspace.app.ui.fmtNum
 import coil3.compose.AsyncImage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -210,7 +216,7 @@ private fun Composer(code: CodeView, onChange: (CodeView) -> Unit) {
                 // The server measured and it doesn't fit (someone else added meanwhile, or our numbers were old).
                 val fresh = runCatching { api.code(code.id) }.getOrNull()
                 if (fresh != null) onChange(fresh)
-                if (fresh != null && !fits(fresh, n)) offer = n else error = R.string.storage_full
+                if (fresh != null && !fits(fresh, n)) offer = n else error = if (BuildConfig.PURCHASES_ENABLED) R.string.storage_full else R.string.iap_off_space
             } else error = R.string.upload_error
         } catch (_: Exception) {
             error = R.string.upload_error
@@ -220,11 +226,18 @@ private fun Composer(code: CodeView, onChange: (CodeView) -> Unit) {
         }
     }
 
-    // Paid for space — upload right away.
+    // A month of space for this code from Google Play (the server extends it), then upload right away.
     fun payAndUpload(plan: String) {
         scope.launch {
             busy = true
-            runCatching { api.buyStorage(code.id, plan) }
+            error = null
+            val r = ctx.app.store.buy(ctx.activity(), Buy.Space(code.id, plan))
+            if (r != BuyResult.Done) {
+                error = r.message()
+                busy = false
+                return@launch
+            }
+            runCatching { api.code(code.id) }
                 .onSuccess { next -> onChange(next); submit(next) }
                 .onFailure { error = R.string.upload_error; busy = false }
         }
@@ -307,7 +320,7 @@ private fun Composer(code: CodeView, onChange: (CodeView) -> Unit) {
                 )
                 Spacer(Modifier.width(12.dp))
                 if (preparing) CircularProgressIndicator(Modifier.size(18.dp), color = q.accentInk, strokeWidth = 2.dp)
-                else Text(fileName ?: if (kind == "video") stringResource(R.string.video_limit) else "", style = Type.small, color = q.muted, maxLines = 3, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                else Text(fileName ?: if (kind == "video") stringResource(if (BuildConfig.PURCHASES_ENABLED) R.string.video_limit else R.string.iap_off_video_limit) else "", style = Type.small, color = q.muted, maxLines = 3, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
             }
         }
         QField(
@@ -327,12 +340,17 @@ private fun Composer(code: CodeView, onChange: (CodeView) -> Unit) {
     }
 }
 
-/** Doesn't fit: file size, free space, the smallest plan it fits in and its price; only the owner can buy space. */
+/**
+ * Doesn't fit: file size, free space, the smallest plan it fits in and its Google Play price; only the owner can buy
+ * space. No Google Play price → "Purchases unavailable". A build without purchases shows the sizes and "not enough
+ * space" — no plan, no price.
+ */
 @Composable
 fun RoomOffer(code: CodeView, need: Long, busy: Boolean, onPay: (String) -> Unit, onCancel: () -> Unit) {
     val st = code.storage ?: return
     val plan = Storage.planFor(st.used + need)
     val owner = code.access == "owner"
+    val price = plan?.let { storePrice(Products.SPACE[it.id].orEmpty()) }
     Column(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(LocalQr.current.stage).border(1.dp, LocalQr.current.stageLine, RoundedCornerShape(14.dp)).dotGrid(Bone.copy(alpha = 0.06f)).padding(16.dp)
             .semantics { liveRegion = LiveRegionMode.Assertive },
@@ -344,21 +362,22 @@ fun RoomOffer(code: CodeView, need: Long, busy: Boolean, onPay: (String) -> Unit
             style = Type.kicker.copy(letterSpacing = androidx.compose.ui.unit.TextUnit(0.02f, androidx.compose.ui.unit.TextUnitType.Em)), color = Bone.copy(alpha = 0.75f),
         )
         when {
+            !BuildConfig.PURCHASES_ENABLED -> Text(stringResource(R.string.iap_off_space), style = Type.body, color = Bone.copy(alpha = 0.85f))
             plan == null -> Text(stringResource(R.string.up_max, fmtBytes(Storage.PLANS.last().bytes)), style = Type.body, color = Bone.copy(alpha = 0.85f))
             !owner -> Text(stringResource(R.string.up_owner_only), style = Type.body, color = Bone.copy(alpha = 0.85f))
+            price == null -> Text(stringResource(R.string.iap_unavailable), style = Type.body, color = Bone.copy(alpha = 0.85f))
             else -> {
-                Text(stringResource(R.string.up_need, fmtBytes(plan.bytes), fmtNum(plan.price)), style = Type.bodyStrong, color = Bone)
-                Text(stringResource(R.string.buy_demo), style = Type.small, color = Lime)
+                Text(stringResource(R.string.up_need_store, fmtBytes(plan.bytes), price), style = Type.bodyStrong, color = Bone)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     QButton(
-                        if (busy) stringResource(R.string.uploading) else stringResource(R.string.up_pay, fmtNum(plan.price)),
+                        if (busy) stringResource(R.string.uploading) else stringResource(R.string.up_pay_store, price),
                         { onPay(plan.id) }, Modifier.weight(1f), enabled = !busy,
                     )
                     QButton(stringResource(R.string.cancel), onCancel, kind = BtnKind.Stage)
                 }
             }
         }
-        if (plan == null || !owner) QButton(stringResource(R.string.cancel), onCancel, kind = BtnKind.Stage)
+        if (!BuildConfig.PURCHASES_ENABLED || plan == null || !owner || price == null) QButton(stringResource(R.string.cancel), onCancel, kind = BtnKind.Stage)
     }
 }
 

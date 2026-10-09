@@ -1,0 +1,1 @@
+Primera versión: escáner de códigos QR y de barras, tus códigos con interruptor y escaneos, creación de códigos, memoria bajo el código.

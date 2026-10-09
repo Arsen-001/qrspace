@@ -1,0 +1,4 @@
+# Google Play: the service-account JSON key is never in the repo — its path comes from QRSPACE_PLAY_JSON_KEY
+# (e.g. export QRSPACE_PLAY_JSON_KEY=~/.qrspace/play-service-account.json). See README "Google Play submission".
+json_key_file(ENV["QRSPACE_PLAY_JSON_KEY"])
+package_name("co.qrspace.app")

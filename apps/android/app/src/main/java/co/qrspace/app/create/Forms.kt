@@ -33,6 +33,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -56,8 +57,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import co.qrspace.app.BuildConfig
 import co.qrspace.app.R
 import co.qrspace.app.app
+import co.qrspace.app.billing.Products
 import co.qrspace.app.codes.QrImage
 import co.qrspace.app.codes.parseColor
 import co.qrspace.app.data.Look
@@ -79,7 +82,6 @@ import co.qrspace.app.ui.SiteText
 import co.qrspace.app.ui.Type
 import co.qrspace.app.ui.dotGrid
 import co.qrspace.app.ui.fmtBytes
-import co.qrspace.app.ui.fmtUsd
 import coil3.compose.AsyncImage
 import kotlinx.coroutines.delay
 import java.util.Calendar
@@ -311,10 +313,22 @@ private fun SwatchRow(label: String, colors: List<String>, value: String, onPick
     }
 }
 
-/** Price row under the preview: simple / styled, $1, "the first simple code is free". */
+/** Google Play's price of [productId] for this person ("$0.99", "390 ֏"); null — not loaded / no Google Play. */
+@Composable
+fun storePrice(productId: String): String? {
+    val prices by LocalContext.current.app.store.prices.collectAsState()
+    return prices[productId]
+}
+
+/**
+ * Price row under the preview: simple / styled, the store's price of a code, "the first simple code is free". None in
+ * a build without purchases; no price while Google Play's prices aren't there.
+ */
 @Composable
 fun TierRow(tier: String) {
+    if (!BuildConfig.PURCHASES_ENABLED) return
     val q = LocalQr.current
+    val price = storePrice(Products.CODE)
     Column {
         Row(
             Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).border(1.dp, q.line, RoundedCornerShape(10.dp)).padding(horizontal = 12.dp, vertical = 10.dp),
@@ -323,7 +337,7 @@ fun TierRow(tier: String) {
             Box(Modifier.size(8.dp).clip(CircleShape).background(if (tier == "simple") q.muted else Lime))
             Spacer(Modifier.width(8.dp))
             Text(stringResource(if (tier == "simple") R.string.tier_simple else R.string.tier_styled), style = Type.bodyStrong, color = q.ink, modifier = Modifier.weight(1f))
-            Text(fmtUsd(co.qrspace.app.data.Pricing.PRICE), style = Type.h2, color = q.ink)
+            if (price != null) Text(price, style = Type.h2, color = q.ink)
         }
         Spacer(Modifier.height(6.dp))
         Text(stringResource(R.string.first_free), style = Type.small, color = q.muted, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
@@ -336,14 +350,19 @@ sealed interface GateState {
     data object Working : GateState
 }
 
-/** Labels of the gate's main button: creating a code, or getting a code's picture. */
-data class GateLabels(val free: Int, val pay: Int, val pack: Int)
-val CreateLabels = GateLabels(R.string.create_free, R.string.create_pay, R.string.create_from_pack)
-val DownloadLabels = GateLabels(R.string.download_free, R.string.pay_and_download, R.string.pack_download)
+/**
+ * Labels of the gate's main button: creating a code, or getting a code's picture. [off] — what a build without
+ * purchases says instead of the price.
+ */
+data class GateLabels(val free: Int, val pay: Int, val pack: Int, val off: Int)
+val CreateLabels = GateLabels(R.string.create_free, R.string.create_pay, R.string.create_from_pack, R.string.iap_off_create)
+val DownloadLabels = GateLabels(R.string.download_free, R.string.pay_and_download, R.string.pack_download, R.string.iap_off_picture)
 
 /**
- * The price gate, honest about the demo: the first simple code is free, a pack code costs nothing more, otherwise $1
- * — "Payment is a demo for now — no money is charged".
+ * The price gate: the first simple code is free, a pack code costs nothing more, otherwise a code at Google Play's
+ * price (onConfirm then buys it — billing/Store.kt). Google Play not there → "Purchases unavailable". Without purchases
+ * (BuildConfig.PURCHASES_ENABLED = false) the free code and pack codes still go through; a paid one gets
+ * [GateLabels.off] and only "Cancel" — no price, no link.
  */
 @Composable
 fun PriceGate(state: GateState, labels: GateLabels, onConfirm: () -> Unit, onCancel: () -> Unit, modifier: Modifier = Modifier) {
@@ -360,29 +379,33 @@ fun PriceGate(state: GateState, labels: GateLabels, onConfirm: () -> Unit, onCan
             is GateState.Ask -> {
                 val qt = state.quote
                 val pack = qt.pack
-                when {
-                    pack != null -> {
-                        Text(stringResource(R.string.pack_from), style = Type.bodyStrong, color = Bone)
-                        Spacer(Modifier.height(4.dp))
-                        Text(stringResource(R.string.pack_left) + ": ${pack.left} · " + fmtBytes(pack.bytes) + " " + stringResource(R.string.pack_room), style = Type.kicker, color = Bone.copy(alpha = 0.7f))
-                    }
-                    qt.free -> Text(stringResource(R.string.free_first), style = Type.bodyStrong, color = Bone)
-                    else -> {
-                        Text(stringResource(R.string.pay_title) + ": " + fmtUsd(qt.price), style = Type.h2, color = Bone)
-                        Spacer(Modifier.height(4.dp))
-                        Text(stringResource(R.string.buy_demo), style = Type.small, color = Lime)
-                    }
-                }
-                Spacer(Modifier.height(14.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    val main = when {
-                        pack != null -> stringResource(labels.pack)
-                        qt.free -> stringResource(labels.free)
-                        labels.pay == R.string.create_pay -> stringResource(R.string.create_pay, fmtUsd(qt.price))
-                        else -> stringResource(labels.pay) + " — " + fmtUsd(qt.price)
-                    }
-                    QButton(main, onConfirm, Modifier.weight(1f))
+                val paid = pack == null && !qt.free
+                val price = storePrice(Products.CODE)
+                if (paid && (!BuildConfig.PURCHASES_ENABLED || price == null)) {
+                    Text(stringResource(if (BuildConfig.PURCHASES_ENABLED) R.string.iap_unavailable else labels.off), style = Type.bodyStrong, color = Bone)
+                    Spacer(Modifier.height(14.dp))
                     QButton(stringResource(R.string.cancel), onCancel, kind = BtnKind.Stage)
+                } else {
+                    when {
+                        pack != null -> {
+                            Text(stringResource(R.string.pack_from), style = Type.bodyStrong, color = Bone)
+                            Spacer(Modifier.height(4.dp))
+                            Text(stringResource(R.string.pack_left) + ": ${pack.left} · " + fmtBytes(pack.bytes) + " " + stringResource(R.string.pack_room), style = Type.kicker, color = Bone.copy(alpha = 0.7f))
+                        }
+                        qt.free -> Text(stringResource(R.string.free_first), style = Type.bodyStrong, color = Bone)
+                        else -> Text(stringResource(R.string.pay_title) + ": " + price, style = Type.h2, color = Bone)
+                    }
+                    Spacer(Modifier.height(14.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        val main = when {
+                            pack != null -> stringResource(labels.pack)
+                            qt.free -> stringResource(labels.free)
+                            labels.pay == R.string.create_pay -> stringResource(R.string.create_pay, price.orEmpty())
+                            else -> stringResource(labels.pay) + " — " + price.orEmpty()
+                        }
+                        QButton(main, onConfirm, Modifier.weight(1f))
+                        QButton(stringResource(R.string.cancel), onCancel, kind = BtnKind.Stage)
+                    }
                 }
             }
         }

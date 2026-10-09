@@ -1,0 +1,1 @@
+Primeira versão: leitor de QR codes e códigos de barras, seus códigos com interruptor e leituras, criação de códigos, memória sob o código.

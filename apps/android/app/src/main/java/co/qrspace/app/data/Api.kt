@@ -266,6 +266,22 @@ class Api(private val context: Context) {
     suspend fun buyStorage(id: String, plan: String): CodeView = post("/api/codes/${enc(id)}/storage", buildJsonObject { put("plan", plan) })
 
     /**
+     * A Google Play purchase: the server checks the token with Google, credits [intent] once (a code key, a pack, a month
+     * of space) and consumes the purchase. Errors: 402 not verified, 409 already credited, 422 wrong product; space —
+     * 403/404/413 before Google is asked (billing/Products.outcome).
+     */
+    suspend fun iap(productId: String, purchaseToken: String, intent: JsonObject) {
+        post<JsonObject>("/api/iap", buildJsonObject {
+            put("platform", "android"); put("productId", productId); put("purchaseToken", purchaseToken); put("intent", intent)
+        })
+    }
+
+    /** The site's demo pack purchase — only the debug fake store uses it (local testing without Google Play). */
+    suspend fun demoPack(plan: String) {
+        post<JsonObject>("/api/packs", buildJsonObject { put("plan", plan) })
+    }
+
+    /**
      * Permission for one big video: 413 if it doesn't fit (the server measures with the real size), 400 if not a video;
      * {direct:false} on a server without file storage (then the form takes the file).
      */

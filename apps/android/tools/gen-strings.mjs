@@ -34,12 +34,20 @@ SITE_KEYS.push(
   "saveError", "save", "saved", "delete", "visTitle", "tabAccess", "tabLink", "linkHint", "tabMemory", "storageTitle", "storagePaidUntil", "composerTitle", "addText", "addPhoto",
   "addVideo", "upload", "replace", "textPlaceholder", "captionPlaceholder", "uploading", "videoLimit", "videoTooBig", "upTooBigTitle", "upSizes", "upNeed",
   "upPay", "upOwnerOnly", "upMax", "storageFull", "uploadError", "you", "providersPending", "tpl.pet", "downloadFree", "payAndDownload", "packDownload", "deleteAccount", "deleteAccountSure", "deleteAccountYes",
+  "packsTitle", "packBuy", "packBought",
   ...Object.entries(FAMILIES).flatMap(([f, ids]) => ids.map((id) => `${f}.${id}`)),
 );
 const SITE = [...new Set(SITE_KEYS)];
 
 const site = Object.fromEntries(SITE.map((k) => [k, Object.fromEntries(LANGS.map((l) => [l, DICTS[l][k] ?? DICTS.en[k]]))]));
 for (const k of SITE) if (!DICTS.en[k]) throw new Error(`missing site key ${k}`);
+// Google Play gives prices already formatted ("$0.99", "390 ֏") — the site's "${price}" sentences without their "$".
+for (const [k, from] of Object.entries({ upNeedStore: "upNeed", upPayStore: "upPay" })) {
+  site[k] = Object.fromEntries(LANGS.map((l) => {
+    if (!site[from][l].includes("${price}")) throw new Error(`${from}.${l} has no \${price}`);
+    return [l, site[from][l].replace("${price}", "{price}")];
+  }));
+}
 
 // Site placeholders → Android positional args.
 const PH = {
@@ -49,6 +57,8 @@ const PH = {
   upSizes: { file: "%1$s", free: "%2$s", quota: "%3$s" },
   upNeed: { size: "%1$s", price: "%2$s" },
   upPay: { price: "%1$s" },
+  upNeedStore: { size: "%1$s", price: "%2$s" },
+  upPayStore: { price: "%1$s" },
   upMax: { max: "%1$s" },
 };
 const NOTICE = { who: "%1$s", title: "%2$s", amount: "%3$s" };
@@ -124,6 +134,15 @@ const APP = {
   server_apply: ["Use", "Выбрать", "Ընտրել", "Usar", "Usar", "Utiliser", "Verwenden"],
   unread_count: ["Unread: %1$d", "Непрочитанных: %1$d", "Չկարդացված՝ %1$d", "Sin leer: %1$d", "Não lidas: %1$d", "Non lus : %1$d", "Ungelesen: %1$d"],
   space_used: ["%1$s of %2$s", "%1$s из %2$s", "%1$s / %2$s", "%1$s de %2$s", "%1$s de %2$s", "%1$s sur %2$s", "%1$s von %2$s"],
+  // A build without purchases (BuildConfig.PURCHASES_ENABLED = false, Google Play payments rule): no prices, no "buy".
+  iap_off_create: ["This code can’t be made in the app yet. Here: your first simple code and codes from your packs.", "Этот код пока нельзя сделать в приложении. Здесь — первый простой код и коды из ваших пакетов.", "Այս կոդը դեռ հնարավոր չէ ստեղծել հավելվածում։ Այստեղ՝ ձեր առաջին պարզ կոդը և կոդերը ձեր փաթեթներից։", "Este código aún no se puede crear en la app. Aquí: tu primer código simple y los códigos de tus packs.", "Este código ainda não pode ser criado no app. Aqui: seu primeiro código simples e os códigos dos seus pacotes.", "Ce code ne peut pas encore être créé dans l’app. Ici : votre premier code simple et les codes de vos packs.", "Dieser Code lässt sich in der App noch nicht erstellen. Hier: dein erster einfacher Code und Codes aus deinen Paketen."],
+  iap_off_picture: ["The picture of this code isn’t available in the app yet.", "Картинку этого кода пока нельзя получить в приложении.", "Այս կոդի նկարը դեռ հասանելի չէ հավելվածում։", "La imagen de este código aún no está disponible en la app.", "A imagem deste código ainda não está disponível no app.", "L’image de ce code n’est pas encore disponible dans l’app.", "Das Bild dieses Codes ist in der App noch nicht verfügbar."],
+  iap_off_space: ["Not enough space under the code. Pick a smaller file or delete something.", "Под кодом не хватает места. Выберите файл поменьше или удалите что-то.", "Կոդի տակ տեղը չի բավականացնում։ Ընտրեք ավելի փոքր ֆայլ կամ ջնջեք ինչ-որ բան։", "No hay espacio suficiente bajo el código. Elige un archivo más pequeño o borra algo.", "Falta espaço sob o código. Escolha um arquivo menor ou apague algo.", "Pas assez d’espace sous le code. Choisissez un fichier plus petit ou supprimez quelque chose.", "Nicht genug Platz unter dem Code. Wähle eine kleinere Datei oder lösche etwas."],
+  // Google Play Billing (billing/Store.kt).
+  iap_unavailable: ["Purchases unavailable right now.", "Покупки сейчас недоступны.", "Գնումներն այժմ հասանելի չեն։", "Las compras no están disponibles ahora.", "As compras não estão disponíveis agora.", "Les achats ne sont pas disponibles pour le moment.", "Käufe sind gerade nicht verfügbar."],
+  iap_pending: ["Payment is pending — we’ll finish as soon as Google Play confirms it.", "Оплата ещё идёт — закончим, как только Google Play её подтвердит.", "Վճարումը դեռ ընթացքի մեջ է՝ կավարտենք, հենց Google Play-ը հաստատի։", "El pago está pendiente: terminaremos en cuanto Google Play lo confirme.", "O pagamento está pendente — concluímos assim que o Google Play confirmar.", "Paiement en attente — on termine dès que Google Play le confirme.", "Die Zahlung steht aus — wir schließen ab, sobald Google Play sie bestätigt."],
+  iap_failed: ["The purchase didn’t finish. Try again — if Google Play charged you, it finishes later or is refunded automatically.", "Покупка не завершилась. Попробуйте ещё раз — если Google Play списал деньги, покупка завершится позже или деньги вернутся сами.", "Գնումը չավարտվեց։ Փորձեք նորից՝ եթե Google Play-ը գանձել է գումարը, գնումը կավարտվի ավելի ուշ կամ գումարը կվերադարձվի ինքնաբերաբար։", "La compra no se completó. Inténtalo de nuevo: si Google Play te cobró, se completará más tarde o se te reembolsará automáticamente.", "A compra não foi concluída. Tente de novo — se o Google Play cobrou, ela será concluída depois ou reembolsada automaticamente.", "L’achat n’a pas abouti. Réessayez — si Google Play vous a débité, il se terminera plus tard ou sera remboursé automatiquement.", "Der Kauf wurde nicht abgeschlossen. Versuch es noch einmal — falls Google Play abgebucht hat, wird er später abgeschlossen oder automatisch erstattet."],
+  iap_off_video_limit: ["The video has to fit in the free space under the code.", "Видео должно поместиться в свободное место под кодом.", "Տեսանյութը պետք է տեղավորվի կոդի տակ ազատ տեղում։", "El video tiene que caber en el espacio libre bajo el código.", "O vídeo precisa caber no espaço livre sob o código.", "La vidéo doit tenir dans l’espace libre sous le code.", "Das Video muss in den freien Platz unter dem Code passen."],
 };
 delete APP.copied_toast;
 

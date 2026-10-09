@@ -69,6 +69,13 @@
     <string name="server_apply">Use</string>
     <string name="unread_count">Unread: %1$d</string>
     <string name="space_used">%1$s of %2$s</string>
+    <string name="iap_off_create">This code can’t be made in the app yet. Here: your first simple code and codes from your packs.</string>
+    <string name="iap_off_picture">The picture of this code isn’t available in the app yet.</string>
+    <string name="iap_off_space">Not enough space under the code. Pick a smaller file or delete something.</string>
+    <string name="iap_unavailable">Purchases unavailable right now.</string>
+    <string name="iap_pending">Payment is pending — we’ll finish as soon as Google Play confirms it.</string>
+    <string name="iap_failed">The purchase didn’t finish. Try again — if Google Play charged you, it finishes later or is refunded automatically.</string>
+    <string name="iap_off_video_limit">The video has to fit in the free space under the code.</string>
     <string name="nav_codes">My codes</string>
     <string name="login">Sign in</string>
     <string name="login_title">Sign in</string>
@@ -239,6 +246,9 @@
     <string name="delete_account">Delete account</string>
     <string name="delete_account_sure">Delete your account forever? All your codes, memories, photos and videos will be gone. This can’t be undone.</string>
     <string name="delete_account_yes">Yes, delete forever</string>
+    <string name="packs_title">Several codes at once — in reserve</string>
+    <string name="pack_buy">Buy pack</string>
+    <string name="pack_bought">The pack is yours — download codes any time</string>
     <string name="type_whatsapp">WhatsApp</string>
     <string name="type_telegram">Telegram</string>
     <string name="type_viber">Viber</string>
@@ -332,4 +342,6 @@
     <string name="tpl_hint_car">People message you without your number; the number is on a switch</string>
     <string name="tpl_hint_lost">A finder messages you without learning your name or address</string>
     <string name="tpl_hint_pet">The pet’s profile is open, the owner stays hidden — contact goes through us</string>
+    <string name="up_need_store">It needs %1$s of space — %2$s a month.</string>
+    <string name="up_pay_store">Pay %1$s and upload</string>
 </resources>

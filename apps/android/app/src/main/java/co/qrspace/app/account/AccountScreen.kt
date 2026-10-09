@@ -2,6 +2,12 @@ package co.qrspace.app.account
 
 import android.widget.Toast
 import co.qrspace.app.BuildConfig
+import co.qrspace.app.billing.Buy
+import co.qrspace.app.billing.BuyResult
+import co.qrspace.app.billing.Products
+import co.qrspace.app.billing.activity
+import co.qrspace.app.billing.message
+import co.qrspace.app.data.Storage
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -39,7 +45,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
@@ -272,10 +280,16 @@ private fun Signed() {
                         }
                     }
                 }
-                Spacer(Modifier.height(24.dp))
-                Section(stringResource(R.string.acc_packs), null)
+                // Packs: mine, then buying one in Google Play. No Google Play prices (or a build without purchases) —
+                // only packs bought earlier, no "buy a pack" nudge.
+                val prices by ctx.app.store.prices.collectAsState()
+                val canBuyPacks = BuildConfig.PURCHASES_ENABLED && Products.PACKS.values.any { it in prices }
+                if (canBuyPacks || p.packs.isNotEmpty()) {
+                    Spacer(Modifier.height(24.dp))
+                    Section(stringResource(R.string.acc_packs), null)
+                }
                 if (p.packs.isEmpty()) {
-                    Text(stringResource(R.string.acc_no_packs), style = Type.body, color = q.muted)
+                    if (canBuyPacks) Text(stringResource(R.string.acc_no_packs), style = Type.body, color = q.muted)
                 } else p.packs.forEach { pk ->
                     QCard(Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -288,9 +302,10 @@ private fun Signed() {
                         Text(stringResource(R.string.acc_pack_used, pk.used, pk.codes) + " · " + fmtDate(pk.at), style = Type.small, color = q.muted)
                     }
                 }
+                if (canBuyPacks) BuyPacks(prices) { scope.launch { load() } }
+                // No "Open on qrspace.co" here: the site's account page sells packs with the site's own payments, and
+                // Google Play doesn't allow leading people from the app to another way to pay (README "Payments").
                 Spacer(Modifier.height(28.dp))
-                QButton(stringResource(R.string.open_in_browser), { co.qrspace.app.scan.Actions.open(ctx, "${api.base}/account") }, kind = BtnKind.Ghost, icon = Glyphs.Open, modifier = Modifier.fillMaxWidth())
-                Spacer(Modifier.height(10.dp))
                 QButton(stringResource(R.string.logout), { scope.launch { session.signOut() } }, kind = BtnKind.Ink, icon = Glyphs.Exit, modifier = Modifier.fillMaxWidth())
                 // Demo people can't be deleted (the server answers 403) — no button, as on the site.
                 if (p.provider != "demo") {
@@ -349,6 +364,9 @@ private fun Bar(frac: Float, track: androidx.compose.ui.graphics.Color = LocalQr
 private fun NoticesCard(n: Notices) {
     val q = LocalQr.current
     val session = LocalContext.current.app.session
+    // No market news (bids, sales): the market sells on the site with its own payments — Google Play doesn't allow the
+    // app to promote buying outside Google Play (README "Payments").
+    val items = n.items.filter { it.kind !in MARKET_NOTICES }
     Section(stringResource(R.string.notifications), if (n.unread > 0) "${n.unread}" else null)
     QCard(Modifier.fillMaxWidth()) {
         if (n.due > 0) {
@@ -357,10 +375,10 @@ private fun NoticesCard(n: Notices) {
                 Spacer(Modifier.width(8.dp))
                 Text(stringResource(R.string.tasks_due, n.due), style = Type.bodyStrong, color = q.ink)
             }
-            if (n.items.isNotEmpty()) Spacer(Modifier.height(10.dp))
+            if (items.isNotEmpty()) Spacer(Modifier.height(10.dp))
         }
-        if (n.items.isEmpty() && n.due == 0) Text(stringResource(R.string.notifications_empty), style = Type.body, color = q.muted)
-        n.items.take(8).forEach { item ->
+        if (items.isEmpty() && n.due == 0) Text(stringResource(R.string.notifications_empty), style = Type.body, color = q.muted)
+        items.take(8).forEach { item ->
             Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.Top) {
                 Box(Modifier.padding(top = 7.dp).size(8.dp).clip(RoundedCornerShape(4.dp)).background(if (item.read) q.line else Lime))
                 Spacer(Modifier.width(10.dp))
@@ -372,6 +390,50 @@ private fun NoticesCard(n: Notices) {
         }
     }
     Spacer(Modifier.height(24.dp))
+}
+
+private val MARKET_NOTICES = setOf("outbid", "bid", "sold", "won")
+
+/** Packs in Google Play: N codes, 1 MB under each, the store's price → bought → the profile reloads. */
+@Composable
+private fun BuyPacks(prices: Map<String, String>, onBought: () -> Unit) {
+    val ctx = LocalContext.current
+    val q = LocalQr.current
+    val scope = rememberCoroutineScope()
+    var busy by remember { mutableStateOf<String?>(null) }
+    var note by remember { mutableStateOf<Int?>(null) }
+    Spacer(Modifier.height(16.dp))
+    Text(stringResource(R.string.packs_title), style = Type.h3, color = q.ink, modifier = Modifier.semantics { heading() })
+    Spacer(Modifier.height(10.dp))
+    Products.PACKS.forEach { (plan, pid) ->
+        val price = prices[pid] ?: return@forEach
+        Row(
+            Modifier.fillMaxWidth().padding(bottom = 8.dp).clip(Radius).background(q.card).border(1.dp, q.line, Radius).padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text("${Products.PACK_CODES[plan]} QR", style = Type.h3, color = q.ink)
+                Text(fmtBytes(Storage.FREE) + " " + stringResource(R.string.pack_room), style = Type.small, color = q.muted)
+            }
+            val label = stringResource(R.string.pack_buy) + ": ${Products.PACK_CODES[plan]} QR, $price"
+            QButton(
+                price,
+                {
+                    busy = plan
+                    note = null
+                    scope.launch {
+                        val r = ctx.app.store.buy(ctx.activity(), Buy.Pack(plan))
+                        busy = null
+                        note = if (r == BuyResult.Done) R.string.pack_bought else r.message()
+                        if (r == BuyResult.Done) onBought()
+                    }
+                },
+                Modifier.semantics { contentDescription = label },
+                enabled = busy == null,
+            )
+        }
+    }
+    note?.let { Text(stringResource(it), style = Type.small, color = if (it == R.string.pack_bought) q.ok else q.warn, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }) }
 }
 
 @Composable

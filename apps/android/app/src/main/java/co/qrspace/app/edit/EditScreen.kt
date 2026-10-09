@@ -58,6 +58,10 @@ import co.qrspace.app.codes.CodeImage
 import co.qrspace.app.codes.linkOf
 import co.qrspace.app.create.ContentFields
 import co.qrspace.app.create.DownloadLabels
+import co.qrspace.app.billing.Buy
+import co.qrspace.app.billing.BuyResult
+import co.qrspace.app.billing.activity
+import co.qrspace.app.billing.message
 import co.qrspace.app.create.GateState
 import co.qrspace.app.create.PriceGate
 import co.qrspace.app.create.siteText
@@ -180,6 +184,8 @@ private fun Header(c: CodeView, base: String, onBack: () -> Unit, onView: (Strin
     var gate by remember { mutableStateOf<GateState?>(null) }
     var sharing by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf(false) }
+    /** After Google Play: pending, unavailable, didn't finish. */
+    var note by remember { mutableStateOf<Int?>(null) }
     // A memory code is paid when its picture is taken (like downloading on the site, key "code:{id}"); a generator code
     // was paid when it was created.
     val key = "code:${c.id}"
@@ -194,6 +200,7 @@ private fun Header(c: CodeView, base: String, onBack: () -> Unit, onView: (Strin
         }
     }
     fun ask() {
+        note = null
         if (c.content != null || c.access != "owner") return share()
         scope.launch {
             gate = GateState.Checking
@@ -230,19 +237,27 @@ private fun Header(c: CodeView, base: String, onBack: () -> Unit, onView: (Strin
                 CircularProgressIndicator(Modifier.size(16.dp), color = Lime, strokeWidth = 2.dp)
             }
             if (error) Text(stringResource(R.string.error_network), style = Type.small, color = Lime, modifier = Modifier.padding(top = 8.dp))
+            note?.let { Text(stringResource(it), style = Type.small, color = Lime, modifier = Modifier.padding(top = 8.dp)) }
             gate?.let { g ->
                 Spacer(Modifier.height(12.dp))
                 PriceGate(g, DownloadLabels, onConfirm = {
+                    val qt = (g as? GateState.Ask)?.quote
                     scope.launch {
                         gate = GateState.Working
-                        runCatching { api.pay(key, tier) }
-                            .onSuccess {
-                                gate = null
-                                share()
-                                // Paid → the server now draws it full size; reload so the picture here updates too.
-                                runCatching { api.code(c.id) }.onSuccess(onChange)
-                            }
-                            .onFailure { gate = null; error = true }
+                        // Free / from a pack: the server records it. Paid: Google Play first, the server credits the key.
+                        val ok = if (qt != null && (qt.free || qt.pack != null)) {
+                            runCatching { api.pay(key, tier) }.onFailure { error = true }.isSuccess
+                        } else {
+                            val r = ctx.app.store.buy(ctx.activity(), Buy.Code(key, tier))
+                            note = r.message()
+                            r == BuyResult.Done
+                        }
+                        gate = null
+                        if (ok) {
+                            share()
+                            // Paid → the server now draws it full size; reload so the picture here updates too.
+                            runCatching { api.code(c.id) }.onSuccess(onChange)
+                        }
                     }
                 }, onCancel = { gate = null }, modifier = Modifier.border(1.dp, Bone.copy(alpha = 0.15f), RoundedCornerShape(14.dp)))
             }

@@ -1,0 +1,48 @@
+# QR Space — Google Play (fastlane supply). Run from apps/android:
+#   fastlane android metadata      listing texts + pictures only (no build)
+#   fastlane android release       metadata + bundleRelease → upload the AAB to a track (internal by default)
+#   fastlane android validate      the same upload, checked by Google but not saved
+# Needs: QRSPACE_PLAY_JSON_KEY = path to the Play service-account JSON (outside the repo), the upload key in
+# ~/.qrspace/android-upload.properties (Gradle signs with it). Optional: QRSPACE_PLAY_TRACK (internal | alpha | beta |
+# production), QRSPACE_PLAY_STATUS (draft | completed; a never-published app takes only "draft").
+# The very first AAB must be uploaded by hand in Play Console (the API can't create the app) — README.
+
+default_platform(:android)
+
+JAVA21 = "/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home"
+
+platform :android do
+  before_all do
+    UI.user_error!("Set QRSPACE_PLAY_JSON_KEY to the Play service-account JSON path (kept outside the repo)") unless ENV["QRSPACE_PLAY_JSON_KEY"].to_s != "" && File.exist?(File.expand_path(ENV["QRSPACE_PLAY_JSON_KEY"]))
+    ENV["JAVA_HOME"] ||= JAVA21 if File.directory?(JAVA21)
+    # Listing texts come from docs/store/listing.json — regenerate so the upload is never stale.
+    sh("node", File.expand_path("../tools/gen-store-metadata.mjs", __dir__))
+  end
+
+  def upload(extra = {})
+    supply({
+      json_key: File.expand_path(ENV["QRSPACE_PLAY_JSON_KEY"]),
+      package_name: "co.qrspace.app",
+      metadata_path: File.expand_path("metadata/android", __dir__),
+      track: ENV["QRSPACE_PLAY_TRACK"] || "internal",
+      release_status: ENV["QRSPACE_PLAY_STATUS"] || "draft",
+    }.merge(extra))
+  end
+
+  desc "Store listing only: titles, descriptions, icon, feature graphic, screenshots"
+  lane :metadata do
+    upload(skip_upload_aab: true, skip_upload_apk: true, skip_upload_changelogs: true)
+  end
+
+  desc "Build the signed AAB (upload key) and send it with the listing to a track (default: internal, draft)"
+  lane :release do
+    gradle(project_dir: File.expand_path("..", __dir__), task: "bundle", build_type: "Release")
+    upload(aab: lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH], skip_upload_apk: true)
+  end
+
+  desc "Like release, but Google only checks the upload (nothing is saved)"
+  lane :validate do
+    gradle(project_dir: File.expand_path("..", __dir__), task: "bundle", build_type: "Release")
+    upload(aab: lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH], skip_upload_apk: true, validate_only: true)
+  end
+end

@@ -68,6 +68,13 @@
     <string name="server_apply">Utiliser</string>
     <string name="unread_count">Non lus : %1$d</string>
     <string name="space_used">%1$s sur %2$s</string>
+    <string name="iap_off_create">Ce code ne peut pas encore être créé dans l’app. Ici : votre premier code simple et les codes de vos packs.</string>
+    <string name="iap_off_picture">L’image de ce code n’est pas encore disponible dans l’app.</string>
+    <string name="iap_off_space">Pas assez d’espace sous le code. Choisissez un fichier plus petit ou supprimez quelque chose.</string>
+    <string name="iap_unavailable">Les achats ne sont pas disponibles pour le moment.</string>
+    <string name="iap_pending">Paiement en attente — on termine dès que Google Play le confirme.</string>
+    <string name="iap_failed">L’achat n’a pas abouti. Réessayez — si Google Play vous a débité, il se terminera plus tard ou sera remboursé automatiquement.</string>
+    <string name="iap_off_video_limit">La vidéo doit tenir dans l’espace libre sous le code.</string>
     <string name="nav_codes">Mes codes</string>
     <string name="login">Se connecter</string>
     <string name="login_title">Connexion</string>
@@ -238,6 +245,9 @@
     <string name="delete_account">Supprimer le compte</string>
     <string name="delete_account_sure">Supprimer votre compte pour toujours ? Tous vos codes, mémoires, photos et vidéos disparaîtront. C’est irréversible.</string>
     <string name="delete_account_yes">Oui, supprimer pour toujours</string>
+    <string name="packs_title">Plusieurs codes d’un coup — en réserve</string>
+    <string name="pack_buy">Acheter le pack</string>
+    <string name="pack_bought">Le pack est à vous — téléchargez vos codes quand vous voulez</string>
     <string name="type_whatsapp">WhatsApp</string>
     <string name="type_telegram">Telegram</string>
     <string name="type_viber">Viber</string>
@@ -331,4 +341,6 @@
     <string name="tpl_hint_car">On vous écrit sans voir votre numéro ; le numéro est sur un interrupteur</string>
     <string name="tpl_hint_lost">La personne qui le trouve vous écrit sans connaître votre nom ni votre adresse</string>
     <string name="tpl_hint_pet">Le profil de l’animal est public, le propriétaire reste caché — le contact passe par nous</string>
+    <string name="up_need_store">Il faut %1$s d’espace — %2$s par mois.</string>
+    <string name="up_pay_store">Payer %1$s et envoyer</string>
 </resources>

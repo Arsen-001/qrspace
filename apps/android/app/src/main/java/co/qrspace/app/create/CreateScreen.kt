@@ -49,6 +49,10 @@ import co.qrspace.app.R
 import co.qrspace.app.app
 import co.qrspace.app.data.ApiException
 import co.qrspace.app.data.Look
+import co.qrspace.app.billing.Buy
+import co.qrspace.app.billing.BuyResult
+import co.qrspace.app.billing.activity
+import co.qrspace.app.billing.message
 import co.qrspace.app.data.Payload
 import co.qrspace.app.data.Pricing
 import co.qrspace.app.ui.Bone
@@ -86,7 +90,8 @@ private val FieldsSaver = Saver<AllFields, String>(
 
 /**
  * Create a new QR (the web's /create): what's in the code → how it looks (live preview drawn by the server) → the price
- * gate (first simple code free / from a pack / $1, demo) → the code. Or a memory code: name, template, look.
+ * gate (first simple code free / from a pack / a code bought in Google Play) → the code. Or a memory code: name,
+ * template, look.
  */
 @Composable
 fun CreateScreen(onBack: () -> Unit, onCreated: (String) -> Unit, onSignIn: () -> Unit) {
@@ -219,9 +224,17 @@ fun CreateScreen(onBack: () -> Unit, onCreated: (String) -> Unit, onSignIn: () -
                 val g = gate
                 if (g != null) {
                     PriceGate(g, CreateLabels, onConfirm = {
+                        val qt = (g as? GateState.Ask)?.quote
                         scope.launch {
                             gate = GateState.Working
-                            runCatching { api.pay(key, tier) }.onSuccess { makeQuick() }.onFailure(::failed)
+                            if (qt != null && (qt.free || qt.pack != null)) {
+                                // The first simple code / a code from a pack: no money, the server just records it.
+                                runCatching { api.pay(key, tier) }.onSuccess { makeQuick() }.onFailure(::failed)
+                            } else {
+                                // A paid code: Google Play, the server credits the key, then the code as before.
+                                val r = ctx.app.store.buy(ctx.activity(), Buy.Code(key, tier))
+                                if (r == BuyResult.Done) makeQuick() else { gate = null; error = r.message() }
+                            }
                         }
                     }, onCancel = { gate = null })
                 } else {
