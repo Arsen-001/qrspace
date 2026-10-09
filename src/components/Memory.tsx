@@ -1,9 +1,9 @@
 "use client";
 // Память под кодом: записи (текст, фото, видео) и форма «дописать». Одна и та же в настройках и после скана.
 import { useRef, useState } from "react";
-import { api, buyStorage, fmtBytes, MAX_PHOTO_PX, MAX_VIDEO_MB, FREE_STORAGE, mediaUrl, STORAGE_PLANS, VIDEO_TYPES, type Block, type CodeView } from "@/lib/codes";
+import { api, buyStorage, fmtBytes, MAX_PHOTO_PX, MAX_VIDEO_MB, FREE_STORAGE, mediaUrl, planFor, STORAGE_PLANS, VIDEO_TYPES, type Block, type CodeView } from "@/lib/codes";
 import { fmtDateTime } from "@/lib/format";
-import type { Dict, Lang } from "@/lib/i18n";
+import { fill, type Dict, type Lang } from "@/lib/i18n";
 import { prepareImage } from "@/lib/qr/raster";
 import { Avatar, personName } from "./Avatar";
 import { Tasks } from "./Tasks";
@@ -42,28 +42,73 @@ async function uploadVideo(codeId: string, file: File, onProgress: (pct: number)
     access: "private",
     handleUploadUrl: `/api/codes/${codeId}/upload`,
     contentType: file.type,
+    // Сервер разрешит загрузить ровно столько байт и только если они влезают в место под кодом.
+    clientPayload: JSON.stringify({ size: file.size }),
     multipart: file.size > 8 * 1024 * 1024,
     onUploadProgress: (e) => onProgress(Math.round(e.percentage)),
   });
   return name;
 }
 
-function Composer({ t, code, onChange }: { t: Dict; code: CodeView; onChange: (v: CodeView) => void }) {
+/**
+ * Не влезает в место под кодом (владелец 09.10.2026: «скидывают большое — смотрим, сколько мегабайт, показываем цену, он
+ * платит, потом позволяем загрузить»): размер файла, сколько свободно, какое место нужно и сколько стоит. Платит хозяин —
+ * сразу после оплаты файл загружается. Цена — за то место, которое нужно этому файлу; сервер всё равно меряет сам.
+ */
+function RoomOffer({ t, lang, code, need, busy, onPay, onCancel }: { t: Dict; lang: Lang; code: CodeView; need: number; busy: boolean; onPay: (plan: string) => void; onCancel: () => void }) {
+  const st = code.storage!;
+  const plan = planFor(st.used + need);
+  const owner = code.access === "owner";
+  return (
+    <div role="alert" className="space-y-3 rounded-2xl bg-stage p-4 text-on-stage sm:p-5">
+      <div className="font-heading text-base font-bold">{t.upTooBigTitle}</div>
+      <div className="font-mono text-xs text-on-stage/70">
+        {fill(t.upSizes, { file: fmtBytes(need, lang), free: fmtBytes(Math.max(0, st.quota - st.used), lang), quota: fmtBytes(st.quota, lang) })}
+      </div>
+      {!plan ? (
+        <p className="text-sm text-on-stage/80">{fill(t.upMax, { max: fmtBytes(STORAGE_PLANS[STORAGE_PLANS.length - 1].bytes, lang) })}</p>
+      ) : !owner ? (
+        <p className="text-sm text-on-stage/80">{t.upOwnerOnly}</p>
+      ) : (
+        <>
+          <p className="text-sm">
+            {fill(t.upNeed, { size: fmtBytes(plan.bytes, lang), price: plan.price })} <span className="text-on-stage/60">{t.buyDemo}</span>
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" disabled={busy} onClick={() => onPay(plan.id)} className="min-h-11 rounded-xl bg-accent px-5 font-heading text-sm font-bold text-on-accent disabled:opacity-50">
+              {fill(t.upPay, { price: plan.price })}
+            </button>
+            <button type="button" onClick={onCancel} className="min-h-11 rounded-xl px-4 text-sm font-medium text-on-stage/70 hover:text-on-stage">
+              {t.cancel}
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function Composer({ t, lang, code, onChange }: { t: Dict; lang: Lang; code: CodeView; onChange: (v: CodeView) => void }) {
   const [kind, setKind] = useState<Kind>("text");
   const [text, setText] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  /** Сколько байт нужно этой записи, если она не влезает в место под кодом. */
+  const [offer, setOffer] = useState<number | null>(null);
   const input = useRef<HTMLInputElement>(null);
+  const fits = (c: CodeView, need: number) => !c.storage || c.storage.used + need <= c.storage.quota;
 
   const pickKind = (k: Kind) => {
     setKind(k);
     setFile(null);
     setError(null);
+    setOffer(null);
   };
 
-  const submit = async () => {
+  /** current — код после оплаты места (новое место), иначе — как сейчас. */
+  const submit = async (current: CodeView = code) => {
     setBusy(true);
     setError(null);
     // Пока запись уходила, человек мог начать следующую — очищаем только то, что отправили.
@@ -72,16 +117,21 @@ function Composer({ t, code, onChange }: { t: Dict; code: CodeView; onChange: (v
     try {
       const form = new FormData();
       form.set("text", sentText);
-      if (sentFile && kind === "photo") form.set("file", await shrinkPhoto(sentFile), "photo.jpg");
+      const photo = sentFile && kind === "photo" ? await shrinkPhoto(sentFile) : null;
+      if (sentFile && kind === "video" && !VIDEO_TYPES[sentFile.type]) throw new Error("type");
+      // Сначала — сколько места нужно и влезает ли; не влезает — показываем цену, файл не грузим.
+      const need = (photo?.size ?? (sentFile && kind === "video" ? sentFile.size : 0)) + new Blob([sentText]).size;
+      if (!fits(current, need)) {
+        setOffer(need);
+        return;
+      }
+      setOffer(null);
+      if (photo) form.set("file", photo, "photo.jpg");
       if (sentFile && kind === "video") {
-        if (!VIDEO_TYPES[sentFile.type]) throw new Error("type");
         const uploaded = await uploadVideo(code.id, sentFile, setProgress);
         if (uploaded) form.set("uploaded", uploaded);
         else form.set("file", sentFile);
       }
-      // Не влезает в место под кодом — говорим сразу, не загружая файл.
-      const need = (form.get("file") instanceof Blob ? (form.get("file") as Blob).size : sentFile && kind === "video" ? sentFile.size : 0) + new Blob([sentText]).size;
-      if (code.storage && code.storage.used + need > code.storage.quota) throw new Error("413");
       onChange(await api.addBlock(code.id, form));
       setText((t) => (t === sentText ? "" : t));
       setFile((f) => (f === sentFile ? null : f));
@@ -90,6 +140,18 @@ function Composer({ t, code, onChange }: { t: Dict; code: CodeView; onChange: (v
     } finally {
       setBusy(false);
       setProgress(null);
+    }
+  };
+  // Оплатили место — сразу загружаем.
+  const payAndUpload = async (plan: string) => {
+    setBusy(true);
+    try {
+      const next = await buyStorage(code.id, plan);
+      onChange(next);
+      await submit(next);
+    } catch {
+      setError(t.uploadError);
+      setBusy(false);
     }
   };
 
@@ -135,6 +197,9 @@ function Composer({ t, code, onChange }: { t: Dict; code: CodeView; onChange: (v
               }
               setError(null);
               setFile(f);
+              // Видео: размер известен сразу — не влезает, цену места показываем ещё до «Сохранить».
+              const need = f && kind === "video" ? f.size + new Blob([text]).size : 0;
+              setOffer(f && kind === "video" && !fits(code, need) ? need : null);
             }}
           />
         </div>
@@ -147,6 +212,7 @@ function Composer({ t, code, onChange }: { t: Dict; code: CodeView; onChange: (v
         onChange={(e) => setText(e.target.value)}
         className={`${field} resize-y`}
       />
+      {offer !== null && <RoomOffer t={t} lang={lang} code={code} need={offer} busy={busy} onPay={payAndUpload} onCancel={() => setOffer(null)} />}
       {error && <p className="text-sm text-warn">{error}</p>}
       <button type="submit" disabled={!ready || busy} className="min-h-11 rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent disabled:opacity-40">
         {busy ? (progress !== null && progress < 100 ? `${t.uploading} ${progress}%` : t.uploading) : t.save}
@@ -325,7 +391,7 @@ export function Memory({ t, lang, code, me, onChange }: { t: Dict; lang: Lang; c
         <>
           {blocks.length === 0 && <p className="text-sm text-muted">{t.memoryEmpty}</p>}
           <StorageBar t={t} lang={lang} code={code} onChange={onChange} />
-          <Composer t={t} code={code} onChange={onChange} />
+          <Composer t={t} lang={lang} code={code} onChange={onChange} />
         </>
       )}
     </div>

@@ -32,7 +32,10 @@ export async function POST(req: NextRequest, ctx: RouteContext<"/api/codes/[id]/
   const uploaded = form.get("uploaded");
   if (!media && typeof uploaded === "string" && uploaded) {
     const f = uploadedName(id, uploaded) && (await files.open(uploaded, { start: 0, end: 0 }));
-    if (!f || f.size > MAX_VIDEO_MB * 1024 * 1024) return Response.json({ error: "file" }, { status: 400 });
+    if (!f || f.size > MAX_VIDEO_MB * 1024 * 1024) {
+      if (f) await files.remove(uploaded);
+      return Response.json({ error: "file" }, { status: 400 });
+    }
     media = { name: uploaded, kind: "video", size: f.size };
   }
   if (!text && !media) return Response.json({ error: "empty" }, { status: 400 });

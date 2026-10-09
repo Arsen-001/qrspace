@@ -166,7 +166,8 @@ export type MarketState = { sold: Record<string, number>; designs: Design[] };
 export type Lot = Listing & { view: Pick<CodeView, "title" | "style" | "edition" | "owners"> };
 
 export const MAX_PHOTO_PX = 1600;
-export const MAX_VIDEO_MB = 50;
+/** Один файл — не больше самого большого места под кодом (1 ГБ, владелец 09.10.2026); сверх оплаченного места — всё равно нельзя. */
+export const MAX_VIDEO_MB = 1024;
 
 /**
  * Место под каждым кодом (владелец 08.10.2026): 1 МБ бесплатно; больше — помесячно (владелец 09.10.2026: «1 QR — 1 доллар
@@ -181,6 +182,8 @@ export const STORAGE_PLANS = [
   { id: "s1000", bytes: 1024 * 1024 * 1024, price: 9 },
 ] as const;
 export const STORAGE_MONTH_MS = 30 * 24 * 3600 * 1000;
+/** Самое маленькое место, куда влезет столько байт; null — больше самого большого. */
+export const planFor = (bytes: number) => (bytes <= FREE_STORAGE ? null : (STORAGE_PLANS.find((p) => p.bytes >= bytes) ?? null));
 export const storageOf = (c: Pick<CodeRecord, "storage" | "storageUntil" | "blocks">, now = Date.now()) => {
   const active = !!c.storage && (!c.storageUntil || Date.parse(c.storageUntil) > now);
   const quota = active ? Math.max(FREE_STORAGE, c.storage!) : FREE_STORAGE;
