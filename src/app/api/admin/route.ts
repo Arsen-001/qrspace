@@ -18,7 +18,7 @@ export async function GET() {
           byKind,
           scans: db.codes.reduce((n, c) => n + c.visits.length, 0),
           scansWeek: db.codes.reduce((n, c) => n + c.visits.filter((v) => Date.parse(v.at) > week).length, 0),
-          revenue: db.purchases.reduce((n, p) => n + p.price, 0) + db.packs.reduce((n, p) => n + p.price, 0) + db.spaces.reduce((n, p) => n + p.price, 0),
+          revenue: [...db.purchases, ...db.packs, ...db.spaces].reduce((n, p) => n + (p.test ? 0 : p.price), 0),
           purchases: db.purchases.length,
           openLots: db.listings.filter((l) => l.status === "open").length,
           blocked: db.codes.filter((c) => c.blocked).length,

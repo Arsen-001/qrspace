@@ -1,6 +1,7 @@
 import { mutate, viewOf } from "@/server/db";
+import { extendSpace } from "@/server/grants";
 import { currentPerson } from "@/server/session";
-import { FREE_STORAGE, STORAGE_MONTH_MS, STORAGE_PLANS, storageOf } from "@/lib/codes";
+import { FREE_STORAGE, STORAGE_PLANS, storageOf } from "@/lib/codes";
 
 /**
  * Сменить место под кодом (демо — деньги не списываются). Только хозяин. Пакет — на месяц: тот же ещё раз — продлить
@@ -24,10 +25,8 @@ export async function POST(req: Request, ctx: RouteContext<"/api/codes/[id]/stor
       delete c.storage;
       delete c.storageUntil;
     } else {
-      const from = st.plan === plan.id && st.until ? Date.parse(st.until) : now;
-      c.storage = plan.bytes;
-      c.storageUntil = new Date(from + STORAGE_MONTH_MS).toISOString();
-      db.spaces.push({ person: me, code: c.id, plan: plan.id, bytes: plan.bytes, price: plan.price, at: new Date(now).toISOString() });
+      const err = extendSpace(db, me, c.id, plan.id, { price: plan.price });
+      if (err) return err;
     }
     return viewOf(c, me);
   });

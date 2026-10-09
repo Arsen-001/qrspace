@@ -3,6 +3,7 @@
 // аккаунт). Пока ключей нет (их заводит владелец) — ничего не отправляем и ничего лишнего не делаем.
 import { createPrivateKey, sign } from "node:crypto";
 import http2 from "node:http2";
+import { googleToken, readAccount } from "./gauth";
 
 const env = (k: string) => process.env[k]?.trim() || "";
 const test = (k: string) => (process.env.NODE_ENV !== "production" ? env(k) : "");
@@ -58,25 +59,11 @@ function sendApns(m: PushMessage): Promise<boolean> {
   });
 }
 
-// Firebase: обмениваем подписанный JWT сервисного аккаунта на токен доступа (час), держим 50 минут.
-let fcmAccess: { value: string; at: number; project: string } | null = null;
+// Firebase: токен доступа сервисного аккаунта (gauth — общий с проверкой покупок Google Play).
 async function fcmToken(): Promise<{ value: string; project: string } | null> {
-  if (fcmAccess && Date.now() - fcmAccess.at < 50 * 60_000) return fcmAccess;
-  const sa = JSON.parse(env("FCM_SERVICE_ACCOUNT")) as { client_email: string; private_key: string; project_id: string; token_uri?: string };
-  const now = Math.floor(Date.now() / 1000);
-  const aud = test("FCM_TEST_TOKEN_URL") || sa.token_uri || "https://oauth2.googleapis.com/token";
-  const head = b64url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
-  const claims = b64url(JSON.stringify({ iss: sa.client_email, scope: "https://www.googleapis.com/auth/firebase.messaging", aud, iat: now, exp: now + 3600 }));
-  const sig = sign("sha256", Buffer.from(`${head}.${claims}`), createPrivateKey(pem(sa.private_key)));
-  const r = await fetch(aud, {
-    method: "POST",
-    headers: { "content-type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer", assertion: `${head}.${claims}.${b64url(sig)}` }),
-  }).catch(() => null);
-  const j = r?.ok ? ((await r.json()) as { access_token?: string }) : null;
-  if (!j?.access_token) return null;
-  fcmAccess = { value: j.access_token, at: Date.now(), project: sa.project_id };
-  return fcmAccess;
+  const sa = readAccount(env("FCM_SERVICE_ACCOUNT"));
+  const value = sa && (await googleToken(sa, "https://www.googleapis.com/auth/firebase.messaging", test("FCM_TEST_TOKEN_URL")));
+  return sa && value ? { value, project: sa.project_id } : null;
 }
 
 async function sendFcm(m: PushMessage): Promise<boolean> {

@@ -6,7 +6,7 @@ import type { SavedStyle } from "./qr/style";
 
 export type Tier = "simple" | "styled";
 export const PRICES: Record<Tier, number> = { simple: 1, styled: 1 };
-export type Purchase = { person: string; key: string; tier: Tier; price: number; free: boolean; at: string; /** Скачан из пакета. */ pack?: string; bytes?: number; /** Какой код создан по этой оплате (генератор): одна оплата — один код. */ code?: string };
+export type Purchase = { person: string; key: string; tier: Tier; price: number; free: boolean; at: string; /** Скачан из пакета. */ pack?: string; bytes?: number; /** Какой код создан по этой оплате (генератор): одна оплата — один код. */ code?: string; /** Оплачено в App Store / Google Play; test — проверочная покупка (не выручка). */ store?: "apple" | "google"; test?: boolean };
 export type Quote = { paid: boolean; price: number; free: boolean; /** Можно взять из пакета: сколько кодов осталось и место под кодом. */ pack?: { left: number; bytes: number } };
 
 const SIMPLE_DOTS = ["square", "rounded", "dots"];

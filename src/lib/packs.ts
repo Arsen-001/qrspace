@@ -7,7 +7,7 @@ const pack = <I extends string>(id: I, codes: number, off: number) =>
   ({ id, codes, mb: 1, off, full: codes * CODE_PRICE, price: Math.round(codes * CODE_PRICE * (100 - off)) / 100 }) as const;
 export const CODE_PACKS = [pack("p5", 5, 20), pack("p10", 10, 30), pack("p50", 50, 35), pack("p100", 100, 40)];
 export type PackPlan = (typeof CODE_PACKS)[number];
-export type Pack = { id: string; person: string; plan: string; codes: number; used: number; bytes: number; price: number; at: string };
+export type Pack = { id: string; person: string; plan: string; codes: number; used: number; bytes: number; price: number; at: string; store?: "apple" | "google"; test?: boolean };
 
 export const packBytes = (p: PackPlan) => p.mb * 1024 * 1024;
 
