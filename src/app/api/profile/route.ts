@@ -89,6 +89,9 @@ export async function DELETE() {
     db.users = db.users.filter((x) => x.id !== me);
     db.notifications = db.notifications.filter((n) => n.to !== me);
     db.purchases = db.purchases.filter((p) => p.person !== me);
+    db.packs = db.packs.filter((p) => p.person !== me);
+    db.spaces = db.spaces.filter((p) => p.person !== me);
+    db.appTokens = db.appTokens.filter((x) => x.person !== me);
     db.orders = db.orders.filter((o) => o.client !== me);
     db.shop = db.shop.filter((o) => o.person !== me);
     return files;
