@@ -235,6 +235,9 @@
     <string name="download_free">Descargar gratis</string>
     <string name="pay_and_download">Pagar y descargar</string>
     <string name="pack_download">Descargar del paquete</string>
+    <string name="delete_account">Eliminar cuenta</string>
+    <string name="delete_account_sure">¿Eliminar tu cuenta para siempre? Desaparecerán todos tus códigos, memorias, fotos y videos. No se puede deshacer.</string>
+    <string name="delete_account_yes">Sí, eliminar para siempre</string>
     <string name="type_whatsapp">WhatsApp</string>
     <string name="type_telegram">Telegram</string>
     <string name="type_viber">Viber</string>

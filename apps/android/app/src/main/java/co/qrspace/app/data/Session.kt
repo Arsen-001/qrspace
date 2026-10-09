@@ -68,6 +68,23 @@ class Session(private val api: Api, private val push: Push) {
         push.register(api)
     }
 
+    /**
+     * Delete the account (stores require it in-app): the push device goes first (needs the session), then
+     * DELETE /api/profile; on success — signed out locally, [clearCaches] drops cached pictures. Failed → device back.
+     */
+    suspend fun deleteAccount(clearCaches: () -> Unit) {
+        push.unregister(api)
+        try {
+            api.deleteAccount()
+        } catch (e: Exception) {
+            push.register(api)
+            throw e
+        }
+        clearCaches()
+        refresh()
+        _epoch.value++
+    }
+
     suspend fun signOut() {
         push.unregister(api)
         api.logout()

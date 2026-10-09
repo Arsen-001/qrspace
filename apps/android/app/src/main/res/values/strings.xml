@@ -236,6 +236,9 @@
     <string name="download_free">Download for free</string>
     <string name="pay_and_download">Pay and download</string>
     <string name="pack_download">Download from pack</string>
+    <string name="delete_account">Delete account</string>
+    <string name="delete_account_sure">Delete your account forever? All your codes, memories, photos and videos will be gone. This can’t be undone.</string>
+    <string name="delete_account_yes">Yes, delete forever</string>
     <string name="type_whatsapp">WhatsApp</string>
     <string name="type_telegram">Telegram</string>
     <string name="type_viber">Viber</string>

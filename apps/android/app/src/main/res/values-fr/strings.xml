@@ -235,6 +235,9 @@
     <string name="download_free">Télécharger gratuitement</string>
     <string name="pay_and_download">Payer et télécharger</string>
     <string name="pack_download">Télécharger depuis le pack</string>
+    <string name="delete_account">Supprimer le compte</string>
+    <string name="delete_account_sure">Supprimer votre compte pour toujours ? Tous vos codes, mémoires, photos et vidéos disparaîtront. C’est irréversible.</string>
+    <string name="delete_account_yes">Oui, supprimer pour toujours</string>
     <string name="type_whatsapp">WhatsApp</string>
     <string name="type_telegram">Telegram</string>
     <string name="type_viber">Viber</string>

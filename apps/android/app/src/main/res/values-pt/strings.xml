@@ -235,6 +235,9 @@
     <string name="download_free">Baixar grátis</string>
     <string name="pay_and_download">Pagar e baixar</string>
     <string name="pack_download">Baixar do pacote</string>
+    <string name="delete_account">Excluir conta</string>
+    <string name="delete_account_sure">Excluir sua conta para sempre? Todos os seus códigos, memórias, fotos e vídeos vão sumir. Não dá para desfazer.</string>
+    <string name="delete_account_yes">Sim, excluir para sempre</string>
     <string name="type_whatsapp">WhatsApp</string>
     <string name="type_telegram">Telegram</string>
     <string name="type_viber">Viber</string>

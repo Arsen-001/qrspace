@@ -235,6 +235,9 @@
     <string name="download_free">Kostenlos herunterladen</string>
     <string name="pay_and_download">Bezahlen und herunterladen</string>
     <string name="pack_download">Aus dem Paket laden</string>
+    <string name="delete_account">Konto löschen</string>
+    <string name="delete_account_sure">Konto für immer löschen? Alle deine Codes, Erinnerungen, Fotos und Videos verschwinden. Das lässt sich nicht rückgängig machen.</string>
+    <string name="delete_account_yes">Ja, für immer löschen</string>
     <string name="type_whatsapp">WhatsApp</string>
     <string name="type_telegram">Telegram</string>
     <string name="type_viber">Viber</string>

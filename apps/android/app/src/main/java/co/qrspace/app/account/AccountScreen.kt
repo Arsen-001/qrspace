@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -40,6 +41,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -67,6 +69,7 @@ import co.qrspace.app.ui.QCard
 import co.qrspace.app.ui.Radius
 import co.qrspace.app.ui.RadiusSm
 import co.qrspace.app.ui.Screen
+import co.qrspace.app.ui.StatusScrim
 import co.qrspace.app.ui.Type
 import co.qrspace.app.ui.dotGrid
 import co.qrspace.app.ui.fmtBytes
@@ -95,6 +98,7 @@ fun AccountScreen(onSignedIn: () -> Unit = {}) {
             if (BuildConfig.DEBUG) ServerSwitch()
             Spacer(Modifier.height(120.dp))
         }
+        StatusScrim(LocalQr.current.stage)
     }
 }
 
@@ -288,6 +292,11 @@ private fun Signed() {
                 QButton(stringResource(R.string.open_in_browser), { co.qrspace.app.scan.Actions.open(ctx, "${api.base}/account") }, kind = BtnKind.Ghost, icon = Glyphs.Open, modifier = Modifier.fillMaxWidth())
                 Spacer(Modifier.height(10.dp))
                 QButton(stringResource(R.string.logout), { scope.launch { session.signOut() } }, kind = BtnKind.Ink, icon = Glyphs.Exit, modifier = Modifier.fillMaxWidth())
+                // Demo people can't be deleted (the server answers 403) — no button, as on the site.
+                if (p.provider != "demo") {
+                    Spacer(Modifier.height(16.dp))
+                    DeleteAccount()
+                }
             }
         }
     }
@@ -405,5 +414,55 @@ private fun ServerSwitch() {
             QButton(stringResource(R.string.server_apply), { scope.launch { session.switchServer(url) } }, kind = BtnKind.Ink, enabled = url.startsWith("http"))
         }
         Text(api.base, style = Type.small, color = q.muted, modifier = Modifier.padding(top = 4.dp))
+    }
+}
+
+/** "Delete account" with a clear confirm step, in the site's words (AccountPage Settings). */
+@Composable
+private fun DeleteAccount() {
+    val ctx = LocalContext.current
+    val q = LocalQr.current
+    val session = ctx.app.session
+    val scope = rememberCoroutineScope()
+    var sure by remember { mutableStateOf(false) }
+    var busy by remember { mutableStateOf(false) }
+    var failed by remember { mutableStateOf(false) }
+    if (!sure) {
+        androidx.compose.material3.TextButton({ sure = true; failed = false }, Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+            Text(stringResource(R.string.delete_account), style = Type.small, color = q.muted)
+        }
+        return
+    }
+    Column(
+        Modifier.fillMaxWidth().clip(Radius).background(q.warnSoft).padding(16.dp)
+            .semantics { liveRegion = androidx.compose.ui.semantics.LiveRegionMode.Polite },
+    ) {
+        Text(stringResource(R.string.delete_account_sure), style = Type.bodyStrong, color = q.warn)
+        Spacer(Modifier.height(12.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                Modifier.weight(1f).heightIn(min = 48.dp).clip(RadiusSm).background(if (busy) q.warn.copy(alpha = 0.5f) else q.warn)
+                    .clickable(enabled = !busy, role = Role.Button) {
+                        busy = true
+                        failed = false
+                        scope.launch {
+                            runCatching {
+                                session.deleteAccount {
+                                    coil3.SingletonImageLoader.get(ctx).let { l -> l.memoryCache?.clear(); l.diskCache?.clear() }
+                                    java.io.File(ctx.cacheDir, "shared").deleteRecursively()
+                                }
+                            }.onFailure { failed = true }
+                            busy = false
+                        }
+                    }
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (busy) CircularProgressIndicator(Modifier.size(18.dp), color = Bone, strokeWidth = 2.dp)
+                else Text(stringResource(R.string.delete_account_yes), style = Type.button, color = Bone)
+            }
+            androidx.compose.material3.TextButton({ sure = false }, enabled = !busy) { Text(stringResource(R.string.cancel), color = q.muted) }
+        }
+        if (failed) Text(stringResource(R.string.save_error), style = Type.small, color = q.warn, modifier = Modifier.padding(top = 8.dp))
     }
 }

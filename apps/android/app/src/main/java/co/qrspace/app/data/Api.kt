@@ -205,6 +205,15 @@ class Api(private val context: Context) {
         else -> "$base/login?next=/app/callback"
     }
 
+    /** Delete the account and everything in it (403 "demo" for demo people). The server drops the session too. */
+    suspend fun deleteAccount() {
+        withContext(Dispatchers.IO) {
+            client.newCall(url("/api/profile").delete().build()).execute().use { r -> if (!r.isSuccessful) fail(r) }
+        }
+        cookies.clear(host)
+        synchronized(previews) { previews.clear() }
+    }
+
     suspend fun logout() {
         runCatching { post<JsonObject>("/api/me", buildJsonObject { put("personId", JsonNull) }) }
         cookies.clear(host)

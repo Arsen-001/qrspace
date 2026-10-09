@@ -120,6 +120,9 @@ v1.1 (09.10.2026):
   and look → "Open on qrspace.co".
 - Code detail: server drawing; editors (shared "can add") get the same composer (room offer says only the owner can buy).
 - Sign-in via Custom Tab + token; sign-out also deletes the push device. Debug server switch, per-host cookies.
+- Delete account (store requirement): Account → "Delete account" → the site's confirm ("Delete your account forever?…",
+  "Yes, delete forever") → push device removed, `DELETE /api/profile`, local sign-out, picture caches cleared. Hidden for
+  demo people (`provider === "demo"`; the server answers 403 for them), as on the site.
 - Strings: ~150 new, site wording reused (dash*, up*, vis*, type/field/hint/dot/eye/preset families) + app-only in 7
   languages; `ui/SiteText.kt` generated. TalkBack: switch role + "Show what's under the code: <title>", radio groups,
   headings, live regions for the gate / room offer / errors, merged scan numbers.

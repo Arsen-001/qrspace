@@ -235,6 +235,9 @@
     <string name="download_free">Скачать бесплатно</string>
     <string name="pay_and_download">Оплатить и скачать</string>
     <string name="pack_download">Скачать из пакета</string>
+    <string name="delete_account">Удалить аккаунт</string>
+    <string name="delete_account_sure">Удалить аккаунт навсегда? Пропадут все ваши коды, память, фото и видео. Вернуть нельзя.</string>
+    <string name="delete_account_yes">Да, удалить навсегда</string>
     <string name="type_whatsapp">WhatsApp</string>
     <string name="type_telegram">Telegram</string>
     <string name="type_viber">Viber</string>

@@ -33,7 +33,7 @@ SITE_KEYS.push(
   "payTitle", "freeFirst", "packFrom", "packLeft", "packRoom", "buyDemo", "templateLabel", "newCodeTitle", "newCodePlaceholder", "create", "titleLabel",
   "saveError", "save", "saved", "delete", "visTitle", "tabAccess", "tabLink", "linkHint", "tabMemory", "storageTitle", "storagePaidUntil", "composerTitle", "addText", "addPhoto",
   "addVideo", "upload", "replace", "textPlaceholder", "captionPlaceholder", "uploading", "videoLimit", "videoTooBig", "upTooBigTitle", "upSizes", "upNeed",
-  "upPay", "upOwnerOnly", "upMax", "storageFull", "uploadError", "you", "providersPending", "tpl.pet", "downloadFree", "payAndDownload", "packDownload",
+  "upPay", "upOwnerOnly", "upMax", "storageFull", "uploadError", "you", "providersPending", "tpl.pet", "downloadFree", "payAndDownload", "packDownload", "deleteAccount", "deleteAccountSure", "deleteAccountYes",
   ...Object.entries(FAMILIES).flatMap(([f, ids]) => ids.map((id) => `${f}.${id}`)),
 );
 const SITE = [...new Set(SITE_KEYS)];

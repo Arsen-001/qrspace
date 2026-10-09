@@ -235,6 +235,9 @@
     <string name="download_free">Ներբեռնել անվճար</string>
     <string name="pay_and_download">Վճարել և ներբեռնել</string>
     <string name="pack_download">Ներբեռնել փաթեթից</string>
+    <string name="delete_account">Ջնջել հաշիվը</string>
+    <string name="delete_account_sure">Ջնջե՞լ հաշիվը ընդմիշտ։ Կվերանան ձեր բոլոր կոդերը, հիշողությունը, լուսանկարները և տեսանյութերը։ Վերադարձնել հնարավոր չէ։</string>
+    <string name="delete_account_yes">Այո, ջնջել ընդմիշտ</string>
     <string name="type_whatsapp">WhatsApp</string>
     <string name="type_telegram">Telegram</string>
     <string name="type_viber">Viber</string>
