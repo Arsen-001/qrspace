@@ -18,6 +18,7 @@
 | Сканы наших кодов (время, вошёл ли человек) | Usage Data → Product Interaction | App activity → App interactions | да | работа приложения (статистика сканов владельцу) |
 | Место — только если нашедший сам отправил его хозяину | Location → Precise Location (необязательно) | Location → Precise location (optional) | да | работа приложения |
 | Адрес телефона для уведомлений (APNs / FCM) и язык | Identifiers → Device ID | Device or other IDs | да | работа приложения (уведомления) |
+| Android: диагностика Google ML Kit (модель телефона, версия, ошибки; без кадров камеры) | — (только Android) | App info and performance → Diagnostics; Device or other IDs | нет | аналитика (работа сканера) — собирает Google |
 
 ## Чего нет
 
