@@ -20,6 +20,12 @@ const guest = await ctx();
 ok((await guest.get(`/api/codes/${keys.id}/image`)).status() === 403, "closed code drawing hidden from a guest");
 ok((await arman.get(`/api/codes/${keys.id}/image`)).status() === 200, "owner sees own closed code drawing");
 
+// Предпросмотр до создания кода
+const style = { ...((await (await arman.get(`/api/codes/${bublik.id}`)).json()).style), texture: null };
+const pv = await guest.post("/api/preview", { data: { style, format: "png", size: 200 } });
+ok(pv.status() === 200 && pv.headers()["content-type"] === "image/png", "preview of a style before creating");
+ok((await guest.post("/api/preview", { data: { style: { dot: "bogus" } } })).status() === 400, "broken style refused");
+
 // Вход из приложения: браузер приложения вошёл → одноразовый код → сессия приложения
 const back = await arman.get("/app/callback", { maxRedirects: 0 });
 const loc = back.headers()["location"] ?? "";
