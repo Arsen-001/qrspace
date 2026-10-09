@@ -11,6 +11,9 @@ import type { Order } from "@/lib/orders";
 import type { Purchase } from "@/lib/pricing";
 import type { Pack } from "@/lib/packs";
 import type { ShopOrder } from "@/lib/shop";
+import { after } from "next/server";
+import { DICTS, fill } from "@/lib/i18n";
+import { deliver, pushOn, type PushMessage } from "./push";
 import { demoEnabled, demoUsers, publicPerson, usable, type User } from "./users";
 import { DEFAULT_STYLE, type SavedStyle } from "@/lib/qr/style";
 
@@ -256,6 +259,8 @@ export function mutate<T>(fn: (db: Db) => T | Promise<T>): Promise<T> {
       const result = await fn(db);
       if (await store.save(db, version)) {
         cache.__qrRead = undefined;
+        const notices = outbox.get(db);
+        if (notices) sendPush(pushMessages(db, notices));
         return result;
       }
     }
@@ -352,8 +357,43 @@ export function accessOf(code: CodeRecord, me: string | null): AccessLevel {
 /** Уведомить человека (себя за свои же действия — не уведомляем). */
 export function notify(db: Db, to: string | null | undefined, actor: string | null, kind: string, params: Record<string, string>, link: string) {
   if (!to || to === actor) return;
-  db.notifications.push({ id: newId(), to, kind, params, link, at: new Date().toISOString(), read: false });
+  const n: Notice = { id: newId(), to, kind, params, link, at: new Date().toISOString(), read: false };
+  db.notifications.push(n);
   db.notifications = db.notifications.slice(-2000);
+  // На телефон — только когда запись сохранится (см. mutate) и есть ключи Apple / Firebase.
+  const on = pushOn();
+  if ((on.ios || on.android) && db.users.find((u) => u.id === to)?.devices?.length) outbox.set(db, [...(outbox.get(db) ?? []), n]);
+}
+
+/** Уведомления этой правки данных, которые надо отправить на телефоны (у каждой попытки mutate — свои). */
+const outbox = new WeakMap<Db, Notice[]>();
+
+/** Текст на языке телефона — тот же, что в колокольчике сайта. */
+function pushMessages(db: Db, notices: Notice[]): PushMessage[] {
+  return notices.flatMap((n) => {
+    const u = db.users.find((x) => x.id === n.to);
+    return (u?.devices ?? []).map((d) => {
+      const t = DICTS[d.lang ?? "en"] as unknown as Record<string, string>;
+      const who = n.params.who ? (db.users.find((x) => x.id === n.params.who)?.name ?? "") : "";
+      const text = fill(t[`notice.${n.kind}`] ?? n.kind, { ...n.params, who });
+      const extra = n.kind === "message" ? (n.params.preset ? t[`preset.${n.params.preset}`] : n.params.text) : "";
+      return { token: d.token, platform: d.platform, title: "QR Space", body: extra ? `${text}: ${extra}` : text, link: n.link };
+    });
+  });
+}
+
+/** Отправить после ответа сайта; токены удалённых приложений убрать. */
+function sendPush(messages: PushMessage[]) {
+  if (!messages.length) return;
+  const job = async () => {
+    const dead = await deliver(messages);
+    if (dead.length) await mutate((db) => db.users.forEach((u) => u.devices && (u.devices = u.devices.filter((d) => !dead.includes(d.token)))));
+  };
+  try {
+    after(job);
+  } catch {
+    void job().catch(() => {});
+  }
 }
 
 export const designerIdsIn = (db: Db) => db.users.filter((u) => u.designer).map((u) => u.id);

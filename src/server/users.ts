@@ -2,6 +2,7 @@
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import type { Lang } from "@/lib/i18n";
 import { colorFor, PEOPLE, type Person } from "@/lib/people";
 import type { Db } from "./db";
 
@@ -23,7 +24,7 @@ export type User = {
   /** Последние цвета (точки и фон) — после скачивания; первыми в «Тонкой настройке». */
   recentColors?: { fg: string; bg: string }[];
   /** Телефоны с нашим приложением — куда слать уведомления (APNs / FCM, когда будут ключи). */
-  devices?: { token: string; platform: "ios" | "android"; at: string }[];
+  devices?: { token: string; platform: "ios" | "android"; at: string; lang?: Lang }[];
 };
 
 export const demoEnabled = () => process.env.DEMO_LOGIN !== "off";
