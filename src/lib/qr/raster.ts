@@ -352,6 +352,14 @@ export async function downloadLive(drawing: Drawing, expected: string, name: str
 }
 
 /** Прочитать QR с картинки (кадр камеры или фото) — для «Проверить код». null — кода не нашли. */
+/** Сканер: любой код — QR и другие двумерные, штрихкоды (EAN, UPC, Code 128…). Текст и вид кода. */
+export async function readAny(img: ImageData): Promise<{ text: string; format: string } | null> {
+  const { readBarcodes } = await getReader();
+  const res = await readBarcodes(img, { tryHarder: true, tryInvert: true, tryRotate: true, maxNumberOfSymbols: 1 });
+  const hit = res.find((r) => r.isValid && r.text);
+  return hit ? { text: hit.text, format: hit.format } : null;
+}
+
 export async function readQr(img: ImageData): Promise<string | null> {
   const { readBarcodes } = await getReader();
   const res = await readBarcodes(img, { formats: ["QRCode"], tryHarder: true, tryInvert: true, maxNumberOfSymbols: 1 });

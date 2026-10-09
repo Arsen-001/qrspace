@@ -1,12 +1,16 @@
 "use client";
 // «Проверить код»: камера (или фото) читает QR, сайт говорит — настоящий ли это код QR Space или наклейка-подделка,
 // которая ведёт на чужой сайт (так мошенники подменяют коды на машинах, в кафе, на столбах).
+// С 09.10.2026 это и наш сканер (/scan; владелец: «у нас должен быть и наш сканер», «а можно сканер для штрихкодов?»):
+// любой код и штрихкод — что в нём и кнопки (Wi‑Fi, звонок, контакт, событие…), у штрихкода — номер и поиск.
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { Kind } from "@/lib/codes";
 import { fill } from "@/lib/i18n";
 import { useLang } from "@/lib/lang";
-import { readQr } from "@/lib/qr/raster";
+import { readAny } from "@/lib/qr/raster";
+import { parseScanned, type Scanned } from "@/lib/qr/scan";
+import { ContentCard } from "./ContentCard";
 import { KindIcon } from "./KindIcon";
 import { ReportBox } from "./ReportBox";
 import { Shell } from "./Shell";
@@ -14,18 +18,23 @@ import { StepBadge } from "./ui";
 
 type Result = { result: "ours"; id: string; kind: Kind; title: string | null } | { result: "foreign"; host: string } | { result: "missing" | "site" | "text" };
 
-export function VerifyPage() {
-  const { lang, t } = useLang((t) => `${t.verifyTitle} — ${t.appName}`);
+export function VerifyPage({ mode = "verify" }: { mode?: "scan" | "verify" }) {
+  const { lang, t } = useLang((t) => `${mode === "scan" ? t.scanTitle : t.verifyTitle} — ${t.appName}`);
   const video = useRef<HTMLVideoElement>(null);
   const [on, setOn] = useState(false);
   const [text, setText] = useState<string | null>(null);
   const [res, setRes] = useState<Result | null>(null);
+  const [scanned, setScanned] = useState<Scanned | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const check = async (decoded: string) => {
+  const check = async (decoded: string, format: string) => {
     setText(decoded);
     setOn(false);
-    setRes(await fetch(`/api/verify?u=${encodeURIComponent(decoded)}`).then((r) => r.json() as Promise<Result>));
+    const sc = parseScanned(decoded, format);
+    setScanned(sc);
+    // Ссылку проверяем: наш ли это код или подделка, ведущая на чужой сайт. Остальное проверять не нужно.
+    if (sc.kind === "content" && sc.content.type === "url") setRes(await fetch(`/api/verify?u=${encodeURIComponent(decoded)}`).then((r) => r.json() as Promise<Result>));
+    else setRes({ result: "text" });
   };
 
   // Камера: кадр раз в 300 мс → читаем QR. Задняя камера на телефоне.
@@ -51,8 +60,11 @@ export function VerifyPage() {
             c.height = Math.round(v.videoHeight * k);
             const ctx = c.getContext("2d", { willReadFrequently: true })!;
             ctx.drawImage(v, 0, 0, c.width, c.height);
-            const found = await readQr(ctx.getImageData(0, 0, c.width, c.height)).catch(() => null);
-            if (found && live) return void check(found);
+            const found = await readAny(ctx.getImageData(0, 0, c.width, c.height)).catch(() => null);
+            if (found && live) {
+              navigator.vibrate?.(40);
+              return void check(found.text, found.format);
+            }
           }
           timer = window.setTimeout(tick, 300);
         };
@@ -81,8 +93,8 @@ export function VerifyPage() {
       c.height = Math.round(img.naturalHeight * k);
       const ctx = c.getContext("2d", { willReadFrequently: true })!;
       ctx.drawImage(img, 0, 0, c.width, c.height);
-      const found = await readQr(ctx.getImageData(0, 0, c.width, c.height));
-      if (found) await check(found);
+      const found = await readAny(ctx.getImageData(0, 0, c.width, c.height));
+      if (found) await check(found.text, found.format);
       else setError(t.verifyNotFound);
     } catch {
       setError(t.verifyNotFound);
@@ -93,14 +105,15 @@ export function VerifyPage() {
 
   const reset = () => {
     setRes(null);
+    setScanned(null);
     setText(null);
     setError(null);
   };
 
   return (
     <Shell t={t} lang={lang} narrow>
-      <h1 className="font-heading text-3xl font-extrabold tracking-tight">{t.verifyTitle}</h1>
-      <p className="mt-2 text-sm text-muted">{t.verifyHint}</p>
+      <h1 className="font-heading text-3xl font-extrabold tracking-tight">{mode === "scan" ? t.scanTitle : t.verifyTitle}</h1>
+      <p className="mt-2 text-sm text-muted">{mode === "scan" ? t.scanHint : t.verifyHint}</p>
 
       {!res && (
         <div className="mt-6 space-y-3">
@@ -140,7 +153,33 @@ export function VerifyPage() {
 
       {res && (
         <section className="mt-6 space-y-4">
-          {res.result === "ours" ? (
+          {scanned?.kind === "barcode" ? (
+            <div className="overflow-hidden rounded-3xl border border-line bg-card">
+              <div className="bg-stage p-6 text-on-stage sm:p-8">
+                <div className="font-mono text-[11px] uppercase tracking-[0.14em] text-on-stage/60">
+                  {t.scanBarcode} · {scanned.format}
+                </div>
+                <div className="mt-3 break-all font-mono text-3xl font-bold tracking-wider">{scanned.number}</div>
+              </div>
+              <div className="grid gap-2 p-4 sm:grid-cols-2 sm:p-5">
+                <a href={`https://www.google.com/search?q=${encodeURIComponent(scanned.number)}`} target="_blank" rel="noopener noreferrer" className="grid min-h-12 place-items-center rounded-xl bg-accent px-4 font-heading text-sm font-bold text-on-accent">
+                  {t.scanSearch} →
+                </a>
+                <button type="button" onClick={() => navigator.clipboard?.writeText(scanned.number)} className="min-h-12 rounded-xl border border-line bg-field px-4 font-heading text-sm font-bold hover:border-muted">
+                  {t.copy}
+                </button>
+              </div>
+            </div>
+          ) : scanned?.kind === "content" && scanned.content.type !== "url" ? (
+            <>
+              {mode === "verify" && scanned.content.type === "text" && (
+                <div className="rounded-2xl border border-line bg-card p-5">
+                  <div className="font-heading text-xl font-bold">{t.verifyText}</div>
+                </div>
+              )}
+              <ContentCard t={t} lang={lang} content={scanned.content} />
+            </>
+          ) : res.result === "ours" ? (
             <div className="rounded-2xl bg-ok p-5 text-on-ok">
               <div className="font-heading text-2xl font-extrabold">✓ {t.verifyOurs}</div>
               <div className="mt-2 flex items-center gap-2 text-sm">
@@ -158,7 +197,9 @@ export function VerifyPage() {
               <div className="font-heading text-xl font-bold">{res.result === "missing" ? t.verifyMissing : res.result === "site" ? t.verifySite : t.verifyText}</div>
             </div>
           )}
-          {text && <p className="break-all rounded-xl bg-field p-3 font-mono text-xs text-muted">{text}</p>}
+          {/* Чужая ссылка — предупредили выше; открыть всё равно можно. */}
+          {scanned?.kind === "content" && scanned.content.type === "url" && res.result !== "ours" && <ContentCard t={t} lang={lang} content={scanned.content} />}
+          {text && scanned?.kind === "content" && scanned.content.type === "url" && <p className="break-all rounded-xl bg-field p-3 font-mono text-xs text-muted">{text}</p>}
           <div className="flex flex-wrap gap-2">
             {res.result === "ours" && <ReportBox t={t} id={res.id} />}
             {res.result === "ours" && (
@@ -167,7 +208,7 @@ export function VerifyPage() {
               </Link>
             )}
             <button type="button" onClick={reset} className="min-h-11 rounded-xl border border-line bg-card px-4 text-sm font-semibold hover:border-muted">
-              {t.verifyAgain}
+              {mode === "scan" ? t.scanAgain : t.verifyAgain}
             </button>
           </div>
         </section>

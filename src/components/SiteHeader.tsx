@@ -46,6 +46,7 @@ export function SiteHeader({ t, lang }: { t: Dict; lang: Lang }) {
   const nav = [
     { href: "/create", label: t.navGenerator, on: path === "/create" },
     { href: "/market", label: t.navMarket, on: path.startsWith("/market") },
+    { href: "/scan", label: t.navScan, on: path === "/scan" },
     { href: "/codes", label: t.navCodes, on: path.startsWith("/codes") },
     ...(admin ? [{ href: "/admin", label: t.navAdmin, on: path.startsWith("/admin") }] : []),
   ];
