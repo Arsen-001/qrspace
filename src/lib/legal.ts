@@ -9,17 +9,16 @@ export const LEGAL_UPDATED = "2026-10-09";
 
 /**
  * Оператор сайта и приложений (владелец 09.10.2026: «под AI Switch LLC будем оба делать» — QR Space и BookTime):
- * ООО «АИ Свитч» / AI Switch LLC, рег. номер 999.110.1592631, ИНН 01098805 (реквизиты — как в BookTime).
- * Почта — info@booktime.am, пока не заработает support@qrspace.co (пересылка Cloudflare → info@booktime.am).
+ * ООО «АИ Свитч» / AI Switch LLC. На сайте — только название и почта (владелец 09.10.2026: «оставь только название и
+ * почту»). Почта — info@booktime.am, пока не заработает support@qrspace.co (Google Workspace, см. aiswitch/README.md).
  */
 const OPERATOR = {
-  name: { ru: "ООО «АИ Свитч» (AI Switch LLC), ИНН 01098805", hy: "«ԱԻ ՍՎԻՏՉ» ՍՊԸ (AI Switch LLC), ՀՎՀՀ 01098805", en: "AI Switch LLC (tax ID 01098805)" },
-  address: { ru: "Армения, 0056, Ереван, ул. Кочаряна, 10, кв. 4", hy: "Հայաստան, 0056, Երևան, Քոչարյան փ., 10, բն. 4", en: "10 Kocharyan St, Apt 4, Yerevan 0056, Armenia" },
+  name: { ru: "ООО «АИ Свитч» (AI Switch LLC)", hy: "«ԱԻ ՍՎԻՏՉ» ՍՊԸ (AI Switch LLC)", en: "AI Switch LLC" },
   email: process.env.NEXT_PUBLIC_OPERATOR_EMAIL || "info@booktime.am",
 };
 export const operatorFor = (lang: Lang) => {
   const l: BaseLang = lang === "ru" || lang === "hy" ? lang : "en";
-  return { name: OPERATOR.name[l], address: OPERATOR.address[l], email: OPERATOR.email };
+  return { name: OPERATOR.name[l], email: OPERATOR.email };
 };
 
 type Section = { h: string; p: string[] };

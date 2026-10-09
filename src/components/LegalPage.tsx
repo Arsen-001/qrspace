@@ -44,7 +44,6 @@ export function LegalPage({ doc }: { doc: LegalDoc }) {
           <h2 className="font-heading text-lg font-bold">{t.legalContacts}</h2>
           <div className="mt-2 space-y-1 text-sm">
             <p className="font-semibold">{op.name}</p>
-            <p>{op.address}</p>
             <p>
               <a href={`mailto:${op.email}`} className="text-accent-ink underline underline-offset-2">
                 {op.email}
