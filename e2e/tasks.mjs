@@ -14,7 +14,7 @@ const shot = async (p, name) => { await p.waitForTimeout(300); await p.screensho
 const ok = (c, m) => { console.log(c ? "  ✓" : "  ✗", m); if (!c) errors.push(m); };
 
 const p = await mk(390);
-await p.goto(B + "/login");
+await p.goto(B + "/login?next=/codes");
 await p.getByRole("button", { name: /Арман/ }).click();
 await p.waitForSelector("text=Что сделать");
 const up = p.locator("section:has(h2:text('Что сделать'))");
@@ -46,7 +46,7 @@ ok(await d.getByRole("button", { name: /Сделано/ }).count() === 0, "viewe
 await shot(d, "r-390-viewer");
 // армянский
 const h = await mk(1280, "hy-AM");
-await h.goto(B + "/login");
+await h.goto(B + "/login?next=/codes");
 await h.getByRole("button", { name: /Արման/ }).click();
 await h.waitForSelector("text=Ինչ անել");
 await shot(h, "r-1280-hy-codes");

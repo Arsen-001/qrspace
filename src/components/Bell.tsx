@@ -45,13 +45,15 @@ export function Bell({ t, lang }: { t: Dict; lang: Lang }) {
     };
   }, [open]);
 
-  const count = (data?.unread ?? 0) + (data?.due ? 1 : 0);
-  const toggle = () => {
-    const next = !open;
-    setOpen(next);
-    // Открыли — значит, увидели: отмечаем прочитанными (точки «новое» остаются до закрытия).
-    if (next && data?.unread) api.readNotices().then(() => setData((d) => d && { ...d, unread: 0 }), () => {});
-  };
+  // Открыли — значит, увидели: отмечаем прочитанными (точки «новое» остаются до закрытия). И если открыли раньше, чем
+  // уведомления загрузились, и если новые пришли, пока список открыт.
+  const unread = data?.unread ?? 0;
+  useEffect(() => {
+    if (open && unread) api.readNotices().then(() => setData((d) => d && { ...d, unread: 0 }), () => {});
+  }, [open, unread]);
+
+  const count = unread + (data?.due ? 1 : 0);
+  const toggle = () => setOpen((v) => !v);
 
   return (
     <div ref={box} className="relative">

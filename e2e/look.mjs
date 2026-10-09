@@ -6,7 +6,7 @@ const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 }, l
 const p = await ctx.newPage();
 const errors = [];
 p.on("pageerror", (e) => errors.push(e.message));
-await p.goto(B + "/login");
+await p.goto(B + "/login?next=/codes");
 await p.getByRole("button", { name: /Арман/ }).click();
 await p.waitForSelector("text=Wi");
 await p.getByRole("link", { name: /Wi/ }).click();
@@ -25,7 +25,7 @@ console.log("still reads");
 // армянский, телефон
 const m = await browser.newContext({ viewport: { width: 390, height: 800 }, locale: "hy-AM" });
 const q = await m.newPage();
-await q.goto(B + "/login");
+await q.goto(B + "/login?next=/codes");
 await q.getByRole("button", { name: /Արման/ }).click();
 await q.waitForURL(/codes$/); await q.waitForSelector("text=Котёл");
 await q.getByRole("link", { name: /Котёл/ }).last().click();

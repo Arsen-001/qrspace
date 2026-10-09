@@ -7,7 +7,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 const root = path.resolve(import.meta.dirname, "..");
-const ALL = ["flow", "order", "video", "redirect", "tags", "look", "market", "designer", "tasks", "pay", "print", "resale", "cert", "live", "security", "a11y", "starters", "verify", "links", "moderation", "legal", "langs", "packs"];
+const ALL = ["flow", "order", "video", "redirect", "tags", "look", "market", "designer", "tasks", "pay", "print", "resale", "cert", "live", "security", "a11y", "starters", "verify", "links", "moderation", "legal", "langs", "packs", "account"];
 // Вход через Google проверяем с подставным сервером Google (только на этом компьютере).
 const WITH_GOOGLE = ["google", "notify", "batch1"];
 const ENV = "GOOGLE_CLIENT_ID=test-client.apps.googleusercontent.com\nGOOGLE_CLIENT_SECRET=test-secret\nOAUTH_TEST_TOKEN_URL=http://127.0.0.1:3729/token\nDESIGNER_EMAILS=studio.designer@gmail.com\n";
@@ -27,7 +27,7 @@ for (const s of suites) {
   const google = WITH_GOOGLE.includes(s);
   if (google) {
     writeFileSync(path.join(root, ".env.local"), ENV);
-    await sleep(3000); // сервер перечитывает .env.local
+    await sleep(8000); // сервер перечитывает .env.local и перезапускается
   }
   const r = spawnSync("node", [path.join(import.meta.dirname, `${s}.mjs`)], { encoding: "utf8", timeout: 600_000 });
   const outText = (r.stdout ?? "") + (r.stderr ?? "");

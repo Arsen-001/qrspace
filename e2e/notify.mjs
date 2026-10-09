@@ -24,7 +24,8 @@ const google = async (email, name, sub) => {
   const u = new URL(r.headers()["location"]);
   const code = Buffer.from(JSON.stringify({ nonce: u.searchParams.get("nonce"), email, name, sub })).toString("base64url");
   await p.goto(`${u.searchParams.get("redirect_uri")}?state=${u.searchParams.get("state")}&code=${code}`);
-  await p.waitForURL(/codes/);
+  await p.waitForURL(/codes|account/);
+  if (!p.url().includes("/codes")) await p.goto(B + "/codes", { waitUntil: "networkidle" });
   return p;
 };
 const me = (p) => p.evaluate(() => fetch("/api/me").then((r) => r.json()));
@@ -78,7 +79,9 @@ ok(n.items.some((x) => x.kind === "outbid"), "previous top bidder notified (outb
 await a.getByRole("button", { name: "Уведомления" }).click();
 await a.waitForSelector("text=Вашу ставку перебили");
 await a.screenshot({ path: out + "n-bell-390.png" });
-ok((await notices(a)).unread === 0, "opening the bell marks as read");
+let unread = 1;
+for (let i = 0; i < 15 && unread; i++) { await a.waitForTimeout(200); unread = (await notices(a)).unread; }
+ok(unread === 0, "opening the bell marks as read");
 console.log("errors:", errors.length ? errors : "none");
 await browser.close();
 mock.close();

@@ -37,7 +37,7 @@ for (const scheme of ["light", "dark"]) {
   const scanUrl = p.url().replace("/codes/", "/c/");
   await p.goto(scanUrl, { waitUntil: "networkidle" });
   await scan(p, `${scheme} scan`);
-  await p.goto(B + "/profile", { waitUntil: "networkidle" });
+  await p.goto(B + "/account", { waitUntil: "networkidle" });
   await scan(p, `${scheme} profile`);
   await ctx.close();
 }

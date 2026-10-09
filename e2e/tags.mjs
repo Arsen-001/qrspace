@@ -14,7 +14,7 @@ const shot = async (p, name) => { await p.waitForTimeout(250); await p.screensho
 const ok = (cond, msg) => { console.log(cond ? "  ✓" : "  ✗", msg); if (!cond) errors.push(msg); };
 
 const o = await mk(1280);
-await o.goto(B + "/login");
+await o.goto(B + "/login?next=/codes");
 await o.getByRole("button", { name: /Арман/ }).click();
 await o.waitForSelector("text=Моя машина");
 await shot(o, "t-01-codes");
@@ -97,7 +97,7 @@ ok(true, "new car code created");
 
 // армянский и телефон: настройки связи
 const h = await mk(390, "hy-AM");
-await h.goto(B + "/login");
+await h.goto(B + "/login?next=/codes");
 await h.getByRole("button", { name: /Արման/ }).click();
 await h.waitForURL(/codes$/);
 await h.goto(B + car);

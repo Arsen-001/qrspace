@@ -18,7 +18,7 @@ export const appUrl = (req: Request) => env("APP_URL").replace(/\/$/, "") || new
 export const callbackUrl = (req: Request, p: Provider) => `${appUrl(req)}/api/auth/${p}/callback`;
 
 /** Куда вернуть после входа — только страницы нашего сайта. */
-export const safeNext = (v: unknown) => (typeof v === "string" && v.startsWith("/") && !v.startsWith("//") && !v.startsWith("/login") ? v : "/codes");
+export const safeNext = (v: unknown) => (typeof v === "string" && v.startsWith("/") && !v.startsWith("//") && !v.startsWith("/login") ? v : "/account");
 
 const b64url = (b: Buffer) => b.toString("base64url");
 const OAUTH_COOKIE = "qr-oauth";

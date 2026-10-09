@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { LANGS, type Dict, type Lang } from "@/lib/i18n";
 import { saveLang } from "@/lib/lang";
 import { useMe } from "@/lib/me";
-import { Avatar, personName } from "./Avatar";
+import { AccountMenu } from "./AccountMenu";
 import { Bell } from "./Bell";
 import { Select } from "./ui";
 
@@ -82,13 +82,11 @@ export function SiteHeader({ t, lang }: { t: Dict; lang: Lang }) {
           {ready && me && <Bell t={t} lang={lang} />}
           {ready &&
             (me ? (
-              <Link href="/profile" title={`${personName(me, lang)} · ${t.profileTitle}`} className="rounded-full">
-                <Avatar id={me} lang={lang} size={36} />
-              </Link>
+              <AccountMenu t={t} lang={lang} me={me} />
             ) : (
               <Link
                 // С главной после входа — в профиль с моими кодами (иначе «вошёл — как будто ничего не поменялось»).
-                href={`/login?next=${encodeURIComponent(path === "/" ? "/profile" : path)}`}
+                href={`/login?next=${encodeURIComponent(path === "/" ? "/account" : path)}`}
                 className="grid min-h-10 place-items-center rounded-xl bg-accent px-3 text-sm font-semibold text-on-accent"
               >
                 {t.login}

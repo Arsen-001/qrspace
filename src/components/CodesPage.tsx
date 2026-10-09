@@ -63,7 +63,7 @@ function CodeCard({ t, lang, base, code, shared }: { t: Dict; lang: Lang; base: 
 }
 
 /** «Что сделать»: просроченные и ближайшие 2 недели — по всем моим кодам и тем, где мне можно дописывать. */
-function Upcoming({ t, lang, codes, onDone }: { t: Dict; lang: Lang; codes: CodeView[]; onDone: () => void }) {
+export function Upcoming({ t, lang, codes, onDone }: { t: Dict; lang: Lang; codes: CodeView[]; onDone: () => void }) {
   const items = codes
     .filter((c) => c.access === "owner" || c.access === "edit")
     .flatMap((c) => (c.tasks ?? []).map((task) => ({ c, task })))

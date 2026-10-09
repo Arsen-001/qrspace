@@ -79,6 +79,8 @@ export function CodePacks({ t, lang }: { t: Dict; lang: Lang }) {
       const r = await buyPack(p.id);
       setLeft(r.left);
       setDone(p.id);
+      // Кабинет перечитывает свои цифры (сколько кодов в пакетах).
+      window.dispatchEvent(new Event("qrspace:packs"));
     } finally {
       setBusy(null);
     }

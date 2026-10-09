@@ -35,7 +35,7 @@ export function LoginPage({ next, error }: { next: string | null; error: string 
   const { ready, me, demo, providers } = useMe();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
-  const target = next && next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/login") ? next : "/codes";
+  const target = next && next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/login") ? next : "/account";
   const q = `?next=${encodeURIComponent(target)}`;
 
   const pick = async (id: string | null) => {
