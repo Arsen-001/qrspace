@@ -1,0 +1,77 @@
+# Spec for XcodeGen: `xcodegen generate` creates QRSpace.xcodeproj (not committed).
+name: QRSpace
+options:
+  bundleIdPrefix: co.qrspace
+  deploymentTarget:
+    iOS: "17.0"
+  developmentLanguage: en
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    # TODO(owner): set the Team ID once the Apple Developer account ($99/yr) exists.
+    DEVELOPMENT_TEAM: ""
+targets:
+  QRSpace:
+    type: application
+    platform: iOS
+    sources:
+      - path: QRSpace
+    scheme:
+      testTargets: [QRSpaceTests]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: co.qrspace.app
+        PRODUCT_NAME: QRSpace
+        INFOPLIST_FILE: QRSpace/Resources/Info.plist
+        CODE_SIGN_ENTITLEMENTS: QRSpace/Resources/QRSpace.entitlements
+        CODE_SIGN_STYLE: Automatic
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SWIFT_EMIT_LOC_STRINGS: YES
+        LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+        ENABLE_PREVIEWS: YES
+    info:
+      path: QRSpace/Resources/Info.plist
+      properties:
+        CFBundleDisplayName: QR Space
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleDevelopmentRegion: en
+        CFBundleLocalizations: [en, ru, hy, es, pt, fr, de]
+        CFBundleAllowMixedLocalizations: true
+        LSApplicationQueriesSchemes: [viber, whatsapp, tg]
+        CFBundleURLTypes:
+          - CFBundleURLName: co.qrspace.app
+            CFBundleURLSchemes: [qrspace]
+        NSCameraUsageDescription: QR Space uses the camera to scan QR codes and barcodes.
+        NSPhotoLibraryUsageDescription: QR Space reads a code from a photo you pick.
+        NSContactsUsageDescription: QR Space saves a scanned contact card to your contacts when you ask.
+        NSCalendarsWriteOnlyAccessUsageDescription: QR Space adds a scanned event to your calendar when you ask.
+        UILaunchScreen:
+          UIColorName: LaunchBackground
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+    entitlements:
+      path: QRSpace/Resources/QRSpace.entitlements
+      properties:
+        # Universal Links: qrspace.co serves apple-app-site-association once APPLE_APP_IDS is set in Vercel.
+        com.apple.developer.associated-domains: [applinks:qrspace.co, applinks:www.qrspace.co]
+  QRSpaceTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [QRSpaceTests]
+    dependencies:
+      - target: QRSpace
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: co.qrspace.app.tests
+        GENERATE_INFOPLIST_FILE: YES
