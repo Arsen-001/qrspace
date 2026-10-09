@@ -104,8 +104,8 @@
     <string name="acc_signed_with">Angemeldet mit</string>
     <string name="acc_login_text">Melde dich an, um deine Codes, Käufe und Pakete zu sehen.</string>
     <string name="login_only_hint">Registriere dich und melde dich mit deinem Google- oder Apple-Konto an. Kein Passwort nötig.</string>
-    <string name="verify_ours">Echter QR-Studio-Code</string>
-    <string name="verify_foreign">Kein QR-Studio-Code</string>
+    <string name="verify_ours">Echter QR-Space-Code</string>
+    <string name="verify_foreign">Kein QR-Space-Code</string>
     <string name="verify_no_camera">Kein Kamerazugriff — wähle ein Foto des Codes.</string>
     <string name="verify_not_found">Kein QR-Code im Foto gefunden — fotografiere näher und gerader.</string>
     <string name="verify_photo">Oder ein Foto des Codes wählen</string>

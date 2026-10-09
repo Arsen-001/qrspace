@@ -4,11 +4,13 @@
 import { createContext, createElement, useContext, useEffect, useSyncExternalStore, type ReactNode } from "react";
 import { DICTS, type Dict, type Lang } from "./i18n";
 
-const LANG_KEY = "qr-studio.lang";
+const LANG_KEY = "qrspace.lang";
+/** Прежнее имя ключа (проект назывался qr-studio) — выбранный раньше язык не теряем. */
+const OLD_LANG_KEY = "qr-studio.lang";
 
 function savedLang(): Lang | null {
   try {
-    const saved = localStorage.getItem(LANG_KEY) as Lang | null;
+    const saved = (localStorage.getItem(LANG_KEY) ?? localStorage.getItem(OLD_LANG_KEY)) as Lang | null;
     if (saved && saved in DICTS) return saved;
   } catch {}
   return null;
