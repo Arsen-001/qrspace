@@ -43,12 +43,16 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>viber</string>
 		<string>whatsapp</string>
 		<string>tg</string>
 	</array>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>
@@ -61,9 +65,11 @@
 	<key>NSContactsUsageDescription</key>
 	<string>QR Space saves a scanned contact card to your contacts when you ask.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>QR Space saves your code's image to Photos when you ask.</string>
+	<string>QR Space saves your code’s image to Photos when you ask.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>QR Space reads a code from a photo you pick.</string>
+	<string>QR Space reads a code from a photo you pick and adds the photos and videos you choose under your code.</string>
+	<key>QRPurchasesEnabled</key>
+	<string>$(QR_PURCHASES_ENABLED)</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -77,13 +83,6 @@
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-	</array>
-	<key>UISupportedInterfaceOrientations~ipad</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 </dict>
 </plist>

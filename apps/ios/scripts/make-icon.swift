@@ -1,13 +1,16 @@
 // Draws the app icon (1024×1024 PNG): black stage, lime QR finder eyes, module dots.
+// No alpha channel — App Store Connect rejects an app icon with one (the stage fills every pixel anyway).
 // Run: swift scripts/make-icon.swift QRSpace/Resources/Assets.xcassets/AppIcon.appiconset/icon-1024.png
 import AppKit
+import ImageIO
+import UniformTypeIdentifiers
 
 let size = 1024
 let out = CommandLine.arguments.dropFirst().first ?? "icon-1024.png"
-let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: size, pixelsHigh: size, bitsPerSample: 8, samplesPerPixel: 4,
-                           hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
+let cg = CGContext(data: nil, width: size, height: size, bitsPerComponent: 8, bytesPerRow: 0,
+                   space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)!
 NSGraphicsContext.saveGraphicsState()
-NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+NSGraphicsContext.current = NSGraphicsContext(cgContext: cg, flipped: false)
 let stage = NSColor(srgbRed: 0x0B / 255, green: 0x0B / 255, blue: 0x0C / 255, alpha: 1)
 let lime = NSColor(srgbRed: 0xC6 / 255, green: 1, blue: 0x2E / 255, alpha: 1)
 let dim = NSColor(srgbRed: 0xF3 / 255, green: 0xF2 / 255, blue: 0xEC / 255, alpha: 0.16)
@@ -39,5 +42,7 @@ for cy in 0..<11 { for cx in 0..<11 {
     NSBezierPath(ovalIn: NSRect(x: c.x - r, y: c.y - r, width: 2 * r, height: 2 * r)).fill()
 }}
 NSGraphicsContext.restoreGraphicsState()
-try! rep.representation(using: .png, properties: [:])!.write(to: URL(fileURLWithPath: out))
+let dest = CGImageDestinationCreateWithURL(URL(fileURLWithPath: out) as CFURL, UTType.png.identifier as CFString, 1, nil)!
+CGImageDestinationAddImage(dest, cg.makeImage()!, nil)
+precondition(CGImageDestinationFinalize(dest), "couldn't write \(out)")
 print("wrote \(out)")

@@ -1,0 +1,23 @@
+QR Space — the scanner and QR codes of the new generation.
+
+SCANNER
+• Reads QR codes and barcodes: EAN, UPC, Code 128, DataMatrix, PDF417, Aztec and more.
+• Wi‑Fi — network and password in one tap, phone — call, contact — save, event — add to calendar, place — open in maps.
+• Product barcode — the number and a web search.
+• Fake check: we show whether it’s a genuine QR Space code or a sticker with someone else’s link.
+• Decode from a photo, torch, scan history (kept only on your phone).
+
+YOUR CODES
+• Link, text, Wi‑Fi, contact, phone, email, social, event — 18 kinds.
+• Ready-made styles, colours, dot and corner shapes — instant preview.
+• Your first simple code is free; after that, a small one-time price per code — yours forever, no subscription.
+
+MEMORY UNDER THE CODE
+• Under every code there’s room for photos, video and text: a family album, boiler instructions, your pet’s details.
+• You decide who sees it: everyone, your contacts, chosen people or only you.
+• 1 MB free, more space monthly if you need it.
+
+SCANS
+• How many times each code was scanned — total, this week and by day.
+
+Privacy: the camera reads codes on your phone and frames are never sent anywhere. No advertising trackers.

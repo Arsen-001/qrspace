@@ -1,0 +1,7 @@
+QR Space is a QR code and barcode scanner plus QR codes with "memory": photos, video and text kept under a code, visible to the people the owner chooses.
+
+- The scanner (first tab) works without an account: point the camera at any QR code or barcode, or tap "From Photos".
+- Sign in: the Account tab → "Sign in on qrspace.co" opens our website inside the app (Sign in with Apple or Google). While demo sign-in is on, the same screen also lists demo people — tap "Arman" to use a demo account with sample codes.
+- In-app purchases (StoreKit): one QR code (consumable), packs of 5/10/50/100 codes (consumables), and more space under one code for one month — 10 MB, 100 MB or 1 GB (non-renewing subscriptions; they can be bought again for other codes). Where: "My QR codes" → "+ Create new QR" → enter a link → pick a styled look → Create (the first simple code is free); packs — Account → Packs; space — open a code with memory → "Change space", or add a video bigger than the free space.
+- Delete account: Account → "Delete account" (hidden for demo accounts).
+- The camera is used only to read codes on the device; frames are not sent anywhere. Scan history stays on the phone.

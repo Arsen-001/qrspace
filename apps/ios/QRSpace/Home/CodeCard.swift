@@ -62,6 +62,7 @@ struct CodeCard: View {
                         .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.stageLine))
                 }
                 .accessibilityLabel("\(tr("dashAsGuest")): \(code.title ?? "")")
+                .accessibilityIdentifier("card-guest")
             }
             .buttonStyle(.plain)
             .padding(.top, 14)

@@ -6,6 +6,12 @@ DerivedData/
 *.xcresult
 xcuserdata/
 .swiftpm/
-# Simulator screenshots and test images
+# Simulator screenshots and test images; also fastlane/screenshots (App Store shots, ~46 MB — regenerate with
+# node apps/ios/fastlane/shots/take.mjs)
 screenshots/
 .testdata/
+# fastlane run output (the .ipa goes to build/ipa)
+fastlane/report.xml
+fastlane/README.md
+fastlane/Preview.html
+fastlane/test_output/

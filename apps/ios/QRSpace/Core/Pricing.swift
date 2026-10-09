@@ -62,6 +62,9 @@ enum StoragePlans {
     /// One file — at most the biggest space (1 GB).
     static let maxFile = 1024 * 1024 * 1024
 
+    /// The owner can switch plans (each is a purchase) — only in builds with purchases (StoreBuild).
+    static var canChange: Bool { StoreBuild.purchasesEnabled }
+
     /// The smallest plan this many bytes fit into; nil — fits into the free 1 MB, or more than the biggest plan.
     static func planFor(_ bytes: Int) -> Plan? {
         bytes <= free ? nil : all.first { $0.bytes >= bytes }

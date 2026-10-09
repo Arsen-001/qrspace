@@ -164,6 +164,11 @@ final class API {
         try check(resp)
     }
 
+    /// "Report this code" (phishing, spam, offensive, other) — the admin decides; 429 after 3 an hour.
+    func report(_ id: String, reason: String, text: String) async throws {
+        _ = try await send("/api/codes/\(esc(id))/report", method: "POST", json: ["reason": reason, "text": text])
+    }
+
     // MARK: money (demo)
 
     func quote(key: String, tier: Tier) async throws -> Quote {
@@ -173,6 +178,14 @@ final class API {
         _ = try await send("/api/purchases", method: "POST", json: ["key": key, "tier": tier.rawValue])
     }
     func packs() async throws -> PacksState { try await get("/api/packs") }
+
+    // MARK: money (Apple in-app purchase)
+
+    /// The signed App Store transaction and what it was for (POST /api/iap). 200 — granted; 409 (`conflict`) —
+    /// granted before; 402 not verified, 422 wrong product, 403/404/413 for space — keep the transaction open.
+    func iap(jws: String, intent: IAPIntent) async throws {
+        _ = try await send("/api/iap", method: "POST", json: ["platform": "ios", "jws": jws, "intent": intent.json])
+    }
 
     // MARK: drawings
 

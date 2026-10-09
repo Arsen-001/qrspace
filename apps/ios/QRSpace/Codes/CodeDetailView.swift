@@ -159,7 +159,10 @@ struct CodeDetailView: View {
         let link = URL(string: code.link(base: session.linkBase)) ?? page
         return VStack(spacing: 10) {
             ShareLink(item: link) { Label(tr("result.share"), systemImage: "square.and.arrow.up") }.buttonStyle(.plainField)
-            Button { openURL(page) } label: { Label(tr("code.openOnSite"), systemImage: "safari") }.buttonStyle(.plainField)
+            // Someone else's code: report it (App Store guideline 1.2 — people can flag what others put under codes).
+            if code.access != .owner { ReportBox(id: code.id) }
+            // No "Open on qrspace.co": the website sells codes, packs and space outside Apple's in-app purchase, and
+            // App Review rejects links that lead there (guideline 3.1.1).
         }
         .padding(.top, 4)
     }
@@ -228,5 +231,72 @@ struct BlockView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Theme.card, in: RoundedRectangle(cornerRadius: 10))
         .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.line))
+    }
+}
+
+/// "Report this code" (src/components/ReportBox.tsx): a reason, optional details, sent to the admin. Works signed out.
+struct ReportBox: View {
+    static let reasons = ["phishing", "spam", "offensive", "other"]
+    let id: String
+    @State private var open = false
+    @State private var reason = "phishing"
+    @State private var text = ""
+    @State private var state: Phase = .idle
+    enum Phase { case idle, busy, sent, limit, error }
+
+    var body: some View {
+        if state == .sent {
+            Label(tr("reportSent"), systemImage: "checkmark.circle.fill").font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(Theme.ok).frame(maxWidth: .infinity)
+        } else if !open {
+            Button(tr("reportCode")) { open = true }
+                .font(.system(size: 13)).underline().foregroundStyle(Theme.muted)
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .accessibilityIdentifier("report-open")
+        } else {
+            CardBox {
+                Text(tr("reportCode")).font(.system(size: 15, weight: .semibold)).foregroundStyle(Theme.ink)
+                FlowRow(spacing: 8) {
+                    ForEach(Self.reasons, id: \.self) { r in
+                        let on = reason == r
+                        Button(tr("reason.\(r)")) { reason = r }
+                            .font(.system(size: 13, weight: .medium))
+                            .padding(.horizontal, 12).frame(minHeight: 36)
+                            .foregroundStyle(on ? Theme.onAccent : Theme.ink)
+                            .background(on ? Theme.accent : Theme.field, in: RoundedRectangle(cornerRadius: 10))
+                            .overlay(RoundedRectangle(cornerRadius: 10).stroke(on ? Theme.accent : Theme.line))
+                            .buttonStyle(.plain)
+                            .accessibilityAddTraits(on ? [.isSelected] : [])
+                    }
+                }
+                TextField(tr("reportDetails"), text: $text, axis: .vertical).lineLimit(2...5).textFieldStyle(BoxField())
+                if state == .limit { Text(tr("sendLimit")).font(.system(size: 12)).foregroundStyle(Theme.warn) }
+                if state == .error { Text(tr("sendError")).font(.system(size: 12)).foregroundStyle(Theme.warn) }
+                HStack(spacing: 8) {
+                    Button(tr("reportSend")) { send() }
+                        .font(.system(size: 14, weight: .semibold))
+                        .padding(.horizontal, 16).frame(minHeight: 42)
+                        .foregroundStyle(.white).background(Theme.warn, in: RoundedRectangle(cornerRadius: 10))
+                        .buttonStyle(.plain)
+                        .disabled(state == .busy)
+                    Button(tr("cancel")) { open = false }
+                        .font(.system(size: 14)).foregroundStyle(Theme.muted).frame(minHeight: 42)
+                }
+            }
+        }
+    }
+
+    private func send() {
+        state = .busy
+        Task {
+            do {
+                try await API.shared.report(id, reason: reason, text: String(text.prefix(1000)))
+                state = .sent
+            } catch APIError.limit {
+                state = .limit
+            } catch {
+                state = .error
+            }
+        }
     }
 }

@@ -7,6 +7,7 @@
   "addVideo",
   "bg",
   "buyDemo",
+  "buyError",
   "cancel",
   "captionPlaceholder",
   "colors",
@@ -96,10 +97,15 @@
   "newCodeTitle",
   "notSetUp",
   "overdue",
+  "packBest",
+  "packBuy",
+  "packCodes",
   "packDownload",
   "packFrom",
   "packLeft",
   "packRoom",
+  "packsHint",
+  "packsKicker",
   "payAndDownload",
   "payTitle",
   "preset.circuit",
@@ -114,8 +120,16 @@
   "preset.stars",
   "presets",
   "providersPending",
+  "reason.offensive",
+  "reason.other",
+  "reason.phishing",
+  "reason.spam",
   "records",
   "replace",
+  "reportCode",
+  "reportDetails",
+  "reportSend",
+  "reportSent",
   "sampleBadge",
   "save",
   "saveError",
@@ -124,6 +138,8 @@
   "security.WEP",
   "security.WPA",
   "security.nopass",
+  "sendError",
+  "sendLimit",
   "sharedHint",
   "sharedTitle",
   "statsChart",
@@ -317,6 +333,180 @@
    "pt": "Do Arquivos",
    "fr": "Depuis Fichiers",
    "de": "Aus „Dateien“"
+  },
+  "store.createNotInApp": {
+   "en": "This code isn’t free. In the app you can create your first simple code for free, or a code from your pack.",
+   "ru": "Этот код не бесплатный. В приложении можно бесплатно создать первый простой код или код из вашего пакета.",
+   "hy": "Այս կոդն անվճար չէ։ Հավելվածում կարող եք անվճար ստեղծել առաջին պարզ կոդը կամ կոդ ձեր փաթեթից։",
+   "es": "Este código no es gratis. En la app puedes crear gratis tu primer código simple o un código de tu paquete.",
+   "pt": "Este código não é grátis. No app você pode criar grátis seu primeiro código simples ou um código do seu pacote.",
+   "fr": "Ce code n’est pas gratuit. Dans l’app, vous pouvez créer gratuitement votre premier code simple ou un code de votre pack.",
+   "de": "Dieser Code ist nicht kostenlos. In der App kannst du deinen ersten einfachen Code kostenlos erstellen oder einen Code aus deinem Paket."
+  },
+  "store.downloadNotInApp": {
+   "en": "The full-size image of this code isn’t available in the app.",
+   "ru": "Картинка этого кода в полном размере в приложении недоступна.",
+   "hy": "Այս կոդի լրիվ չափի պատկերը հավելվածում հասանելի չէ։",
+   "es": "La imagen a tamaño completo de este código no está disponible en la app.",
+   "pt": "A imagem em tamanho real deste código não está disponível no app.",
+   "fr": "L’image en taille réelle de ce code n’est pas disponible dans l’app.",
+   "de": "Das Bild dieses Codes in voller Größe ist in der App nicht verfügbar."
+  },
+  "store.roomNotInApp": {
+   "en": "Not enough space under the code. Delete something or pick a smaller file.",
+   "ru": "Под кодом не хватает места. Удалите что-нибудь или выберите файл поменьше.",
+   "hy": "Կոդի տակ տեղը բավարար չէ։ Ջնջեք ինչ-որ բան կամ ընտրեք ավելի փոքր ֆայլ։",
+   "es": "No hay espacio suficiente bajo el código. Borra algo o elige un archivo más pequeño.",
+   "pt": "Não há espaço suficiente sob o código. Apague algo ou escolha um arquivo menor.",
+   "fr": "Pas assez de place sous le code. Supprimez quelque chose ou choisissez un fichier plus petit.",
+   "de": "Unter dem Code ist nicht genug Platz. Lösche etwas oder wähle eine kleinere Datei."
+  },
+  "store.videoLimit": {
+   "en": "Video up to 1 GB, if it fits in the space under the code",
+   "ru": "Видео до 1 ГБ, если влезет в место под кодом",
+   "hy": "Տեսանյութ մինչև 1 ԳԲ, եթե տեղավորվի կոդի տակ եղած տեղում",
+   "es": "Vídeo de hasta 1 GB, si cabe en el espacio bajo el código",
+   "pt": "Vídeo de até 1 GB, se couber no espaço sob o código",
+   "fr": "Vidéo jusqu’à 1 Go, si elle tient dans l’espace sous le code",
+   "de": "Video bis 1 GB, wenn es in den Platz unter dem Code passt"
+  },
+  "iap.unavailable": {
+   "en": "Purchases are unavailable right now.",
+   "ru": "Покупки сейчас недоступны.",
+   "hy": "Գնումներն այժմ հասանելի չեն։",
+   "es": "Las compras no están disponibles ahora.",
+   "pt": "As compras não estão disponíveis agora.",
+   "fr": "Les achats ne sont pas disponibles pour le moment.",
+   "de": "Käufe sind gerade nicht verfügbar."
+  },
+  "iap.pending": {
+   "en": "Waiting for approval — the purchase will finish by itself.",
+   "ru": "Ждём подтверждения — покупка завершится сама.",
+   "hy": "Սպասում ենք հաստատման․ գնումը կավարտվի ինքնըստինքյան։",
+   "es": "Esperando aprobación: la compra se completará sola.",
+   "pt": "Aguardando aprovação — a compra será concluída sozinha.",
+   "fr": "En attente d’approbation — l’achat se terminera tout seul.",
+   "de": "Warte auf Bestätigung — der Kauf wird von selbst abgeschlossen."
+  },
+  "iap.serverError": {
+   "en": "We couldn’t apply the purchase yet. It isn’t lost — we’ll try again next time you open the app.",
+   "ru": "Не получилось засчитать покупку. Она не пропадёт — попробуем ещё раз при следующем запуске.",
+   "hy": "Չհաջողվեց հաշվել գնումը։ Այն չի կորչի․ նորից կփորձենք հավելվածի հաջորդ բացման ժամանակ։",
+   "es": "No pudimos aplicar la compra todavía. No se pierde: lo intentaremos de nuevo la próxima vez que abras la app.",
+   "pt": "Não conseguimos aplicar a compra ainda. Ela não se perde — tentaremos de novo na próxima vez que você abrir o app.",
+   "fr": "Nous n’avons pas encore pu prendre en compte l’achat. Il n’est pas perdu : nous réessaierons à la prochaine ouverture de l’app.",
+   "de": "Wir konnten den Kauf noch nicht verbuchen. Er geht nicht verloren — wir versuchen es beim nächsten Öffnen der App erneut."
+  },
+  "iap.payCreate": {
+   "en": "Pay {price} and create",
+   "ru": "Оплатить {price} и создать",
+   "hy": "Վճարել {price} և ստեղծել",
+   "es": "Pagar {price} y crear",
+   "pt": "Pagar {price} e criar",
+   "fr": "Payer {price} et créer",
+   "de": "{price} zahlen und erstellen"
+  },
+  "iap.payUpload": {
+   "en": "Pay {price} and upload",
+   "ru": "Оплатить {price} и загрузить",
+   "hy": "Վճարել {price} և վերբեռնել",
+   "es": "Pagar {price} y subir",
+   "pt": "Pagar {price} e enviar",
+   "fr": "Payer {price} et envoyer",
+   "de": "{price} zahlen und hochladen"
+  },
+  "iap.need": {
+   "en": "It needs {size} of space — {price} a month.",
+   "ru": "Нужно место {size} — {price} в месяц.",
+   "hy": "Անհրաժեշտ է {size} տեղ՝ {price} ամսական։",
+   "es": "Necesita {size} de espacio: {price} al mes.",
+   "pt": "Precisa de {size} de espaço — {price} por mês.",
+   "fr": "Il faut {size} d’espace — {price} par mois.",
+   "de": "Es braucht {size} Platz — {price} im Monat."
+  },
+  "iap.packBought": {
+   "en": "The pack is yours — create codes from it any time.",
+   "ru": "Пакет ваш — создавайте из него коды когда угодно.",
+   "hy": "Փաթեթը ձերն է․ ստեղծեք դրանից կոդեր ցանկացած պահի։",
+   "es": "El paquete es tuyo: crea códigos con él cuando quieras.",
+   "pt": "O pacote é seu — crie códigos com ele quando quiser.",
+   "fr": "Le pack est à vous — créez-en des codes quand vous voulez.",
+   "de": "Das Paket gehört dir — erstelle daraus jederzeit Codes."
+  },
+  "legal.privacy": {
+   "en": "Privacy policy",
+   "ru": "Конфиденциальность",
+   "hy": "Գաղտնիություն",
+   "es": "Política de privacidad",
+   "pt": "Política de privacidade",
+   "fr": "Politique de confidentialité",
+   "de": "Datenschutz"
+  },
+  "legal.terms": {
+   "en": "Terms of use",
+   "ru": "Условия использования",
+   "hy": "Օգտագործման պայմաններ",
+   "es": "Condiciones de uso",
+   "pt": "Termos de uso",
+   "fr": "Conditions d’utilisation",
+   "de": "Nutzungsbedingungen"
+  }
+ },
+ "infoPlist": {
+  "_doc": "Info.plist texts (InfoPlist.xcstrings): the system shows them when it asks for a permission. English is also in project.yml (the fallback).",
+  "CFBundleDisplayName": {
+   "en": "QR Space",
+   "ru": "QR Space",
+   "hy": "QR Space",
+   "es": "QR Space",
+   "pt": "QR Space",
+   "fr": "QR Space",
+   "de": "QR Space"
+  },
+  "NSCameraUsageDescription": {
+   "en": "QR Space uses the camera to scan QR codes and barcodes.",
+   "ru": "QR Space использует камеру, чтобы сканировать QR-коды и штрихкоды.",
+   "hy": "QR Space-ը տեսախցիկն օգտագործում է QR կոդեր և շտրիխկոդեր սկանավորելու համար։",
+   "es": "QR Space usa la cámara para escanear códigos QR y códigos de barras.",
+   "pt": "O QR Space usa a câmera para ler QR codes e códigos de barras.",
+   "fr": "QR Space utilise l’appareil photo pour scanner les QR codes et les codes-barres.",
+   "de": "QR Space nutzt die Kamera, um QR-Codes und Barcodes zu scannen."
+  },
+  "NSPhotoLibraryUsageDescription": {
+   "en": "QR Space reads a code from a photo you pick and adds the photos and videos you choose under your code.",
+   "ru": "QR Space читает код с выбранного фото и добавляет под ваш код фото и видео, которые вы выберете.",
+   "hy": "QR Space-ը կարդում է կոդը ձեր ընտրած լուսանկարից և ձեր կոդի տակ ավելացնում ձեր ընտրած լուսանկարներն ու տեսանյութերը։",
+   "es": "QR Space lee un código de la foto que eliges y añade bajo tu código las fotos y vídeos que elijas.",
+   "pt": "O QR Space lê um código da foto que você escolher e adiciona sob o seu código as fotos e vídeos que você escolher.",
+   "fr": "QR Space lit un code sur la photo choisie et ajoute sous votre code les photos et vidéos que vous choisissez.",
+   "de": "QR Space liest einen Code aus dem Foto, das du auswählst, und legt die Fotos und Videos, die du wählst, unter deinen Code."
+  },
+  "NSPhotoLibraryAddUsageDescription": {
+   "en": "QR Space saves your code’s image to Photos when you ask.",
+   "ru": "QR Space сохраняет картинку вашего кода в «Фото», когда вы попросите.",
+   "hy": "QR Space-ը ձեր կոդի պատկերը պահում է «Լուսանկարներ»-ում, երբ դուք խնդրեք։",
+   "es": "QR Space guarda la imagen de tu código en Fotos cuando lo pides.",
+   "pt": "O QR Space salva a imagem do seu código em Fotos quando você pede.",
+   "fr": "QR Space enregistre l’image de votre code dans Photos quand vous le demandez.",
+   "de": "QR Space speichert das Bild deines Codes in Fotos, wenn du es möchtest."
+  },
+  "NSContactsUsageDescription": {
+   "en": "QR Space saves a scanned contact card to your contacts when you ask.",
+   "ru": "QR Space сохраняет отсканированную визитку в ваши контакты, когда вы попросите.",
+   "hy": "QR Space-ը սկանավորված կոնտակտը պահում է ձեր կոնտակտներում, երբ դուք խնդրեք։",
+   "es": "QR Space guarda en tus contactos una tarjeta escaneada cuando lo pides.",
+   "pt": "O QR Space salva um cartão de contato lido nos seus contatos quando você pede.",
+   "fr": "QR Space enregistre une fiche contact scannée dans vos contacts quand vous le demandez.",
+   "de": "QR Space speichert eine gescannte Kontaktkarte in deinen Kontakten, wenn du es möchtest."
+  },
+  "NSCalendarsWriteOnlyAccessUsageDescription": {
+   "en": "QR Space adds a scanned event to your calendar when you ask.",
+   "ru": "QR Space добавляет отсканированное событие в ваш календарь, когда вы попросите.",
+   "hy": "QR Space-ը սկանավորված իրադարձությունն ավելացնում է ձեր օրացույցում, երբ դուք խնդրեք։",
+   "es": "QR Space añade un evento escaneado a tu calendario cuando lo pides.",
+   "pt": "O QR Space adiciona um evento lido ao seu calendário quando você pede.",
+   "fr": "QR Space ajoute un événement scanné à votre calendrier quand vous le demandez.",
+   "de": "QR Space fügt einen gescannten Termin zu deinem Kalender hinzu, wenn du es möchtest."
   }
  }
 }

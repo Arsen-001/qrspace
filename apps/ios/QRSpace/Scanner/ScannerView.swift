@@ -24,11 +24,11 @@ struct ScannerView: View {
         ZStack {
             Theme.stage.ignoresSafeArea()
             cameraLayer.ignoresSafeArea()
-            if camera == .ready { Viewfinder().allowsHitTesting(false) }
+            if camera == .ready || Self.debugStill != nil { Viewfinder().allowsHitTesting(false) }
             VStack(spacing: 0) {
                 header
                 Spacer()
-                if camera == .denied || camera == .none { noCamera } else { hintPill }
+                if (camera == .denied || camera == .none) && Self.debugStill == nil { noCamera } else { hintPill }
                 Spacer().frame(height: 18)
                 controls
             }
@@ -49,7 +49,10 @@ struct ScannerView: View {
     }
 
     @ViewBuilder private var cameraLayer: some View {
-        if camera == .ready {
+        if let still = Self.debugStill {
+            // An overlay, so the filled picture never resizes the screen's layout.
+            Color.clear.overlay { Image(uiImage: still).resizable().scaledToFill() }.clipped()
+        } else if camera == .ready {
             if DataScannerView.supported {
                 DataScannerView(active: scanning, onHit: handle)
             } else {
@@ -166,6 +169,16 @@ struct ScannerView: View {
         default: camera = .denied
         }
     }
+
+    /// Debug/QA (App Store screenshots — the Simulator has no camera): `-QRCameraStill /path/img.png` shows that
+    /// picture where the camera picture would be. Always nil in Release.
+    private static let debugStill: UIImage? = {
+        #if DEBUG
+        return UserDefaults.standard.string(forKey: "QRCameraStill").flatMap { UIImage(contentsOfFile: $0) }
+        #else
+        return nil
+        #endif
+    }()
 
     /// Debug/QA: `-QRDecodeFile /path/to/image.png` runs the Photos decode path on a file (the Simulator has no camera).
     private func debugDecodeFromLaunchArgument() async {

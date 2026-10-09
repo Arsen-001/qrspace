@@ -1,0 +1,1 @@
+qr,scanner,barcode,leser,qr-code,generator,wlan,kontakt,erinnerung,foto,video,ean

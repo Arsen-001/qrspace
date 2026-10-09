@@ -1,6 +1,9 @@
+import StoreKitTest
 import XCTest
 
 /// End-to-end against the local dev server (http://localhost:3720, demo mode). Writes go only there.
+/// Purchases go through Apple in-app purchase with Xcode's StoreKit testing (QRSpace.storekit, no dialogs); the dev
+/// server must run with IAP_ALLOW_XCODE=1 to accept those transactions.
 /// Screenshots land in $QR_SHOTS (pass `TEST_RUNNER_QR_SHOTS=<dir>` to xcodebuild); the big test video is
 /// $QR_VIDEO (`TEST_RUNNER_QR_VIDEO=<path to a >1 MB .mp4>`). See README "End-to-end in the Simulator".
 final class FlowTests: XCTestCase {
@@ -8,8 +11,13 @@ final class FlowTests: XCTestCase {
     var shots: URL? { ProcessInfo.processInfo.environment["QR_SHOTS"].map { URL(fileURLWithPath: $0) } }
     let stamp = String(Int(Date().timeIntervalSince1970) % 100000)
 
-    override func setUp() {
+    private var store: SKTestSession?
+
+    override func setUpWithError() throws {
         continueAfterFailure = false
+        store = try SKTestSession(configurationFileNamed: "QRSpace")
+        store?.disableDialogs = true
+        store?.clearTransactions()
     }
 
     private func launch(_ args: [String]) -> XCUIApplication {
@@ -186,6 +194,7 @@ final class FlowTests: XCTestCase {
         XCTAssertTrue(pay.waitForExistence(timeout: 25), "room offer shown for a big file")
         sleep(2)
         XCTAssertTrue(el(app, "room-sizes").exists)
+        XCTAssertTrue(pay.label.contains("$0.99"), "the App Store price on the button: \(pay.label)")
         XCTAssertLessThanOrEqual(pay.frame.maxY, tabBarTop(app) - 4, "Pay button (\(pay.frame.maxY)) above the tab bar (\(tabBarTop(app)))")
         shot("09-room-offer")
         pay.tap()
@@ -212,6 +221,46 @@ final class FlowTests: XCTestCase {
         confirm.tap()
         sleep(4)
         shot("12-share-sheet")
+    }
+
+    /// A pack of 5 codes from Account, at the App Store's price; the server adds 5 codes to my packs.
+    func test4_BuyPackInAccount() throws {
+        _ = try call("/api/me", method: "POST", body: ["personId": "arman"])
+        let before = (try call("/api/packs") as? [String: Any])?["left"] as? Int ?? -1
+        let app = launch(["-QRDemoPerson", "arman", "-QRTab", "account"])
+        let pack = app.buttons["pack-p5"]
+        XCTAssertTrue(pack.waitForExistence(timeout: 25), "packs with store prices")
+        XCTAssertTrue(pack.label.contains("$3.99"), "store price: \(pack.label)")
+        var n = 0
+        while pack.frame.maxY > tabBarTop(app) - 20 && n < 6 { app.swipeUp(velocity: .slow); n += 1 }
+        sleep(1)
+        shot("13-packs")
+        pack.tap()
+        XCTAssertTrue(el(app, "packs-note").waitForExistence(timeout: 30), "bought note")
+        sleep(1)
+        shot("14-pack-bought")
+        let after = (try call("/api/packs") as? [String: Any])?["left"] as? Int ?? -1
+        XCTAssertEqual(after, before + 5)
+    }
+
+    /// The build without purchases (StoreBuild.purchasesEnabled = NO): no prices and no pay buttons, the app still works
+    /// (the room offer only says what doesn't fit; Account has no packs; the privacy links are there).
+    func test5_NoPurchasesBuild() throws {
+        guard let video = ProcessInfo.processInfo.environment["QR_VIDEO"] else { throw XCTSkip("QR_VIDEO not set") }
+        let id = try newMemoryCode()
+        var app = launch(["-QRPurchases", "NO", "-QRDemoPerson", "arman", "-QROpenCode", id, "-QRAttachFile", video])
+        XCTAssertTrue(el(app, "room-not-in-app").waitForExistence(timeout: 25), "room offer without a price")
+        XCTAssertFalse(app.buttons["room-pay"].exists)
+        XCTAssertFalse(app.staticTexts.matching(NSPredicate(format: "label CONTAINS '$'")).firstMatch.exists, "no prices")
+        sleep(1)
+        shot("15-no-purchases-room")
+        app = launch(["-QRPurchases", "NO", "-QRDemoPerson", "arman", "-QRTab", "account"])
+        XCTAssertTrue(app.buttons["sign-out"].waitForExistence(timeout: 20))
+        XCTAssertFalse(app.buttons["pack-p5"].exists, "no packs to buy")
+        XCTAssertFalse(el(app, "iap-unavailable").exists)
+        toBottom(app)
+        XCTAssertTrue(el(app, "legal-links").exists, "privacy and terms links")
+        shot("16-no-purchases-account")
     }
 
     /// Every scrolling screen: scrolled to the end, its last control sits fully above the floating tab bar.

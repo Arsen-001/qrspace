@@ -1,0 +1,92 @@
+# QR Space → App Store with fastlane (README "App Store submission"). Run from apps/ios:
+#   fastlane release   — texts + screenshots + a fresh build to App Store Connect (SUBMIT=1 also sends it to review)
+#   fastlane beta      — a fresh build to TestFlight
+#   fastlane metadata  — only texts and screenshots (SKIP_SCREENSHOTS=1 — only texts)
+#
+# The App Store Connect API key comes from the environment; nothing secret is kept in the repo:
+#   ASC_KEY_ID      — Key ID      (App Store Connect → Users and Access → Integrations → App Store Connect API)
+#   ASC_ISSUER_ID   — Issuer ID   (same page)
+#   ASC_KEY_PATH    — path to the downloaded AuthKey_<KEYID>.p8, kept outside the repo (e.g. ~/.qrspace/)
+#                     (or ASC_KEY_CONTENT — the .p8 text itself, for CI)
+# Builds need DEVELOPMENT_TEAM in project.yml (AI Switch LLC's Team ID).
+#
+# Actions run from apps/ios; `sh` runs inside apps/ios/fastlane.
+default_platform(:ios)
+skip_docs # no generated fastlane/README.md — the steps live in apps/ios/README.md
+
+platform :ios do
+  private_lane :asc_key do
+    unless ENV["ASC_KEY_ID"] && ENV["ASC_ISSUER_ID"] && (ENV["ASC_KEY_PATH"] || ENV["ASC_KEY_CONTENT"])
+      UI.user_error!("Set ASC_KEY_ID, ASC_ISSUER_ID and ASC_KEY_PATH (see the top of fastlane/Fastfile)")
+    end
+    app_store_connect_api_key(
+      key_id: ENV["ASC_KEY_ID"],
+      issuer_id: ENV["ASC_ISSUER_ID"],
+      key_filepath: ENV["ASC_KEY_PATH"],
+      key_content: ENV["ASC_KEY_CONTENT"],
+      in_house: false
+    )
+  end
+
+  desc "docs/store/listing.json → fastlane/metadata (all locales but Armenian)"
+  lane :metadata_files do
+    sh("node", "metadata.mjs")
+  end
+
+  desc "A signed App Store build (.ipa) in build/ipa"
+  lane :build do
+    sh("cd .. && xcodegen generate")
+    build_app(
+      project: "QRSpace.xcodeproj",
+      scheme: "QRSpace",
+      configuration: "Release",
+      export_method: "app-store",
+      output_directory: "build/ipa",
+      clean: true,
+      xcargs: "-allowProvisioningUpdates"
+    )
+  end
+
+  desc "TestFlight: build and upload"
+  lane :beta do
+    key = asc_key
+    build
+    upload_to_testflight(api_key: key, skip_waiting_for_build_processing: true)
+  end
+
+  desc "App Store: texts and screenshots only"
+  lane :metadata do
+    key = asc_key
+    metadata_files
+    deliver(
+      api_key: key,
+      skip_binary_upload: true,
+      skip_screenshots: ENV["SKIP_SCREENSHOTS"] == "1",
+      overwrite_screenshots: true,
+      metadata_path: "./fastlane/metadata",
+      screenshots_path: "./fastlane/screenshots",
+      force: true,
+      precheck_include_in_app_purchases: false
+    )
+  end
+
+  desc "App Store: texts, screenshots and a fresh build; SUBMIT=1 also submits it for review"
+  lane :release do
+    key = asc_key
+    metadata_files
+    build
+    deliver(
+      api_key: key,
+      ipa: lane_context[SharedValues::IPA_OUTPUT_PATH],
+      metadata_path: "./fastlane/metadata",
+      screenshots_path: "./fastlane/screenshots",
+      overwrite_screenshots: true,
+      force: true, # no HTML preview to confirm
+      submit_for_review: ENV["SUBMIT"] == "1",
+      automatic_release: false,
+      run_precheck_before_submit: true,
+      precheck_include_in_app_purchases: false, # precheck can't read in-app purchases with an API key
+      submission_information: { add_id_info_uses_idfa: false }
+    )
+  end
+end

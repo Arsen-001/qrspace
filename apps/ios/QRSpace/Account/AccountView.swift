@@ -1,3 +1,4 @@
+import StoreKit
 import SwiftUI
 
 /// Account (site /account): who I am, numbers, purchases, sign out. Signed out — sign-in screen.
@@ -30,6 +31,7 @@ private struct SignedInAccount: View {
                 if let p = profile {
                     hero(p)
                     stats(p)
+                    if StoreBuild.purchasesEnabled { PacksShop { Task { await load() } } }
                     purchases(p)
                     Button(tr("logout"), role: .destructive) { confirmOut = true }
                         .buttonStyle(.plainField)
@@ -37,6 +39,7 @@ private struct SignedInAccount: View {
                         .padding(.top, 6)
                     // Demo accounts can't be deleted (the server answers 403) — no button, as on the site.
                     if p.provider != "demo" { deleteAccount }
+                    LegalLinks()
                 } else if let error {
                     ScreenTitle(text: tr("accountTitle"))
                     CardBox {
@@ -53,7 +56,7 @@ private struct SignedInAccount: View {
         .tabBarClearance()
         .background(ScreenBackground())
         .refreshable { await load() }
-        .task(id: session.generation) { await load() }
+        .task(id: "\(session.generation)-\(Store.shared.delivered)") { await load() }
         .confirmationDialog(tr("account.signOutConfirm"), isPresented: $confirmOut, titleVisibility: .visible) {
             Button(tr("logout"), role: .destructive) { Task { await session.signOut() } }
         }
@@ -177,7 +180,7 @@ private struct SignedInAccount: View {
             HStack {
                 Kicker(text: tr("accPurchases"))
                 Spacer()
-                if p.stats.spent > 0 { Text("\(tr("accSpent")): \(Format.money(p.stats.spent))").font(.system(size: 12, weight: .semibold)).foregroundStyle(Theme.muted) }
+                if p.stats.spent > 0 && StoreBuild.purchasesEnabled { Text("\(tr("accSpent")): \(Format.money(p.stats.spent))").font(.system(size: 12, weight: .semibold)).foregroundStyle(Theme.muted) }
             }
             if p.purchases.isEmpty && p.packs.isEmpty {
                 CardBox { Text(tr("account.noPurchases")).foregroundStyle(Theme.muted) }
@@ -226,11 +229,122 @@ private struct PurchaseRow: View {
                 Text([note, Format.date(date)].compactMap { $0 }.joined(separator: " · ")).font(.system(size: 12)).foregroundStyle(Theme.muted)
             }
             Spacer()
-            Text(price).font(Theme.mono(15, weight: .bold)).foregroundStyle(Theme.ink)
+            // Without purchases in the app (StoreBuild) the history stays, the amounts don't.
+            if StoreBuild.purchasesEnabled {
+                Text(price).font(Theme.mono(15, weight: .bold)).foregroundStyle(Theme.ink)
+            }
         }
         .padding(14)
         .background(Theme.card, in: RoundedRectangle(cornerRadius: 10))
         .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.line))
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// Packs of codes (the site's /account?tab=packs), bought with Apple in-app purchase: N codes of any look, 1 MB under
+/// each. Prices are the App Store's; the discount is worked out from them (pack vs. N single codes).
+private struct PacksShop: View {
+    let onBought: () -> Void
+    @State private var busy: String?
+    @State private var note: String?
+    @State private var failed = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Kicker(text: tr("packsKicker"))
+            Text(tr("packsHint")).font(.system(size: 13)).foregroundStyle(Theme.muted)
+            if Store.shared.ready {
+                ForEach(CodePacks.all) { plan in row(plan) }
+            } else if Store.shared.load == .loading || Store.shared.load == .idle {
+                ProgressView().frame(maxWidth: .infinity, minHeight: 60)
+            } else {
+                CardBox { PurchasesUnavailable() }
+            }
+            if let note {
+                Text(note).font(.system(size: 13, weight: .semibold)).foregroundStyle(failed ? Theme.warn : Theme.ok)
+                    .accessibilityIdentifier("packs-note")
+            }
+        }
+    }
+
+    @ViewBuilder private func row(_ plan: CodePacks.Plan) -> some View {
+        if let product = Store.shared.product(plan.product) {
+            HStack(alignment: .center, spacing: 12) {
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(spacing: 6) {
+                        Text("\(plan.codes) \(tr("packCodes"))").font(Theme.heading(20)).foregroundStyle(Theme.ink)
+                        if let off = discount(plan, product) {
+                            Text("−\(off)%").font(Theme.mono(11, weight: .bold))
+                                .padding(.horizontal, 6).padding(.vertical, 2)
+                                .foregroundStyle(Theme.onAccent).background(Theme.accent, in: RoundedRectangle(cornerRadius: 5))
+                        }
+                        if plan.id == CodePacks.best {
+                            Text(tr("packBest")).font(.system(size: 11, weight: .bold)).foregroundStyle(Theme.accentInk)
+                        }
+                    }
+                    Text("\(Format.bytes(CodePacks.bytesPerCode)) \(tr("packRoom"))").font(.system(size: 12)).foregroundStyle(Theme.muted)
+                }
+                Spacer(minLength: 8)
+                Button { buy(plan) } label: {
+                    HStack(spacing: 6) {
+                        if busy == plan.id { ProgressView().tint(Theme.onAccent) }
+                        Text(product.displayPrice).font(.system(size: 15, weight: .heavy))
+                    }
+                    .padding(.horizontal, 14).frame(minHeight: 44)
+                    .foregroundStyle(Theme.onAccent)
+                    .background(Theme.accent, in: RoundedRectangle(cornerRadius: 10))
+                }
+                .buttonStyle(.plain)
+                .disabled(busy != nil)
+                .accessibilityLabel("\(tr("packBuy")): \(plan.codes) \(tr("packCodes")), \(product.displayPrice)")
+                .accessibilityIdentifier("pack-\(plan.id)")
+            }
+            .padding(14)
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: 10))
+            .overlay(RoundedRectangle(cornerRadius: 10).stroke(plan.id == CodePacks.best ? Theme.accentInk.opacity(0.6) : Theme.line))
+        }
+    }
+
+    /// How much cheaper than the same number of single codes, in whole percent (nil — not cheaper).
+    private func discount(_ plan: CodePacks.Plan, _ pack: Product) -> Int? {
+        guard let one = Store.shared.product(.code), one.price > 0 else { return nil }
+        let full = one.price * Decimal(plan.codes)
+        let off = Int((NSDecimalNumber(decimal: (full - pack.price) / full).doubleValue * 100).rounded(.down))
+        return off > 0 ? off : nil
+    }
+
+    private func buy(_ plan: CodePacks.Plan) {
+        busy = plan.id
+        note = nil
+        Task {
+            defer { busy = nil }
+            do {
+                switch try await Store.shared.buy(.pack(plan: plan.id)) {
+                case .done: failed = false; note = tr("iap.packBought"); onBought()
+                case .cancelled: break
+                case .pending: failed = false; note = tr("iap.pending")
+                }
+            } catch let f as Store.Failure {
+                failed = true
+                note = f.message
+            } catch {
+                failed = true
+                note = tr("buyError")
+            }
+        }
+    }
+}
+
+/// Privacy policy and terms (App Store guideline 5.1.1(i): the privacy policy must be reachable inside the app).
+struct LegalLinks: View {
+    var body: some View {
+        HStack(spacing: 18) {
+            Link(tr("legal.privacy"), destination: API.base.appendingPathComponent("legal/privacy"))
+            Link(tr("legal.terms"), destination: API.base.appendingPathComponent("legal/terms"))
+        }
+        .font(.system(size: 13))
+        .foregroundStyle(Theme.muted)
+        .frame(maxWidth: .infinity, minHeight: 44)
+        .accessibilityIdentifier("legal-links")
     }
 }

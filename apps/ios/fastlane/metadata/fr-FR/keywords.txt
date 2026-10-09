@@ -1,0 +1,1 @@
+qr,scanner,code-barres,lecteur,générateur,wifi,contact,mémoire,photo,vidéo,ean

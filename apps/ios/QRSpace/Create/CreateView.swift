@@ -23,6 +23,7 @@ struct CreateView: View {
     @State private var title = ""
     @State private var style = QRStyle.default
     @State private var gate: Gate?
+    @State private var gateError: String?
     @State private var busy = false
     @State private var error: String?
     @State private var askSignIn = false
@@ -54,7 +55,7 @@ struct CreateView: View {
         .background(ScreenBackground())
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $gate) { g in
-            GateSheet(quote: g.quote, tier: g.tier, busy: busy, labels: .create,
+            GateSheet(quote: g.quote, tier: g.tier, busy: busy, labels: .create, message: gateError,
                       onConfirm: { Task { await confirm(g) } }, onCancel: { gate = nil })
                 .presentationDetents([.medium, .large])
                 .presentationBackground(Theme.stage)
@@ -120,7 +121,9 @@ struct CreateView: View {
                 HStack(spacing: 8) {
                     Circle().fill(tier == .simple ? Theme.muted : Theme.accentInk).frame(width: 8, height: 8)
                     Text(tier == .simple ? tr("tierSimple") : tr("tierStyled")).font(.system(size: 14, weight: .semibold))
-                    Text(Format.money(1)).font(.system(size: 16, weight: .heavy).width(.expanded))
+                    if let price = Store.shared.price(.code) {
+                        Text(price).font(.system(size: 16, weight: .heavy).width(.expanded))
+                    }
                 }
                 .foregroundStyle(Theme.ink)
                 .accessibilityElement(children: .combine)
@@ -178,17 +181,34 @@ struct CreateView: View {
         let key = Pricing.codeKey(payload: c.sitePayload, styleJSON: style.json)
         do {
             let q = try await API.shared.quote(key: key, tier: tier)
-            if q.paid { await finish(c, key: key) } else { gate = Gate(quote: q, tier: tier, key: key, content: c) }
+            switch StoreBuild.step(for: q) {
+            case .go: await finish(c, key: key)
+            case .ask: gate = Gate(quote: q, tier: tier, key: key, content: c)
+            case .notInApp: error = tr("store.createNotInApp")
+            }
         } catch { show(error) }
     }
 
+    /// Free first code or a code from a pack — the server records it (not a payment). Otherwise Apple in-app
+    /// purchase of one code under this key; the server counts it, then the code is created as after any payment.
     private func confirm(_ g: Gate) async {
         busy = true
+        gateError = nil
         defer { busy = false }
         do {
-            try await API.shared.pay(key: g.key, tier: g.tier)
+            if g.quote.free || g.quote.pack != nil {
+                try await API.shared.pay(key: g.key, tier: g.tier)
+            } else {
+                switch try await Store.shared.buy(.code(key: g.key, tier: g.tier.rawValue)) {
+                case .done: break
+                case .cancelled: return
+                case .pending: gate = nil; error = tr("iap.pending"); return
+                }
+            }
             gate = nil
             await finish(g.content, key: g.key)
+        } catch let f as Store.Failure {
+            gateError = f.message
         } catch { gate = nil; show(error) }
     }
 
@@ -203,7 +223,7 @@ struct CreateView: View {
         } catch APIError.payment {
             // The earlier purchase went to another code — ask again (the quote is honest about the price).
             if let q = try? await API.shared.quote(key: key, tier: tier), !q.paid {
-                gate = Gate(quote: q, tier: tier, key: key, content: c)
+                if StoreBuild.step(for: q) == .ask { gate = Gate(quote: q, tier: tier, key: key, content: c) } else { error = tr("store.createNotInApp") }
             } else {
                 error = tr("saveError")
             }
@@ -284,16 +304,23 @@ struct GateSheet: View {
         let free: String
         let pack: String
         let pay: (String) -> String
-        static var create: Labels { Labels(free: tr("gate.free"), pack: tr("gate.pack"), pay: { tr("gate.pay", ["price": $0]) }) }
-        static var download: Labels { Labels(free: tr("downloadFree"), pack: tr("packDownload"), pay: { "\(tr("payAndDownload")) — $\($0)" }) }
+        /// `pay` gets the store's own price ("$0.99", "990 ₽").
+        static var create: Labels { Labels(free: tr("gate.free"), pack: tr("gate.pack"), pay: { tr("iap.payCreate", ["price": $0]) }) }
+        static var download: Labels { Labels(free: tr("downloadFree"), pack: tr("packDownload"), pay: { "\(tr("payAndDownload")) — \($0)" }) }
     }
 
     let quote: Quote
     let tier: Tier
     let busy: Bool
     let labels: Labels
+    /// A failed purchase ("Purchases unavailable", "Couldn't buy…").
+    var message: String? = nil
     let onConfirm: () -> Void
     let onCancel: () -> Void
+
+    /// One code in the App Store, in the person's currency; nil — purchases off or the products didn't load.
+    private var payPrice: String? { Store.shared.price(.code) }
+    private var canConfirm: Bool { StoreBuild.step(for: quote) == .ask && (quote.free || quote.pack != nil || payPrice != nil) }
 
     var body: some View {
         let q = quote
@@ -304,7 +331,9 @@ struct GateSheet: View {
                     Text(tier == .simple ? tr("tierSimple") : tr("tierStyled")).font(.system(size: 15, weight: .semibold))
                 }
                 Spacer()
-                Text(Format.money(1)).font(.system(size: 18, weight: .heavy).width(.expanded))
+                if let payPrice {
+                    Text(payPrice).font(.system(size: 18, weight: .heavy).width(.expanded))
+                }
             }
             .padding(.horizontal, 14).frame(minHeight: 48)
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.stageLine))
@@ -316,24 +345,37 @@ struct GateSheet: View {
                     .font(Theme.mono(13)).foregroundStyle(Theme.onStage.opacity(0.7))
             } else if q.free {
                 Text(tr("freeFirst")).font(.system(size: 20, weight: .heavy).width(.expanded))
+            } else if StoreBuild.purchasesEnabled {
+                if let payPrice {
+                    Text("\(tr("payTitle")): \(payPrice)").font(.system(size: 22, weight: .heavy).width(.expanded))
+                } else {
+                    PurchasesUnavailable(onStage: true)
+                }
             } else {
-                Text("\(tr("payTitle")): \(Format.money(q.price))").font(.system(size: 22, weight: .heavy).width(.expanded))
-                Label(tr("buyDemo"), systemImage: "info.circle").font(.system(size: 13)).foregroundStyle(Theme.onStage.opacity(0.7))
+                // Callers don't open the gate for this (StoreBuild.step → .notInApp); never show a price anyway.
+                Text(tr("store.createNotInApp")).font(.system(size: 17, weight: .semibold))
             }
 
-            Button(action: onConfirm) {
-                HStack(spacing: 10) {
-                    if busy { ProgressView().tint(Theme.onAccent) }
-                    Text(q.pack != nil ? labels.pack : q.free ? labels.free : labels.pay(price(q.price)))
-                        .font(.system(size: 17, weight: .heavy))
-                }
-                .frame(maxWidth: .infinity, minHeight: 54)
+            if let message {
+                Text(message).font(.system(size: 14, weight: .medium)).foregroundStyle(Theme.warn)
+                    .accessibilityIdentifier("gate-message")
             }
-            .buttonStyle(.plain)
-            .foregroundStyle(Theme.onAccent)
-            .background(Theme.accent, in: RoundedRectangle(cornerRadius: 14))
-            .disabled(busy)
-            .accessibilityIdentifier("gate-confirm")
+
+            if canConfirm {
+                Button(action: onConfirm) {
+                    HStack(spacing: 10) {
+                        if busy { ProgressView().tint(Theme.onAccent) }
+                        Text(q.pack != nil ? labels.pack : q.free ? labels.free : labels.pay(payPrice ?? ""))
+                            .font(.system(size: 17, weight: .heavy))
+                    }
+                    .frame(maxWidth: .infinity, minHeight: 54)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(Theme.onAccent)
+                .background(Theme.accent, in: RoundedRectangle(cornerRadius: 14))
+                .disabled(busy)
+                .accessibilityIdentifier("gate-confirm")
+            }
 
             Button(tr("cancel"), action: onCancel)
                 .font(.system(size: 15, weight: .semibold))
@@ -349,6 +391,32 @@ struct GateSheet: View {
         .accessibilityElement(children: .contain)
         .accessibilityLabel(tr("payTitle"))
     }
+}
 
-    private func price(_ v: Double) -> String { v == v.rounded() ? "\(Int(v))" : String(format: "%.2f", v) }
+/// "Purchases unavailable" — the build has purchases but the App Store didn't give us the products (no network,
+/// not set up in App Store Connect yet, a device with purchases blocked). "Try again" asks the store once more.
+struct PurchasesUnavailable: View {
+    var onStage = false
+    var body: some View {
+        // Still asking the store — a spinner, not "unavailable".
+        if Store.shared.load == .loading || Store.shared.load == .idle {
+            ProgressView().tint(onStage ? Theme.onStage : Theme.ink).frame(maxWidth: .infinity, minHeight: 44)
+        } else {
+            unavailable
+        }
+    }
+
+    private var unavailable: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label(tr("iap.unavailable"), systemImage: "exclamationmark.triangle")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(onStage ? Theme.onStage : Theme.ink)
+            Button(tr("common.retry")) { Task { await Store.shared.loadProducts() } }
+                .font(.system(size: 14, weight: .bold))
+                .foregroundStyle(onStage ? Theme.accent : Theme.accentInk)
+                .disabled(Store.shared.load == .loading)
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("iap-unavailable")
+    }
 }

@@ -108,6 +108,7 @@ private struct StorageBar: View {
     @State private var open = false
     @State private var busy = false
     @State private var failed = false
+    @State private var message: String?
 
     var body: some View {
         if let st = code.storage {
@@ -121,7 +122,7 @@ private struct StorageBar: View {
                     }
                     .accessibilityElement(children: .combine)
                     Spacer()
-                    if code.access == .owner {
+                    if code.access == .owner && StoragePlans.canChange {
                         Button { open.toggle() } label: {
                             Text(tr("storageChange")).font(.system(size: 13, weight: .heavy))
                                 .padding(.horizontal, 12).frame(minHeight: 38)
@@ -133,8 +134,8 @@ private struct StorageBar: View {
                 }
                 ProgressView(value: k).tint(k > 0.9 ? Theme.warn : Theme.accentInk)
                     .accessibilityLabel(tr("storageTitle"))
-                if open { plans(st) }
-                if failed { Text(tr("saveError")).font(.system(size: 12)).foregroundStyle(Theme.warn) }
+                if open && StoragePlans.canChange { plans(st) }
+                if failed { Text(message ?? tr("saveError")).font(.system(size: 12)).foregroundStyle(Theme.warn) }
             }
             .padding(14)
             .background(Theme.card, in: RoundedRectangle(cornerRadius: 14))
@@ -149,6 +150,9 @@ private struct StorageBar: View {
                 ForEach(options) { p in
                     let now = (st.plan ?? "free") == p.id
                     let small = st.used > p.bytes
+                    // Paid plans: the App Store's price for a month of this space (nil — purchases unavailable).
+                    let price = p.price > 0 ? Store.shared.price(IAPProduct.space(p.id)).map(IAPText.perMonth) : nil
+                    let unavailable = p.price > 0 && price == nil
                     Button { change(p.id) } label: {
                         VStack(alignment: .leading, spacing: 3) {
                             HStack {
@@ -160,7 +164,7 @@ private struct StorageBar: View {
                                         .foregroundStyle(Theme.onAccent).background(Theme.accent, in: Capsule())
                                 }
                             }
-                            Text(p.price > 0 ? "\(Format.money(p.price)) / \(tr("storageMonth"))" : tr("storageFreeName"))
+                            Text(p.price > 0 ? (price ?? "—") : tr("storageFreeName"))
                                 .font(Theme.mono(12)).foregroundStyle(now ? Theme.accent : Theme.muted)
                             if now && p.id != "free" {
                                 Text(tr("storageRenew")).font(.system(size: 11, weight: .semibold)).underline()
@@ -172,23 +176,44 @@ private struct StorageBar: View {
                         .foregroundStyle(now ? Theme.onStage : Theme.ink)
                         .background(now ? Theme.stage : Theme.field, in: RoundedRectangle(cornerRadius: 12))
                         .overlay(RoundedRectangle(cornerRadius: 12).stroke(now ? Theme.accent : Theme.line))
-                        .opacity(small ? 0.45 : 1)
+                        .opacity(small || unavailable ? 0.45 : 1)
                     }
                     .buttonStyle(.plain)
-                    .disabled(busy || small || (now && p.id == "free"))
-                    .accessibilityLabel("\(Format.bytes(p.bytes)) — \(p.price > 0 ? "\(Format.money(p.price)) / \(tr("storageMonth"))" : tr("storageFreeName"))\(now ? " (\(tr("storageNow")))" : "")")
+                    .disabled(busy || small || unavailable || (now && p.id == "free"))
+                    .accessibilityLabel("\(Format.bytes(p.bytes)) — \(p.price > 0 ? (price ?? tr("iap.unavailable")) : tr("storageFreeName"))\(now ? " (\(tr("storageNow")))" : "")")
+                    .accessibilityIdentifier("plan-\(p.id)")
                 }
             }
-            Text("\(tr("storageMonthly")) \(tr("buyDemo"))").font(.system(size: 12)).foregroundStyle(Theme.muted)
+            if !Store.shared.ready { PurchasesUnavailable() }
+            Text(tr("storageMonthly")).font(.system(size: 12)).foregroundStyle(Theme.muted)
         }
     }
 
+    /// "Free" — back to 1 MB (not a purchase, the server just switches). A paid plan — a month of that space for
+    /// this code through Apple in-app purchase (the current plan again — one more month); the server extends it.
     private func change(_ plan: String) {
         busy = true
         failed = false
+        message = nil
         Task {
-            do { code = try await API.shared.buyStorage(code.id, plan: plan); open = false } catch { failed = true }
-            busy = false
+            defer { busy = false }
+            do {
+                if plan == "free" {
+                    code = try await API.shared.buyStorage(code.id, plan: plan)
+                } else {
+                    switch try await Store.shared.buy(.space(code: code.id, plan: plan)) {
+                    case .done: code = try await API.shared.code(code.id)
+                    case .cancelled: return
+                    case .pending: message = tr("iap.pending"); failed = true; return
+                    }
+                }
+                open = false
+            } catch let f as Store.Failure {
+                message = f.message
+                failed = true
+            } catch {
+                failed = true
+            }
         }
     }
 }
@@ -368,7 +393,7 @@ private struct Composer: View {
                     .font(.system(size: 13)).foregroundStyle(Theme.muted).lineLimit(1)
                     .accessibilityIdentifier("composer-file")
             } else if kind == .video {
-                Text(tr("videoLimit")).font(.system(size: 12)).foregroundStyle(Theme.muted)
+                Text(tr(StoreBuild.purchasesEnabled ? "videoLimit" : "store.videoLimit")).font(.system(size: 12)).foregroundStyle(Theme.muted)
             }
         }
     }
@@ -422,7 +447,7 @@ private struct Composer: View {
             // The server measured it and it doesn't fit (someone added something meanwhile) — fresh numbers, offer.
             if let fresh = try? await API.shared.code(code.id) { code = fresh }
             offer = RoomOffer(storage: code.storage, need: (sentFile?.size ?? 0) + sentText.utf8.count)
-            if offer == nil { error = tr("storageFull") }
+            if offer == nil { error = tr(StoreBuild.purchasesEnabled ? "storageFull" : "store.roomNotInApp") }
         } catch APIError.offline {
             error = tr("common.offline")
         } catch {
@@ -430,15 +455,24 @@ private struct Composer: View {
         }
     }
 
-    /// Paid for the space — upload right away.
+    /// A month of the space it needs through Apple in-app purchase — then upload right away.
     private func payAndUpload(_ plan: String) {
         busy = true
+        error = nil
         Task {
             do {
-                let next = try await API.shared.buyStorage(code.id, plan: plan)
+                switch try await Store.shared.buy(.space(code: code.id, plan: plan)) {
+                case .done: break
+                case .cancelled: busy = false; return
+                case .pending: busy = false; error = tr("iap.pending"); return
+                }
+                let next = try await API.shared.code(code.id)
                 code = next
                 busy = false
                 await submit(current: next)
+            } catch let f as Store.Failure {
+                self.error = f.message
+                busy = false
             } catch {
                 self.error = tr("uploadError")
                 busy = false
@@ -452,7 +486,11 @@ private struct Composer: View {
         guard !Self.attachedOnce, let path = UserDefaults.standard.string(forKey: "QRAttachFile") else { return }
         Self.attachedOnce = true
         let url = URL(fileURLWithPath: path)
-        guard let local = MediaPrep.copyToTemp(url) else { return }
+        // Keep the file's own name (it shows under the picker, e.g. in App Store screenshots).
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("attach-\(UUID().uuidString)", isDirectory: true)
+        let local = dir.appendingPathComponent(url.lastPathComponent)
+        guard (try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)) != nil,
+              (try? FileManager.default.copyItem(at: url, to: local)) != nil else { return }
         let video = MediaPrep.videoTypes[url.pathExtension.lowercased()] != nil
         kind = video ? .video : .photo
         // After the kind switch has reset the composer.
@@ -481,16 +519,23 @@ struct RoomOfferCard: View {
             Text(tr("upSizes", ["file": Format.bytes(offer.need), "free": Format.bytes(offer.free), "quota": Format.bytes(offer.quota)]))
                 .font(Theme.mono(12)).foregroundStyle(Theme.onStage.opacity(0.7))
                 .accessibilityIdentifier("room-sizes")
-            if let plan = offer.plan {
-                if owner {
-                    (Text(tr("upNeed", ["size": Format.bytes(plan.bytes), "price": price(plan.price)])) + Text(" ")
-                        + Text(tr("buyDemo")).foregroundStyle(Theme.onStage.opacity(0.6)))
+            if !StoreBuild.purchasesEnabled {
+                // No purchases in this build: the sizes and what to do — no plan, no price, no button to buy.
+                Text(tr(offer.plan == nil ? "upMax" : "store.roomNotInApp", ["max": Format.bytes(StoragePlans.all.last!.bytes)]))
+                    .font(.system(size: 14)).foregroundStyle(Theme.onStage.opacity(0.85))
+                    .accessibilityIdentifier("room-not-in-app")
+                Button(tr("cancel"), action: onCancel)
+                    .font(.system(size: 14, weight: .medium)).foregroundStyle(Theme.onStage.opacity(0.7))
+                    .frame(minHeight: 44)
+            } else if let plan = offer.plan {
+                if owner, let price = Store.shared.price(IAPProduct.space(plan.id)) {
+                    Text(tr("iap.need", ["size": Format.bytes(plan.bytes), "price": price]))
                         .font(.system(size: 14))
                     HStack(spacing: 8) {
                         Button { onPay(plan.id) } label: {
                             HStack(spacing: 8) {
                                 if busy { ProgressView().tint(Theme.onAccent) }
-                                Text(tr("upPay", ["price": price(plan.price)])).font(.system(size: 15, weight: .heavy))
+                                Text(tr("iap.payUpload", ["price": price])).font(.system(size: 15, weight: .heavy))
                             }
                             .padding(.horizontal, 16).frame(minHeight: 46)
                             .foregroundStyle(Theme.onAccent).background(Theme.accent, in: RoundedRectangle(cornerRadius: 12))
@@ -502,6 +547,11 @@ struct RoomOfferCard: View {
                             .font(.system(size: 14, weight: .medium)).foregroundStyle(Theme.onStage.opacity(0.7))
                             .padding(.horizontal, 10).frame(minHeight: 46)
                     }
+                } else if owner {
+                    PurchasesUnavailable(onStage: true)
+                    Button(tr("cancel"), action: onCancel)
+                        .font(.system(size: 14, weight: .medium)).foregroundStyle(Theme.onStage.opacity(0.7))
+                        .frame(minHeight: 44)
                 } else {
                     Text(tr("upOwnerOnly")).font(.system(size: 14)).foregroundStyle(Theme.onStage.opacity(0.85))
                 }
@@ -524,6 +574,4 @@ struct RoomOfferCard: View {
     private func show() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { reveal?(Self.anchor) }
     }
-
-    private func price(_ v: Double) -> String { v == v.rounded() ? "\(Int(v))" : String(format: "%.2f", v) }
 }

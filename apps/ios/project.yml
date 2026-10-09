@@ -9,9 +9,10 @@ options:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "1.0"
+    # App Store: the version people see (1.0.0) and the build number (raise it for every upload of the same version).
+    MARKETING_VERSION: "1.0.0"
     CURRENT_PROJECT_VERSION: "1"
-    # TODO(owner): set the Team ID once the Apple Developer account ($99/yr) exists.
+    # TODO(owner): the Team ID of AI Switch LLC's Apple Developer account (developer.apple.com → Membership details).
     DEVELOPMENT_TEAM: ""
 targets:
   QRSpace:
@@ -21,6 +22,8 @@ targets:
       - path: QRSpace
     scheme:
       testTargets: [QRSpaceTests]
+      # In-app purchases in the Simulator without App Store Connect (Xcode's StoreKit testing). Not in the app bundle.
+      storeKitConfiguration: QRSpace.storekit
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: co.qrspace.app
@@ -29,7 +32,11 @@ targets:
         CODE_SIGN_ENTITLEMENTS: QRSpace/Resources/QRSpace.entitlements
         CODE_SIGN_STYLE: Automatic
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        TARGETED_DEVICE_FAMILY: "1,2"
+        # iPhone only for 1.0: no iPad layouts or iPad screenshots yet (iPads still run it as an iPhone app).
+        TARGETED_DEVICE_FAMILY: "1"
+        # Buy/pay screens (StoreBuild.purchasesEnabled). NO — an App Store build with no purchases in the app
+        # (guideline 3.1.1 until in-app purchase is decided); or once: xcodebuild … QR_PURCHASES_ENABLED=NO.
+        QR_PURCHASES_ENABLED: "YES"
         SWIFT_EMIT_LOC_STRINGS: YES
         LOCALIZATION_PREFERS_STRING_CATALOGS: YES
         ENABLE_PREVIEWS: YES
@@ -42,26 +49,27 @@ targets:
         CFBundleDevelopmentRegion: en
         CFBundleLocalizations: [en, ru, hy, es, pt, fr, de]
         CFBundleAllowMixedLocalizations: true
+        LSRequiresIPhoneOS: true
+        # Only HTTPS and Apple's own crypto — exempt; App Store Connect then doesn't ask about export compliance.
+        ITSAppUsesNonExemptEncryption: false
+        QRPurchasesEnabled: $(QR_PURCHASES_ENABLED)
         LSApplicationQueriesSchemes: [viber, whatsapp, tg]
         # Debug builds can talk to the local dev server (http://localhost:3720, `-QRAPIBase`); production is https.
+        # Local networking needs no App Review justification; Release builds never use it.
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
         CFBundleURLTypes:
           - CFBundleURLName: co.qrspace.app
             CFBundleURLSchemes: [qrspace]
+        # Permission texts — English here; all 7 languages in Resources/InfoPlist.xcstrings (scripts/strings.json).
         NSCameraUsageDescription: QR Space uses the camera to scan QR codes and barcodes.
-        NSPhotoLibraryUsageDescription: QR Space reads a code from a photo you pick.
-        NSPhotoLibraryAddUsageDescription: QR Space saves your code's image to Photos when you ask.
+        NSPhotoLibraryUsageDescription: QR Space reads a code from a photo you pick and adds the photos and videos you choose under your code.
+        NSPhotoLibraryAddUsageDescription: QR Space saves your code’s image to Photos when you ask.
         NSContactsUsageDescription: QR Space saves a scanned contact card to your contacts when you ask.
         NSCalendarsWriteOnlyAccessUsageDescription: QR Space adds a scanned event to your calendar when you ask.
         UILaunchScreen:
           UIColorName: LaunchBackground
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
-        UISupportedInterfaceOrientations~ipad:
-          - UIInterfaceOrientationPortrait
-          - UIInterfaceOrientationPortraitUpsideDown
-          - UIInterfaceOrientationLandscapeLeft
-          - UIInterfaceOrientationLandscapeRight
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
     entitlements:
@@ -74,7 +82,10 @@ targets:
   QRSpaceUITests:
     type: bundle.ui-testing
     platform: iOS
-    sources: [QRSpaceUITests]
+    sources:
+      - QRSpaceUITests
+      - path: QRSpace.storekit
+        buildPhase: resources
     dependencies:
       - target: QRSpace
     settings:
@@ -85,7 +96,11 @@ targets:
   QRSpaceTests:
     type: bundle.unit-test
     platform: iOS
-    sources: [QRSpaceTests]
+    sources:
+      - QRSpaceTests
+      # SKTestSession(configurationFileNamed: "QRSpace") — in-app purchases against the local server (IAPTests).
+      - path: QRSpace.storekit
+        buildPhase: resources
     dependencies:
       - target: QRSpace
     settings:
@@ -98,6 +113,11 @@ schemes:
       targets:
         QRSpace: all
         QRSpaceUITests: [test]
+        QRSpaceTests: [test]
+    run:
+      config: Debug
+      storeKitConfiguration: QRSpace.storekit
     test:
       config: Debug
-      targets: [QRSpaceUITests]
+      # QRSpaceTests/StoreKitConfigTests sets the Simulator up for StoreKit testing before the UI tests.
+      targets: [QRSpaceUITests, QRSpaceTests]

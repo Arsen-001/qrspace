@@ -44,6 +44,7 @@ struct SignInView: View {
                         Button(tr("common.retry")) { Task { await session.refresh() } }.buttonStyle(.lime)
                     }
                 }
+                LegalLinks()
             }
             .padding(16)
             .frame(maxWidth: 640)

@@ -1,0 +1,1 @@
+qr,scanner,barcode,reader,qr code,generator,wifi,vcard,memory,photo,video,ean,upc

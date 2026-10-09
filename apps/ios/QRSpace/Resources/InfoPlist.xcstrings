@@ -1,0 +1,288 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "CFBundleDisplayName": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space"
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space"
+          }
+        }
+      }
+    },
+    "NSCalendarsWriteOnlyAccessUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space adds a scanned event to your calendar when you ask."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space добавляет отсканированное событие в ваш календарь, когда вы попросите."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space-ը սկանավորված իրադարձությունն ավելացնում է ձեր օրացույցում, երբ դուք խնդրեք։"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space añade un evento escaneado a tu calendario cuando lo pides."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O QR Space adiciona um evento lido ao seu calendário quando você pede."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space ajoute un événement scanné à votre calendrier quand vous le demandez."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space fügt einen gescannten Termin zu deinem Kalender hinzu, wenn du es möchtest."
+          }
+        }
+      }
+    },
+    "NSCameraUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space uses the camera to scan QR codes and barcodes."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space использует камеру, чтобы сканировать QR-коды и штрихкоды."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space-ը տեսախցիկն օգտագործում է QR կոդեր և շտրիխկոդեր սկանավորելու համար։"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space usa la cámara para escanear códigos QR y códigos de barras."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O QR Space usa a câmera para ler QR codes e códigos de barras."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space utilise l’appareil photo pour scanner les QR codes et les codes-barres."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space nutzt die Kamera, um QR-Codes und Barcodes zu scannen."
+          }
+        }
+      }
+    },
+    "NSContactsUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space saves a scanned contact card to your contacts when you ask."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space сохраняет отсканированную визитку в ваши контакты, когда вы попросите."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space-ը սկանավորված կոնտակտը պահում է ձեր կոնտակտներում, երբ դուք խնդրեք։"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space guarda en tus contactos una tarjeta escaneada cuando lo pides."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O QR Space salva um cartão de contato lido nos seus contatos quando você pede."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space enregistre une fiche contact scannée dans vos contacts quand vous le demandez."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space speichert eine gescannte Kontaktkarte in deinen Kontakten, wenn du es möchtest."
+          }
+        }
+      }
+    },
+    "NSPhotoLibraryAddUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space saves your code’s image to Photos when you ask."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space сохраняет картинку вашего кода в «Фото», когда вы попросите."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space-ը ձեր կոդի պատկերը պահում է «Լուսանկարներ»-ում, երբ դուք խնդրեք։"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space guarda la imagen de tu código en Fotos cuando lo pides."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O QR Space salva a imagem do seu código em Fotos quando você pede."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space enregistre l’image de votre code dans Photos quand vous le demandez."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space speichert das Bild deines Codes in Fotos, wenn du es möchtest."
+          }
+        }
+      }
+    },
+    "NSPhotoLibraryUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space reads a code from a photo you pick and adds the photos and videos you choose under your code."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space читает код с выбранного фото и добавляет под ваш код фото и видео, которые вы выберете."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space-ը կարդում է կոդը ձեր ընտրած լուսանկարից և ձեր կոդի տակ ավելացնում ձեր ընտրած լուսանկարներն ու տեսանյութերը։"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space lee un código de la foto que eliges y añade bajo tu código las fotos y vídeos que elijas."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O QR Space lê um código da foto que você escolher e adiciona sob o seu código as fotos e vídeos que você escolher."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space lit un code sur la photo choisie et ajoute sous votre code les photos et vidéos que vous choisissez."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR Space liest einen Code aus dem Foto, das du auswählst, und legt die Fotos und Videos, die du wählst, unter deinen Code."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

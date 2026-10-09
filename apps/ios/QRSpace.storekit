@@ -1,0 +1,178 @@
+{
+  "identifier": "8D3B5E21",
+  "nonRenewingSubscriptions": [
+    {
+      "displayPrice": "0.99",
+      "familyShareable": false,
+      "internalID": "6740000006",
+      "localizations": [
+        {
+          "description": "10 MB of space under one code for one month.",
+          "displayName": "10 MB for a month",
+          "locale": "en_US"
+        },
+        {
+          "description": "10 МБ места под одним кодом на месяц.",
+          "displayName": "10 МБ на месяц",
+          "locale": "ru"
+        }
+      ],
+      "productID": "co.qrspace.space10.month",
+      "referenceName": "Space 10 MB for a month",
+      "type": "NonRenewingSubscription"
+    },
+    {
+      "displayPrice": "2.99",
+      "familyShareable": false,
+      "internalID": "6740000007",
+      "localizations": [
+        {
+          "description": "100 MB of space under one code for one month.",
+          "displayName": "100 MB for a month",
+          "locale": "en_US"
+        },
+        {
+          "description": "100 МБ места под одним кодом на месяц.",
+          "displayName": "100 МБ на месяц",
+          "locale": "ru"
+        }
+      ],
+      "productID": "co.qrspace.space100.month",
+      "referenceName": "Space 100 MB for a month",
+      "type": "NonRenewingSubscription"
+    },
+    {
+      "displayPrice": "8.99",
+      "familyShareable": false,
+      "internalID": "6740000008",
+      "localizations": [
+        {
+          "description": "1 GB of space under one code for one month.",
+          "displayName": "1 GB for a month",
+          "locale": "en_US"
+        },
+        {
+          "description": "1 ГБ места под одним кодом на месяц.",
+          "displayName": "1 ГБ на месяц",
+          "locale": "ru"
+        }
+      ],
+      "productID": "co.qrspace.space1000.month",
+      "referenceName": "Space 1 GB for a month",
+      "type": "NonRenewingSubscription"
+    }
+  ],
+  "products": [
+    {
+      "displayPrice": "0.99",
+      "familyShareable": false,
+      "internalID": "6740000001",
+      "localizations": [
+        {
+          "description": "One QR code of any look, forever. 1 MB under it.",
+          "displayName": "One QR code",
+          "locale": "en_US"
+        },
+        {
+          "description": "Один QR-код любого вида, навсегда. 1 МБ под ним.",
+          "displayName": "Один QR-код",
+          "locale": "ru"
+        }
+      ],
+      "productID": "co.qrspace.code",
+      "referenceName": "One QR code",
+      "type": "Consumable"
+    },
+    {
+      "displayPrice": "3.99",
+      "familyShareable": false,
+      "internalID": "6740000002",
+      "localizations": [
+        {
+          "description": "A pack of 5 QR codes of any look, 1 MB under each.",
+          "displayName": "5 QR codes",
+          "locale": "en_US"
+        },
+        {
+          "description": "Пакет из 5 QR-кодов любого вида, 1 МБ под каждым.",
+          "displayName": "5 QR-кодов",
+          "locale": "ru"
+        }
+      ],
+      "productID": "co.qrspace.pack5",
+      "referenceName": "Pack of 5 codes",
+      "type": "Consumable"
+    },
+    {
+      "displayPrice": "6.99",
+      "familyShareable": false,
+      "internalID": "6740000003",
+      "localizations": [
+        {
+          "description": "A pack of 10 QR codes of any look, 1 MB under each.",
+          "displayName": "10 QR codes",
+          "locale": "en_US"
+        },
+        {
+          "description": "Пакет из 10 QR-кодов любого вида, 1 МБ под каждым.",
+          "displayName": "10 QR-кодов",
+          "locale": "ru"
+        }
+      ],
+      "productID": "co.qrspace.pack10",
+      "referenceName": "Pack of 10 codes",
+      "type": "Consumable"
+    },
+    {
+      "displayPrice": "32.99",
+      "familyShareable": false,
+      "internalID": "6740000004",
+      "localizations": [
+        {
+          "description": "A pack of 50 QR codes of any look, 1 MB under each.",
+          "displayName": "50 QR codes",
+          "locale": "en_US"
+        },
+        {
+          "description": "Пакет из 50 QR-кодов любого вида, 1 МБ под каждым.",
+          "displayName": "50 QR-кодов",
+          "locale": "ru"
+        }
+      ],
+      "productID": "co.qrspace.pack50",
+      "referenceName": "Pack of 50 codes",
+      "type": "Consumable"
+    },
+    {
+      "displayPrice": "59.99",
+      "familyShareable": false,
+      "internalID": "6740000005",
+      "localizations": [
+        {
+          "description": "A pack of 100 QR codes of any look, 1 MB under each.",
+          "displayName": "100 QR codes",
+          "locale": "en_US"
+        },
+        {
+          "description": "Пакет из 100 QR-кодов любого вида, 1 МБ под каждым.",
+          "displayName": "100 QR-кодов",
+          "locale": "ru"
+        }
+      ],
+      "productID": "co.qrspace.pack100",
+      "referenceName": "Pack of 100 codes",
+      "type": "Consumable"
+    }
+  ],
+  "settings": {
+    "_failTransactionsEnabled": false,
+    "_locale": "en_US",
+    "_storefront": "USA",
+    "_storeKitErrors": []
+  },
+  "subscriptionGroups": [],
+  "version": {
+    "major": 4,
+    "minor": 0
+  }
+}

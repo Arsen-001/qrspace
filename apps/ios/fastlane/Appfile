@@ -1,0 +1,4 @@
+# QR Space on the App Store (AI Switch LLC's organization Apple Developer account — shared with BookTime).
+app_identifier("co.qrspace.app")
+# Team ID — the same as DEVELOPMENT_TEAM in project.yml; from the environment so nothing is hard-coded here.
+team_id(ENV["QR_TEAM_ID"]) if ENV["QR_TEAM_ID"]

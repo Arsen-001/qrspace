@@ -13,7 +13,7 @@ struct QRSpaceApp: App {
                 .environment(session)
                 .environment(router)
                 .tint(Theme.accentInk)
-                .task { await session.refresh(); await debugLaunch() }
+                .task { Store.shared.start(); await session.refresh(); await debugLaunch() }
                 // Universal Links (https://qrspace.co/K/…, /c/…), qrspace://… and the sign-in callback qrspace://auth?token=…
                 .onOpenURL { url in
                     if let token = WebAuth.token(from: url) {

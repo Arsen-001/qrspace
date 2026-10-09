@@ -1,0 +1,23 @@
+QR Space — le scanner et les QR codes de nouvelle génération.
+
+SCANNER
+• Lit les QR codes et les codes-barres : EAN, UPC, Code 128, DataMatrix, PDF417, Aztec et plus.
+• Wi‑Fi : réseau et mot de passe en un geste ; téléphone : appeler ; contact : enregistrer ; événement : au calendrier ; lieu : sur la carte.
+• Code-barres d’un produit : le numéro et une recherche sur le web.
+• Détection des faux : on vous dit si c’est un vrai code QR Space ou un autocollant avec le lien de quelqu’un d’autre.
+• Lire depuis une photo, lampe et historique des scans (gardé uniquement sur votre téléphone).
+
+VOS CODES
+• Lien, texte, Wi‑Fi, contact, téléphone, e-mail, réseaux sociaux, événement : 18 types.
+• Styles prêts, couleurs, formes de points et de coins, avec aperçu immédiat.
+• Votre premier code simple est gratuit, ensuite un petit paiement unique par code — à vous pour toujours, sans abonnement.
+
+MÉMOIRE SOUS LE CODE
+• Sous chaque code, de la place pour photos, vidéo et texte : un album de famille, la notice de la chaudière, les infos de votre animal.
+• Vous décidez qui voit : tout le monde, vos contacts, des personnes choisies ou vous seul.
+• 1 Mo gratuit, plus d’espace au mois si besoin.
+
+SCANS
+• Combien de fois chaque code a été scanné : au total, cette semaine et par jour.
+
+Confidentialité : la caméra lit les codes sur votre téléphone, les images ne sont envoyées nulle part. Aucun traceur publicitaire.

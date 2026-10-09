@@ -17,6 +17,8 @@ struct EditCodeView: View {
     @State private var download: DownloadGate?
     @State private var downloading = false
     @State private var downloadFailed = false
+    @State private var downloadNotInApp = false
+    @State private var downloadError: String?
     @State private var shareFile: ShareFile?
 
     struct DownloadGate: Identifiable { let id = UUID(); let quote: Quote; let tier: Tier; let key: String }
@@ -62,10 +64,10 @@ struct EditCodeView: View {
         .background(ScreenBackground())
         .navigationTitle(tr("edit"))
         .navigationBarTitleDisplayMode(.inline)
-        .task(id: "\(id)-\(session.generation)") { await load() }
+        .task(id: "\(id)-\(session.generation)-\(Store.shared.delivered)") { await load() }
         .refreshable { await load() }
         .sheet(item: $download) { g in
-            GateSheet(quote: g.quote, tier: g.tier, busy: downloading, labels: .download,
+            GateSheet(quote: g.quote, tier: g.tier, busy: downloading, labels: .download, message: downloadError,
                       onConfirm: { confirmDownload(g) }, onCancel: { download = nil })
                 .presentationDetents([.medium, .large])
                 .presentationBackground(Theme.stage)
@@ -198,7 +200,11 @@ struct EditCodeView: View {
                 .buttonStyle(.lime)
                 .disabled(downloading)
                 .accessibilityIdentifier("download-png")
-                if downloadFailed { Text(tr("saveError")).font(.system(size: 13)).foregroundStyle(Theme.warn) }
+                if downloadFailed { Text(downloadError ?? tr("saveError")).font(.system(size: 13)).foregroundStyle(Theme.warn) }
+                if downloadNotInApp {
+                    Text(tr("store.downloadNotInApp")).font(.system(size: 13)).foregroundStyle(Theme.muted)
+                        .multilineTextAlignment(.center)
+                }
             }
             if let onGuest {
                 Button(action: onGuest) { Label(tr("dashAsGuest"), systemImage: "eye") }.buttonStyle(.plainField)
@@ -216,6 +222,8 @@ struct EditCodeView: View {
     private func startDownload(_ code: CodeView) {
         downloading = true
         downloadFailed = false
+        downloadNotInApp = false
+        downloadError = nil
         Task {
             defer { downloading = false }
             // `paid` from the server; an older server — generator codes and editions count as paid.
@@ -223,21 +231,38 @@ struct EditCodeView: View {
                 let key = "code:\(code.id)", tier = Pricing.tier(ofSaved: code.style?.raw)
                 do {
                     let q = try await API.shared.quote(key: key, tier: tier)
-                    if !q.paid { download = DownloadGate(quote: q, tier: tier, key: key); return }
+                    switch StoreBuild.step(for: q) {
+                    case .go: break
+                    case .ask: download = DownloadGate(quote: q, tier: tier, key: key); return
+                    case .notInApp: downloadNotInApp = true; return
+                    }
                 } catch { downloadFailed = true; return }
             }
             await fetchFull(code)
         }
     }
 
+    /// Free first code or a pack — recorded by the server; otherwise one code through Apple in-app purchase under
+    /// the key `code:<id>`, then the full-size drawing.
     private func confirmDownload(_ g: DownloadGate) {
         downloading = true
+        downloadError = nil
         Task {
             do {
-                try await API.shared.pay(key: g.key, tier: g.tier)
+                if g.quote.free || g.quote.pack != nil {
+                    try await API.shared.pay(key: g.key, tier: g.tier)
+                } else {
+                    switch try await Store.shared.buy(.code(key: g.key, tier: g.tier.rawValue)) {
+                    case .done: break
+                    case .cancelled: downloading = false; return
+                    case .pending: download = nil; downloadError = tr("iap.pending"); downloadFailed = true; downloading = false; return
+                    }
+                }
                 download = nil
                 if let code { await fetchFull(code) }
                 await load() // now `paid` — the drawing re-checks at full size
+            } catch let f as Store.Failure {
+                downloadError = f.message
             } catch {
                 download = nil
                 downloadFailed = true
