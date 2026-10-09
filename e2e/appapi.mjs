@@ -43,6 +43,7 @@ ok((await (await arman.post("/api/codes/quick", { data: { content: menu, key: "g
 const width = async (id) => (await (await arman.get(`/api/codes/${id}/image?format=png&size=1024`)).body()).readUInt32BE(16);
 ok((await width(bublik.id)) === 256, "unpaid code: only a small picture");
 ok((await width(quick.id)) === 1024, "paid code: full-size picture");
+ok((await (await arman.get(`/api/codes/${quick.id}`)).json()).paid === true && (await (await arman.get(`/api/codes/${bublik.id}`)).json()).paid === false, "code view says whether it's paid");
 ok((await (await arman.get(`/api/codes/${quick.id}`)).json()).title === "Меню кафе", "quick code created with a title");
 
 // Предпросмотр до создания кода
@@ -71,6 +72,11 @@ ok((await (await app.post("/api/devices", { data: { token: dev, platform: "ios" 
 ok((await app.post("/api/devices", { data: { token: dev, platform: "windows" } })).status() === 400, "unknown platform refused");
 ok((await (await ctx()).post("/api/devices", { data: { token: dev, platform: "ios" } })).status() === 401, "guest can't register a device");
 ok((await (await app.delete("/api/devices", { data: { token: dev } })).json()).ok === true, "device removed on sign-out");
+const lost = "e".repeat(50) + "LOST01";
+await app.post("/api/devices", { data: { token: lost, platform: "android", lang: "ru" } });
+ok((await (await app.get("/api/devices")).json()).devices.some((d) => d.end === "LOST01"), "my phones listed (only the token's end)");
+await app.delete("/api/devices", { data: { end: "LOST01" } });
+ok(!(await (await app.get("/api/devices")).json()).devices.some((d) => d.end === "LOST01"), "lost phone removed from the account page");
 
 if (errors.length) { console.log("errors:", errors); process.exit(1); }
 console.log("appapi: ok");

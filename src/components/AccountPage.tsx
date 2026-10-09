@@ -449,6 +449,44 @@ function Sales({ t, lang, p }: { t: Dict; lang: Lang; p: Profile }) {
   );
 }
 
+/** Телефоны с приложением, куда приходят уведомления (09.10.2026); убрать — если телефон потерян или продан. */
+function Phones({ t, lang }: { t: Dict; lang: Lang }) {
+  const [list, setList] = useState<{ platform: "ios" | "android"; at: string; end: string }[] | null>(null);
+  const load = () =>
+    fetch("/api/devices", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : { devices: [] }))
+      .then((j: { devices: { platform: "ios" | "android"; at: string; end: string }[] }) => setList(j.devices), () => setList([]));
+  useEffect(() => {
+    load();
+  }, []);
+  if (!list?.length) return null;
+  const remove = async (end: string) => {
+    await fetch("/api/devices", { method: "DELETE", headers: { "content-type": "application/json" }, body: JSON.stringify({ end }) });
+    load();
+  };
+  return (
+    <section className="rounded-2xl border border-line bg-card p-5">
+      <div className="mb-1.5 flex items-center gap-2 text-sm font-medium text-muted">
+        {t.accPhones}
+        <Info text={t.infoPhones} label={t.accPhones} />
+      </div>
+      <ul className="divide-y divide-line">
+        {list.map((d) => (
+          <li key={d.end} className="flex items-center gap-3 py-2.5 text-sm">
+            <span className="min-w-0 flex-1">
+              <span className="font-semibold">{d.platform === "ios" ? "iPhone" : "Android"}</span>
+              <span className="ml-2 text-xs text-muted">{fmtDateTime(d.at, lang)}</span>
+            </span>
+            <button type="button" onClick={() => remove(d.end)} className="min-h-9 rounded-lg px-3 text-xs font-semibold text-muted hover:bg-field hover:text-warn">
+              {t.remove}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 function Settings({ t, lang, p, onName }: { t: Dict; lang: Lang; p: Profile; onName: () => void }) {
   const router = useRouter();
   const [name, setName] = useState(p.name);
@@ -508,6 +546,8 @@ function Settings({ t, lang, p, onName }: { t: Dict; lang: Lang; p: Profile; onN
           <div className="mb-1.5 mt-4 text-sm font-medium text-muted">{t.accLanguage}</div>
           <Select className="w-full sm:w-56" label={t.accLanguage} value={lang} onChange={(v) => saveLang(v)} options={LANGS.map((l) => ({ id: l.id, label: l.name }))} />
         </section>
+
+        <Phones t={t} lang={lang} />
 
         <section className="space-y-3 rounded-2xl border border-line bg-card p-5">
           <button

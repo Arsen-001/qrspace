@@ -468,6 +468,7 @@ export function viewOf(code: CodeRecord, me: string | null): CodeView {
     requested: !!me && code.requests.some((r) => r.personId === me),
     style: owner || access !== "closed" ? code.style : null,
     styleLocked: !!(code.styleLocked || code.edition || code.auth),
+    paid: !!code.styleLocked || !!code.edition,
     ...((owner || access === "edit") && { storage: storageOf(code) }),
     // Прежний код-ссылка без содержимого — его адрес как «сайт».
     // Заблокированный по жалобе — содержимое (куда ведёт) только хозяину.

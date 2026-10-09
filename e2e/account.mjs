@@ -66,6 +66,13 @@ await p.waitForSelector("text=Использовано 0 из 10");
 ok(true, "bought pack appears in the list");
 await p.locator("nav[aria-label=Кабинет]").getByRole("button", { name: "Покупки" }).click();
 await p.getByText("Пакет · 10 QR").waitFor();
+// Телефоны с уведомлениями: видно и можно убрать
+await p.request.post(B + "/api/devices", { data: { token: "f".repeat(50) + "PHONE1", platform: "ios", lang: "ru" } });
+await p.goto(B + "/account?tab=settings", { waitUntil: "networkidle" });
+await p.getByText("Телефоны с уведомлениями").waitFor();
+await p.getByRole("button", { name: "Убрать" }).click();
+await p.getByText("Телефоны с уведомлениями").waitFor({ state: "detached" });
+ok(true, "phone listed in settings and removed");
 ok(true, "pack is in purchases");
 await p.getByRole("button", { name: /Меню аккаунта/ }).click();
 await p.getByRole("menuitem", { name: "Выйти" }).click();

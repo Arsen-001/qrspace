@@ -113,6 +113,8 @@ export type CodeView = {
   content: Content | null;
   /** Вид закреплён — менять нельзя (скачан, куплен в маркете, вещь бренда). */
   styleLocked: boolean;
+  /** Оплачен (скачан со страницы кода, из генератора — только по оплате, или куплен в маркете): чистый файл для печати. */
+  paid: boolean;
   /** Место под кодом: занято и всего, байт (хозяину и тем, кто дописывает). */
   storage?: { used: number; quota: number; plan: string | null; until: string | null };
   stats?: ScanStats;

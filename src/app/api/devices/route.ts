@@ -8,11 +8,12 @@ import { currentPerson } from "@/server/session";
  * Apple / Firebase. Не больше 10 телефонов на человека: новые вытесняют старые.
  */
 async function read(req: Request) {
-  const b = (await req.json().catch(() => ({}))) as { token?: unknown; platform?: unknown; lang?: unknown };
+  const b = (await req.json().catch(() => ({}))) as { token?: unknown; platform?: unknown; lang?: unknown; end?: unknown };
   const token = typeof b.token === "string" && /^[A-Za-z0-9:_\-.]{20,4096}$/.test(b.token) ? b.token : null;
   const platform: "ios" | "android" | null = b.platform === "ios" || b.platform === "android" ? b.platform : null;
   const lang = LANGS.find((l) => l.id === b.lang)?.id as Lang | undefined;
-  return { token, platform, lang };
+  const end = typeof b.end === "string" && /^[A-Za-z0-9:_\-.]{6}$/.test(b.end) ? b.end : null;
+  return { token, platform, lang, end };
 }
 
 /** Мои телефоны (без самих токенов — только конец, чтобы приложение узнало себя). */
@@ -42,11 +43,12 @@ export async function POST(req: Request) {
 export async function DELETE(req: Request) {
   const me = await currentPerson();
   if (!me) return Response.json({ error: "login" }, { status: 401 });
-  const { token } = await read(req);
-  if (!token) return Response.json({ error: "bad" }, { status: 400 });
+  // Приложение убирает себя по токену; кабинет на сайте — по концу токена (сам токен сайт не знает).
+  const { token, end } = await read(req);
+  if (!token && !end) return Response.json({ error: "bad" }, { status: 400 });
   await mutate((db) => {
     const u = db.users.find((x) => x.id === me)!;
-    u.devices = (u.devices ?? []).filter((d) => d.token !== token);
+    u.devices = (u.devices ?? []).filter((d) => (token ? d.token !== token : !d.token.endsWith(end!)));
   });
   return Response.json({ ok: true });
 }

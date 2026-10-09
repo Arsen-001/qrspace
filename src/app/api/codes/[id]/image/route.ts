@@ -21,8 +21,8 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/api/codes/[id]/i
   if (accessOf(code, me) === "closed") return Response.json({ error: "closed" }, { status: 403 });
 
   const style = code.style ? fromSaved({ ...code.style, texture: null }) : DEFAULT_STYLE;
-  // Оплачен: код из генератора (создаётся только по оплате), купленный в маркете, или скачан со страницы кода (code:<id>).
-  const paid = (code.compact && code.kind === "link") || !!code.edition || (await purchasesOf(code.owner)).some((p) => p.key === `code:${code.id}` || p.code === code.id);
+  // Оплачен: при оплате вид кода закрепляется (генератор — только по оплате, страница кода — code:<id>), или куплен в маркете.
+  const paid = !!code.styleLocked || !!code.edition || (await purchasesOf(code.owner)).some((p) => p.key === `code:${code.id}` || p.code === code.id);
   const size = Math.min(paid ? 1024 : 256, Math.max(64, Number(req.nextUrl.searchParams.get("size")) || 512));
   let svg = toSvg(buildDrawing(linkOf(publicBase(req), code), toQrStyle(style)), size);
 

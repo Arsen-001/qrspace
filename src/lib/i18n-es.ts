@@ -886,6 +886,8 @@ export const es: Dict = {
   accFromPack: "de un pack",
   accPackItem: "Pack",
   accSpaceItem: "Espacio bajo un código",
+  accPhones: "Teléfonos con notificaciones",
+  infoPhones: "Teléfonos donde iniciaste sesión en la app QR Space y permitiste notificaciones. ¿Perdiste o vendiste uno? Quítalo aquí y dejará de recibirlas.",
   accPackUsed: "{used} de {codes} usados",
   accNoPacks: "Aún no tienes packs. Compra uno y cada código te sale más barato.",
   accNoSales: "Aún no has puesto nada a la venta. Un código coleccionable se vende desde su página.",
