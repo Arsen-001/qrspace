@@ -43,11 +43,15 @@ targets:
         CFBundleLocalizations: [en, ru, hy, es, pt, fr, de]
         CFBundleAllowMixedLocalizations: true
         LSApplicationQueriesSchemes: [viber, whatsapp, tg]
+        # Debug builds can talk to the local dev server (http://localhost:3720, `-QRAPIBase`); production is https.
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
         CFBundleURLTypes:
           - CFBundleURLName: co.qrspace.app
             CFBundleURLSchemes: [qrspace]
         NSCameraUsageDescription: QR Space uses the camera to scan QR codes and barcodes.
         NSPhotoLibraryUsageDescription: QR Space reads a code from a photo you pick.
+        NSPhotoLibraryAddUsageDescription: QR Space saves your code's image to Photos when you ask.
         NSContactsUsageDescription: QR Space saves a scanned contact card to your contacts when you ask.
         NSCalendarsWriteOnlyAccessUsageDescription: QR Space adds a scanned event to your calendar when you ask.
         UILaunchScreen:
@@ -65,6 +69,19 @@ targets:
       properties:
         # Universal Links: qrspace.co serves apple-app-site-association once APPLE_APP_IDS is set in Vercel.
         com.apple.developer.associated-domains: [applinks:qrspace.co, applinks:www.qrspace.co]
+  # Flows against the local dev server (sign in on the site, create, edit, room offer) with screenshots.
+  # Run only with the shared lock held and the dev server up — see README "End-to-end in the Simulator".
+  QRSpaceUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [QRSpaceUITests]
+    dependencies:
+      - target: QRSpace
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: co.qrspace.app.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: QRSpace
   QRSpaceTests:
     type: bundle.unit-test
     platform: iOS
@@ -75,3 +92,12 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: co.qrspace.app.tests
         GENERATE_INFOPLIST_FILE: YES
+schemes:
+  QRSpaceE2E:
+    build:
+      targets:
+        QRSpace: all
+        QRSpaceUITests: [test]
+    test:
+      config: Debug
+      targets: [QRSpaceUITests]

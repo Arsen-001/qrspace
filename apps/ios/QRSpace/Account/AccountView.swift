@@ -20,6 +20,9 @@ private struct SignedInAccount: View {
     @State private var notices: Notices?
     @State private var error: APIError?
     @State private var confirmOut = false
+    @State private var sureDelete = false
+    @State private var deleting = false
+    @State private var deleteFailed = false
 
     var body: some View {
         ScrollView {
@@ -31,6 +34,8 @@ private struct SignedInAccount: View {
                     Button(tr("logout"), role: .destructive) { confirmOut = true }
                         .buttonStyle(.plainField)
                         .padding(.top, 6)
+                    // Demo accounts can't be deleted (the server answers 403) — no button, as on the site.
+                    if p.provider != "demo" { deleteAccount }
                 } else if let error {
                     ScreenTitle(text: tr("accountTitle"))
                     CardBox {
@@ -49,6 +54,48 @@ private struct SignedInAccount: View {
         .task(id: session.generation) { await load() }
         .confirmationDialog(tr("account.signOutConfirm"), isPresented: $confirmOut, titleVisibility: .visible) {
             Button(tr("logout"), role: .destructive) { Task { await session.signOut() } }
+        }
+    }
+
+    /// "Delete account" with a clear confirm step (the site's wording); required by App Store guideline 5.1.1(v).
+    @ViewBuilder private var deleteAccount: some View {
+        if sureDelete {
+            VStack(alignment: .leading, spacing: 12) {
+                Text(tr("deleteAccountSure")).font(.system(size: 15, weight: .semibold)).foregroundStyle(Theme.warn)
+                HStack(spacing: 8) {
+                    Button(role: .destructive) {
+                        deleting = true
+                        deleteFailed = false
+                        Task {
+                            do { try await session.deleteAccount() } catch { deleteFailed = true }
+                            deleting = false
+                        }
+                    } label: {
+                        HStack(spacing: 8) {
+                            if deleting { ProgressView().tint(.white) }
+                            Text(tr("deleteAccountYes")).font(.system(size: 15, weight: .bold))
+                        }
+                        .frame(maxWidth: .infinity, minHeight: 46)
+                        .foregroundStyle(.white)
+                        .background(Theme.warn, in: RoundedRectangle(cornerRadius: 10))
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(deleting)
+                    .accessibilityIdentifier("delete-account-yes")
+                    Button(tr("cancel")) { sureDelete = false }
+                        .font(.system(size: 15, weight: .medium)).foregroundStyle(Theme.muted)
+                        .padding(.horizontal, 12).frame(minHeight: 46)
+                }
+                if deleteFailed { Text(tr("saveError")).font(.system(size: 13)).foregroundStyle(Theme.warn) }
+            }
+            .padding(14)
+            .background(Theme.warn.opacity(0.1), in: RoundedRectangle(cornerRadius: 12))
+        } else {
+            Button(tr("deleteAccount")) { sureDelete = true }
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(Theme.muted)
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .accessibilityIdentifier("delete-account")
         }
     }
 

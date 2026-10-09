@@ -49,12 +49,19 @@
 		<string>whatsapp</string>
 		<string>tg</string>
 	</array>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
 	<string>QR Space adds a scanned event to your calendar when you ask.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>QR Space uses the camera to scan QR codes and barcodes.</string>
 	<key>NSContactsUsageDescription</key>
 	<string>QR Space saves a scanned contact card to your contacts when you ask.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>QR Space saves your code's image to Photos when you ask.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>QR Space reads a code from a photo you pick.</string>
 	<key>UIApplicationSceneManifest</key>

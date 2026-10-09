@@ -15,3 +15,10 @@ var uiLanguage: String {
     let code = Bundle.main.preferredLocalizations.first ?? "en"
     return String(code.prefix(2))
 }
+
+/// Locale for dates and numbers in the app's language (the strings' language), with the device's region.
+var uiLocale: Locale {
+    let lang = Bundle.main.preferredLocalizations.first ?? "en"
+    if let region = Locale.current.region?.identifier { return Locale(identifier: "\(lang)_\(region)") }
+    return Locale(identifier: lang)
+}

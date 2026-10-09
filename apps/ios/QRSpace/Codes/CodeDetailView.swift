@@ -1,9 +1,9 @@
-import AVKit
 import SwiftUI
 
 /// One code as the current person sees it: the code, what's in it, and the memory (text, photos, video).
 struct CodeDetailView: View {
-    enum Source: Hashable { case id(String), link(OurLink) }
+    /// `guest` — the code as a person who isn't signed in sees it ("As others see it").
+    enum Source: Hashable { case id(String), link(OurLink), guest(String) }
     enum LoadState { case loading, loaded(CodeView), failed(APIError) }
 
     let source: Source
@@ -39,12 +39,12 @@ struct CodeDetailView: View {
 
     private func load() async {
         do {
-            let id: String
+            let code: CodeView
             switch source {
-            case .id(let x): id = x
-            case .link(let l): id = try await l.codeId()
+            case .id(let x): code = try await API.shared.code(x, visit: fromScan)
+            case .link(let l): code = try await API.shared.code(try await l.codeId(), visit: fromScan)
+            case .guest(let x): code = try await API.shared.codeAsGuest(x)
             }
-            let code = try await API.shared.code(id, visit: fromScan)
             state = .loaded(code)
             autoOpenIfLink(code)
         } catch let e as APIError {
@@ -93,11 +93,14 @@ struct CodeDetailView: View {
     }
 
     private func hero(_ code: CodeView) -> some View {
-        let fg = UIColor(css: code.style?.fg) ?? .black
-        let bg = UIColor(css: code.style?.bg) ?? .white
-        return VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 14) {
+            if case .guest = source {
+                Label(tr("dashAsGuest"), systemImage: "eye").font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(Theme.accent)
+            }
             HStack(alignment: .top, spacing: 14) {
-                QRThumb(text: code.link(base: API.base.absoluteString), fg: fg, bg: bg, size: 112)
+                CodeImage(code: code, base: session.linkBase, size: 112)
+                    .accessibilityElement()
                     .accessibilityLabel(tr("codes.qrLabel", ["t": code.title ?? ""]))
                 VStack(alignment: .leading, spacing: 6) {
                     Kicker(text: kindName(code.kind), color: Theme.accent)
@@ -109,7 +112,7 @@ struct CodeDetailView: View {
                 Spacer(minLength: 0)
             }
             HStack(spacing: 8) {
-                if let owner = session.name(of: code.owner) {
+                if let owner = session.name(of: code.owner), code.access != .owner {
                     Chip(text: "\(tr("ownerLabel")): \(owner)")
                 }
                 if code.access != .closed { Chip(text: tr("access.\(code.access.rawValue)"), lime: code.access == .owner) }
@@ -152,7 +155,7 @@ struct CodeDetailView: View {
 
     private func footer(_ code: CodeView) -> some View {
         let page = URL(string: "\(API.base.absoluteString)/c/\(code.id)")!
-        let link = URL(string: code.link(base: API.base.absoluteString))!
+        let link = URL(string: code.link(base: session.linkBase)) ?? page
         return VStack(spacing: 10) {
             ShareLink(item: link) { Label(tr("result.share"), systemImage: "square.and.arrow.up") }.buttonStyle(.plainField)
             Button { openURL(page) } label: { Label(tr("code.openOnSite"), systemImage: "safari") }.buttonStyle(.plainField)
@@ -200,7 +203,7 @@ struct QRThumb: View {
 }
 
 /// A memory record: text, photo or video, with author and date.
-private struct BlockView: View {
+struct BlockView: View {
     let block: Block
     let author: String?
 
@@ -224,43 +227,5 @@ private struct BlockView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Theme.card, in: RoundedRectangle(cornerRadius: 10))
         .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.line))
-    }
-}
-
-/// Media under a code is served only with the session cookie (/api/media/…).
-private struct AuthedImage: View {
-    let url: URL
-    @State private var image: UIImage?
-    @State private var failed = false
-
-    var body: some View {
-        Group {
-            if let image {
-                Image(uiImage: image).resizable().scaledToFit().clipShape(RoundedRectangle(cornerRadius: 6))
-            } else {
-                RoundedRectangle(cornerRadius: 6).fill(Theme.field).frame(height: 200)
-                    .overlay { if failed { Image(systemName: "photo").foregroundStyle(Theme.muted) } else { ProgressView() } }
-            }
-        }
-        .task(id: url) {
-            if let d = try? await API.shared.data(url), let img = UIImage(data: d) { image = img } else { failed = true }
-        }
-    }
-}
-
-private struct AuthedVideo: View {
-    let url: URL
-    @State private var player: AVPlayer?
-
-    var body: some View {
-        VideoPlayer(player: player)
-            .frame(height: 240)
-            .clipShape(RoundedRectangle(cornerRadius: 6))
-            .onAppear {
-                guard player == nil else { return }
-                let asset = AVURLAsset(url: url, options: [AVURLAssetHTTPCookiesKey: API.shared.cookies])
-                player = AVPlayer(playerItem: AVPlayerItem(asset: asset))
-            }
-            .onDisappear { player?.pause() }
     }
 }
