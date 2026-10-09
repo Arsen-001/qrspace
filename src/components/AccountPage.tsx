@@ -52,6 +52,7 @@ type Profile = {
   };
   purchases: Purchase[];
   packs: Pack[];
+  spaces: { code: string; title: string; plan: string; bytes: number; price: number; at: string }[];
   lots: LotRow[];
 };
 
@@ -168,7 +169,7 @@ function MyCodes({ t, data }: { t: Dict; data: CodeList }) {
 /** Одна строка истории: покупка кода или пакета. */
 type Row = { at: string; title: ReactNode; price: string; note?: string };
 
-function rowsOf(t: Dict, p: Profile): Row[] {
+function rowsOf(t: Dict, lang: Lang, p: Profile): Row[] {
   const codes: Row[] = p.purchases.map((x) => ({
     at: x.at,
     title: (
@@ -191,7 +192,24 @@ function rowsOf(t: Dict, p: Profile): Row[] {
     title: `${t.accPackItem} · ${x.codes} ${t.packCodes}`,
     price: money(x.price),
   }));
-  return [...codes, ...packs].sort((a, b) => b.at.localeCompare(a.at));
+  const spaces: Row[] = (p.spaces ?? []).map((x) => ({
+    at: x.at,
+    title: (
+      <>
+        {t.accSpaceItem} · {fmtBytes(x.bytes, lang)} / {t.storageMonth}
+        {x.title && (
+          <>
+            {" · "}
+            <Link href={`/codes/${x.code}`} className="text-accent-ink underline underline-offset-2">
+              {x.title}
+            </Link>
+          </>
+        )}
+      </>
+    ),
+    price: money(x.price),
+  }));
+  return [...codes, ...packs, ...spaces].sort((a, b) => b.at.localeCompare(a.at));
 }
 
 function History({ lang, rows }: { lang: Lang; rows: Row[] }) {
@@ -209,7 +227,7 @@ function History({ lang, rows }: { lang: Lang; rows: Row[] }) {
 }
 
 function Overview({ t, lang, p, codes, go, onDone }: { t: Dict; lang: Lang; p: Profile; codes: CodeList | null; go: (tab: AccTab) => void; onDone: () => void }) {
-  const rows = rowsOf(t, p);
+  const rows = rowsOf(t, lang, p);
   const next = [
     { href: "/create", title: t.newCode, text: t.accNextCode, mark: "+" },
     {
@@ -307,7 +325,7 @@ function Overview({ t, lang, p, codes, go, onDone }: { t: Dict; lang: Lang; p: P
 }
 
 function Purchases({ t, lang, p }: { t: Dict; lang: Lang; p: Profile }) {
-  const rows = rowsOf(t, p);
+  const rows = rowsOf(t, lang, p);
   return (
     <Section
       title={t.accPurchases}

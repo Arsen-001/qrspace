@@ -17,8 +17,10 @@ import { DEFAULT_STYLE, type SavedStyle } from "@/lib/qr/style";
 
 /** Одноразовый код входа в приложение: браузер внутри приложения вошёл → приложение меняет код на свою сессию (5 минут). */
 export type AppToken = { token: string; person: string; until: string };
+/** Оплата места под кодом (месяц): чтобы она была в «Покупках», в «Потрачено» и в выручке. */
+export type SpacePay = { person: string; code: string; plan: string; bytes: number; price: number; at: string };
 
-export type Db = { codes: CodeRecord[]; sales: Record<string, number>; designs: Design[]; purchases: Purchase[]; packs: Pack[]; orders: Order[]; listings: Listing[]; shop: ShopOrder[]; users: User[]; notifications: Notice[]; reports: Report[]; appTokens: AppToken[] };
+export type Db = { codes: CodeRecord[]; sales: Record<string, number>; designs: Design[]; purchases: Purchase[]; packs: Pack[]; orders: Order[]; listings: Listing[]; shop: ShopOrder[]; users: User[]; notifications: Notice[]; reports: Report[]; appTokens: AppToken[]; spaces: SpacePay[] };
 
 const ALPHABET = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 // Без похожих (0/O, 1/I) — короткий номер иногда вводят руками.
@@ -82,6 +84,7 @@ function seed(): Db {
     purchases: [],
     packs: [],
     appTokens: [],
+    spaces: [],
     orders: [],
     codes: [
       parchment,
@@ -209,6 +212,7 @@ function normalize(db: Db): Db {
   db.purchases ??= [];
   db.packs ??= [];
   db.appTokens ??= [];
+  db.spaces ??= [];
   db.orders ??= [];
   db.listings ??= [];
   db.shop ??= [];

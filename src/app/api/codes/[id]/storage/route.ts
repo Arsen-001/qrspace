@@ -27,6 +27,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/codes/[id]/stor
       const from = st.plan === plan.id && st.until ? Date.parse(st.until) : now;
       c.storage = plan.bytes;
       c.storageUntil = new Date(from + STORAGE_MONTH_MS).toISOString();
+      db.spaces.push({ person: me, code: c.id, plan: plan.id, bytes: plan.bytes, price: plan.price, at: new Date(now).toISOString() });
     }
     return viewOf(c, me);
   });

@@ -20,6 +20,7 @@ export async function GET() {
       const titles = new Map(db.codes.map((c) => [c.id, c.title]));
       const purchases = db.purchases.filter((p) => p.person === me);
       const packs = db.packs.filter((p) => p.person === me);
+      const spaces = db.spaces.filter((p) => p.person === me);
       const lots = db.listings.filter((l) => l.seller === me);
       const space = mine.map((c) => storageOf(c, now));
       const visits = mine.flatMap((c) => c.visits);
@@ -38,11 +39,12 @@ export async function GET() {
           quota: space.reduce((s, x) => s + x.quota, 0),
           paidSpace: space.filter((x) => x.plan).length,
           packsLeft: packsLeft(packs),
-          spent: purchases.reduce((s, p) => s + (p.free || p.pack ? 0 : p.price), 0) + packs.reduce((s, p) => s + p.price, 0),
+          spent: purchases.reduce((s, p) => s + (p.free || p.pack ? 0 : p.price), 0) + packs.reduce((s, p) => s + p.price, 0) + spaces.reduce((s, p) => s + p.price, 0),
           earned: lots.reduce((s, l) => s + (l.status === "sold" ? sellerGets(l.final ?? 0) : 0), 0),
         },
         purchases: purchases.slice(-50).reverse(),
         packs: packs.slice().reverse(),
+        spaces: spaces.slice(-50).reverse().map((x) => ({ ...x, title: titles.get(x.code) ?? "" })),
         lots: lots
           .slice(-30)
           .reverse()

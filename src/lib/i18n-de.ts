@@ -879,6 +879,7 @@ export const de: Dict = {
   accSeeAll: "Alle ansehen",
   accFromPack: "aus einem Paket",
   accPackItem: "Paket",
+  accSpaceItem: "Speicher unter einem Code",
   accPackUsed: "{used} von {codes} genutzt",
   accNoPacks: "Noch keine Pakete. Kauf eins — dann wird jeder Code günstiger.",
   accNoSales: "Du hast noch nichts zum Verkauf gestellt. Einen Sammler-Code verkaufst du auf seiner Seite.",

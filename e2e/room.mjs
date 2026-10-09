@@ -56,6 +56,10 @@ for (const w of [1280, 390]) {
       ok((await token(20 * MB)) === 403, "upload permission refused for a file bigger than free space");
       ok((await token(1 * MB)) === 200, "upload permission given for a file that fits");
     } else console.log("  · прямой загрузки нет (нет хранилища) — разрешение проверяется на выкладке");
+    // Оплата места — в «Покупках» кабинета и в «Потрачено»
+    await p.goto(`${B}/account?tab=purchases`, { waitUntil: "networkidle" });
+    await p.getByText("Место под кодом · 10 MB").first().waitFor();
+    ok((await p.getByText("Потрачено").first().innerText()).includes("$1"), "space purchase listed in account purchases and spent");
   }
   await p.context().close();
 }
