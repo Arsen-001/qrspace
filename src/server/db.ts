@@ -5,7 +5,7 @@ import { networkInterfaces } from "node:os";
 import { media as mediaStore } from "./media";
 import { store } from "./store";
 import { inSchedule, SAMPLE_SHORT, ymd, type Report, type AccessLevel, type CodeRecord, type CodeView, type Kind, type Notice, storageOf } from "@/lib/codes";
-import { DESIGNS, SEED_SALES, type Design } from "@/lib/market";
+import { DESIGNS, marketList, SEED_SALES, type Design, type DesignOverride, type MarketDesign } from "@/lib/market";
 import type { Listing } from "@/lib/listings";
 import type { Order } from "@/lib/orders";
 import type { Purchase } from "@/lib/pricing";
@@ -29,7 +29,7 @@ export type ReviewTry = { ip: string; at: string };
 
 export type IapUse = { id: string; store: "apple" | "google"; product: string; person: string; at: string; test?: boolean };
 
-export type Db = { codes: CodeRecord[]; sales: Record<string, number>; designs: Design[]; purchases: Purchase[]; packs: Pack[]; orders: Order[]; listings: Listing[]; shop: ShopOrder[]; users: User[]; notifications: Notice[]; reports: Report[]; appTokens: AppToken[]; spaces: SpacePay[]; iap: IapUse[]; reviewTries: ReviewTry[] };
+export type Db = { codes: CodeRecord[]; sales: Record<string, number>; designs: Design[]; purchases: Purchase[]; packs: Pack[]; orders: Order[]; listings: Listing[]; shop: ShopOrder[]; users: User[]; notifications: Notice[]; reports: Report[]; appTokens: AppToken[]; spaces: SpacePay[]; iap: IapUse[]; reviewTries: ReviewTry[]; marketOverrides: Record<string, DesignOverride> };
 
 const ALPHABET = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 // Без похожих (0/O, 1/I) — короткий номер иногда вводят руками.
@@ -97,6 +97,7 @@ function seed(): Db {
     iap: [],
     reviewTries: [],
     orders: [],
+    marketOverrides: {},
     codes: [
       parchment,
       nebula,
@@ -232,6 +233,7 @@ function normalize(db: Db): Db {
   db.users ??= demoUsers();
   db.notifications ??= [];
   db.reports ??= [];
+  db.marketOverrides ??= {};
   // Новые демо-люди (например, «Администратор») появляются и в уже заполненных данных.
   for (const d of demoUsers()) if (!db.users.some((u) => u.id === d.id)) db.users.push(d);
   contactsOf = new Map(db.users.map((u) => [u.id, u.contacts ?? []]));
@@ -252,7 +254,8 @@ async function load(): Promise<{ db: Db; version: number }> {
 // Такие данные только читаем; меняет их одна mutate — она всегда берёт свежую копию.
 const cache = globalThis as { __qrRead?: { key: number; db: Db } };
 
-async function read(): Promise<Db> {
+/** Данные только для чтения (из памяти, пока не поменялись) — менять их можно только в mutate. */
+export async function read(): Promise<Db> {
   const key = await store.version();
   if (key && cache.__qrRead?.key === key) return cache.__qrRead.db;
   const { db } = await load();
@@ -347,9 +350,10 @@ export async function quoteFor(person: string): Promise<{ mine: Purchase[]; spen
   return { mine: db.purchases.filter((p) => p.person === person), spent: spentIn(db), packs: db.packs.filter((p) => p.person === person) };
 }
 
-export async function market(): Promise<{ sold: Record<string, number>; designs: Design[] }> {
+/** Маркет как его видят все: дизайны с правками администратора, без скрытых (withHidden — и скрытые), и сколько продано. */
+export async function market(withHidden = false): Promise<{ sold: Record<string, number>; designs: MarketDesign[] }> {
   const db = await read();
-  return { sold: db.sales, designs: db.designs };
+  return { sold: db.sales, designs: marketList(db.designs, db.marketOverrides, withHidden) };
 }
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -513,7 +517,8 @@ export function viewOf(code: CodeRecord, me: string | null): CodeView {
 
 export async function findUser(id: string): Promise<User | null> {
   const u = (await read()).users.find((x) => x.id === id) ?? null;
-  return u && active(u) ? u : null;
+  // Заблокированный администратором — как не вошедший: ни один вход и ни одно действие от его имени не проходит.
+  return u && active(u) && !u.blocked ? u : null;
 }
 
 /** Имена всех, кто может войти, — для подписей в браузере (без почт). */

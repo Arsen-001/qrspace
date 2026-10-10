@@ -1,4 +1,4 @@
-import { directory, findUser, isAdminId, linkBase } from "@/server/db";
+import { directory, findUser, isAdminId, linkBase, read } from "@/server/db";
 import { currentPerson, endSession, startSession } from "@/server/session";
 import { demoEnabled, reviewEnabled } from "@/server/users";
 import { PEOPLE } from "@/lib/people";
@@ -19,6 +19,8 @@ export async function POST(req: Request) {
     return Response.json({ me: null });
   }
   if (!demoEnabled() || !PEOPLE.some((p) => p.id === personId)) return Response.json({ error: "demo-off" }, { status: 403 });
+  // Заблокированный администратором не входит и демо-входом.
+  if ((await read()).users.some((u) => u.id === personId && u.blocked)) return Response.json({ error: "blocked" }, { status: 403 });
   await startSession(personId as string);
   return Response.json({ me: personId });
 }

@@ -1,7 +1,6 @@
 import type { NextRequest } from "next/server";
 import { findCode, market } from "@/server/db";
 import { nftConfig, nftView } from "@/server/nft";
-import { DESIGNS } from "@/lib/market";
 
 /**
  * Сертификат подлинности коллекционного кода: дизайн, номер тиража, коллаборация, кто владеет и история владельцев.
@@ -11,7 +10,8 @@ export async function GET(_req: NextRequest, ctx: RouteContext<"/api/cert/[id]">
   const { id } = await ctx.params;
   const c = await findCode(id);
   if (!c?.edition) return Response.json({ error: "not-found" }, { status: 404 });
-  const d = (await market()).designs.find((x) => x.id === c.edition!.design) ?? DESIGNS.find((x) => x.id === c.edition!.design);
+  // Название — с правками администратора; скрытый из маркета дизайн у купленного кода всё равно называем.
+  const d = (await market(true)).designs.find((x) => x.id === c.edition!.design);
   return Response.json({
     id: c.id,
     style: c.style,

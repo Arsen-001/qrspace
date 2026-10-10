@@ -14,6 +14,8 @@ export async function POST(req: NextRequest) {
   try {
     const a = await appleUser(req, code, pk, (form?.get("user") as string | null) ?? null);
     const user = await mutate((db) => upsertUser(db, "apple", a.sub, a.email, a.name, newId));
+    // Заблокированный администратором — без входа, на странице входа объяснение.
+    if (user.blocked) return NextResponse.redirect(`${appUrl(req)}/login?error=blocked`, 303);
     await startSession(user.id);
     return NextResponse.redirect(`${appUrl(req)}${pk.next}`, 303);
   } catch {

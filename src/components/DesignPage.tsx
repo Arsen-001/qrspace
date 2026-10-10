@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { api } from "@/lib/codes";
+import { api, type MarketState } from "@/lib/codes";
 import { tr } from "@/lib/i18n";
 import { useLang } from "@/lib/lang";
-import { catalog, DESIGNS } from "@/lib/market";
+import { DESIGNS, marketList } from "@/lib/market";
 import { useMe } from "@/lib/me";
 import { checkScan } from "@/lib/qr/raster";
 import { toSvg, type Drawing } from "@/lib/qr/render";
@@ -17,9 +17,10 @@ import { useInBrowser } from "./QrThumb";
 import { personName } from "./Avatar";
 import { Notice, Shell } from "./Shell";
 
-export function DesignPage({ id }: { id: string }) {
-  const market = useMarket();
-  const d = catalog(market?.designs ?? []).all.find((x) => x.id === id) ?? null;
+export function DesignPage({ id, initial }: { id: string; initial?: MarketState }) {
+  const market = useMarket(initial);
+  // Скрытый администратором дизайн в списке не приходит — «не найден».
+  const d = (market?.designs ?? marketList([], {})).find((x) => x.id === id) ?? null;
   const { lang, t } = useLang((t) => `${t.marketTitle} — ${t.appName}`);
   const { ready, me, base } = useMe();
   const router = useRouter();

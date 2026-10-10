@@ -88,6 +88,11 @@ const SCREENS = [
   ["market-signed", "ani", "/market"],
   ["designer-market", "nare", "/market"],
   ["admin", "admin", "/admin"],
+  ["admin-users", "admin", "/admin?tab=users"],
+  ["admin-user", "admin", "/admin?tab=users&user=arman", async (p) => { await p.getByRole("button", { name: "Заблокировать человека" }).click(); await p.waitForTimeout(300); }],
+  ["admin-codes", "admin", "/admin?tab=codes", async (p) => { await p.locator("[data-code] button", { hasText: "Заблокировать код" }).first().click(); await p.waitForTimeout(300); }],
+  ["admin-market", "admin", "/admin?tab=market", async (p) => { await p.locator("[data-design] button", { hasText: "Изменить" }).first().click(); await p.waitForTimeout(300); }],
+  ["admin-purchases", "admin", "/admin?tab=purchases"],
 ];
 
 /** Проблемы на открытой странице. */

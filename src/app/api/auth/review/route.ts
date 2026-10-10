@@ -29,6 +29,7 @@ export async function POST(req: Request) {
   });
   if (user === 429) return Response.json({ error: "tries" }, { status: 429 });
   if (user === 401) return Response.json({ error: "wrong" }, { status: 401 });
+  if (user.blocked) return Response.json({ error: "blocked" }, { status: 403 });
   await startSession(user.id);
   console.info("review login used");
   return Response.json({ me: user.id });

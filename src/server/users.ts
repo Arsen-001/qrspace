@@ -26,6 +26,12 @@ export type User = {
   recentColors?: { fg: string; bg: string }[];
   /** Телефоны с нашим приложением — куда слать уведомления (APNs / FCM, когда будут ключи). */
   devices?: { token: string; platform: "ios" | "android"; at: string; lang?: Lang }[];
+  /**
+   * Заблокирован администратором (10.10.2026): войти нельзя (ни Google/Apple, ни демо, ни приложение), уже открытые входы
+   * перестают работать — сервер считает его «не вошедшим», поэтому создавать коды и покупать он тоже не может.
+   * note — за что (видно только администраторам).
+   */
+  blocked?: { at: string; by: string; note: string };
 };
 
 export const demoEnabled = () => process.env.DEMO_LOGIN !== "off";

@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { kindDefaults, mutate, newId, viewOf } from "@/server/db";
 import { currentPerson } from "@/server/session";
 import type { CodeRecord } from "@/lib/codes";
-import { DESIGNS } from "@/lib/market";
+import { marketList } from "@/lib/market";
 
 /**
  * Купить дизайн (оплата — демо). Покупатель получает код с памятью в этом оформлении;
@@ -13,7 +13,8 @@ export async function POST(_req: NextRequest, ctx: RouteContext<"/api/market/[de
   const me = await currentPerson();
   if (!me) return Response.json({ error: "login" }, { status: 401 });
   const result = await mutate((db) => {
-    const d = db.designs.find((x) => x.id === design) ?? DESIGNS.find((x) => x.id === design);
+    // С правками администратора: скрытый — не купить (404), цена — та, что он поставил.
+    const d = marketList(db.designs, db.marketOverrides).find((x) => x.id === design);
     if (!d) return 404;
     const sold = db.sales[d.id] ?? 0;
     if (d.edition !== null && sold >= d.edition) return 409;
@@ -49,6 +50,7 @@ export async function DELETE(_req: NextRequest, ctx: RouteContext<"/api/market/[
     const i = db.designs.findIndex((d) => d.id === design && d.by === me);
     if (i < 0) return false;
     db.designs.splice(i, 1);
+    delete db.marketOverrides[design];
     // Аукцион № 1 этого дизайна без ставок снимаем вместе с ним; со ставками — доигрывается (люди уже торгуются).
     for (const l of db.listings) {
       const c = db.codes.find((x) => x.id === l.code);

@@ -17,6 +17,8 @@ export type Listing = {
   buyer: string | null;
   final: number | null;
   createdAt: string;
+  /** Снят администратором (status «cancelled»): кто и когда — код остаётся у продавца. */
+  removed?: { at: string; by: string };
 };
 
 /** Минимальная следующая ставка: +5 %, но не меньше $1. */

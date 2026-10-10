@@ -17,8 +17,18 @@ export type Design = {
   /** Кто выложил (дизайнер); у встроенных — нет. */
   by?: string;
   createdAt?: string;
+  /** «Выбор QR Space» — администратор поставил в подборку: первым в сетке маркета, с отметкой. */
+  featured?: boolean;
   style: SavedStyle;
 };
+
+/**
+ * Правка администратора поверх дизайна (владелец 10.10.2026: «менять всякое в маркете»). Встроенные дизайны живут в
+ * коде (DESIGNS) и на работающем сайте не меняются — поэтому правки лежат в данных (db.marketOverrides) и
+ * накладываются там, где маркет читается. Нет поля — как было.
+ */
+export type DesignOverride = { hidden?: boolean; featured?: boolean; drop?: boolean; price?: number; name?: L10n; about?: L10n; at: string; by: string };
+export type MarketDesign = Design & { hidden?: boolean; changed?: boolean };
 
 const style = (p: Partial<SavedStyle>): SavedStyle => ({ ...DEFAULT_STYLE, eyeIcon: null, picture: null, ...p });
 
@@ -122,10 +132,38 @@ export const DESIGNS: Design[] = [
   },
 ];
 
-/** Выложенные дизайнером (новые первыми) + встроенные. Дроп дня — самый свежий выложенный дроп, иначе встроенный. */
-export function catalog(published: Design[]): { drop: Design; rest: Design[]; all: Design[] } {
-  const all = [...[...published].reverse(), ...DESIGNS];
-  const drop = all.find((d) => d.drop)!;
+/**
+ * Маркет с правками администратора: выложенные дизайнером (новые первыми), потом встроенные; «в подборке» — первыми.
+ * Дроп дня один: тот, кого администратор сделал дропом (последняя правка), иначе самый свежий выложенный дроп, иначе
+ * встроенный; скрытый дропом не бывает. Скрытые — только для кабинета администратора (withHidden).
+ */
+export function marketList(published: Design[], overrides: Record<string, DesignOverride>, withHidden = false): MarketDesign[] {
+  const all: MarketDesign[] = [...[...published].reverse(), ...DESIGNS].map((d) => {
+    const o = overrides[d.id];
+    if (!o) return d;
+    return {
+      ...d,
+      ...(o.price !== undefined && { price: o.price }),
+      ...(o.name && { name: o.name }),
+      ...(o.about && { about: o.about }),
+      ...(o.featured !== undefined && { featured: o.featured }),
+      ...(o.drop !== undefined && { drop: o.drop }),
+      ...(o.hidden && { hidden: true }),
+      // Что дизайн правили — видно только в кабинете администратора.
+      ...(withHidden && { changed: true }),
+    };
+  });
+  const visible = all.filter((d) => !d.hidden);
+  const chosen = visible.filter((d) => overrides[d.id]?.drop).sort((a, b) => overrides[b.id].at.localeCompare(overrides[a.id].at))[0];
+  const drop = chosen ?? visible.find((d) => d.drop);
+  const list = (withHidden ? all : visible).map((d) => (!!d.drop === (d === drop) ? d : { ...d, drop: d === drop }));
+  // Подборка — первыми, остальной порядок не трогаем (sort в JS устойчивый).
+  return list.sort((a, b) => Number(!!b.featured) - Number(!!a.featured));
+}
+
+/** Дроп дня и остальные — из готового списка маркета (сервер уже наложил правки и убрал скрытые). Дропа может не быть. */
+export function catalog(all: Design[]): { drop: Design | null; rest: Design[]; all: Design[] } {
+  const drop = all.find((d) => d.drop) ?? null;
   return { drop, rest: all.filter((d) => d !== drop), all };
 }
 

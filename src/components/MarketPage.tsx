@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { api, type MarketState } from "@/lib/codes";
 import { tr, type Dict, type Lang } from "@/lib/i18n";
 import { useLang } from "@/lib/lang";
-import { catalog, type Design } from "@/lib/market";
+import { catalog, marketList, type Design } from "@/lib/market";
 import { useMe } from "@/lib/me";
 import { CodePacks, OneQrBanner } from "./CodePacks";
 import { HeroSlider } from "./HeroSlider";
@@ -30,9 +30,9 @@ export function EditionNote({ t, d, sold, className = "" }: { t: Dict; d: Design
   );
 }
 
-/** Что выложено и сколько продано; пока не загрузилось — undefined. */
-export function useMarket(): MarketState | undefined {
-  const [state, setState] = useState<MarketState>();
+/** Маркет (с правками администратора) и сколько продано; initial — уже с сервера; пока не загрузилось — undefined. */
+export function useMarket(initial?: MarketState): MarketState | undefined {
+  const [state, setState] = useState<MarketState | undefined>(initial);
   useEffect(() => {
     let live = true;
     api.market().then((m) => live && setState(m), () => {});
@@ -73,8 +73,10 @@ function DesignCard({ t, lang, d, link, sold }: { t: Dict; lang: Lang; d: Design
       >
         {/* Код — на своём цвете, как на витрине. */}
         <div className="relative p-4 sm:p-5" style={{ background: d.style.bg }}>
-          <div className="absolute left-3 top-3 z-10">
+          <div className="absolute inset-x-3 top-3 z-10 flex flex-col items-start gap-1">
             <RarityBadge t={t} d={d} />
+            {/* Подборка администратора — «Выбор QR Space», первой в сетке. */}
+            {d.featured && <span className="max-w-full truncate rounded-full bg-stage px-2.5 py-1 text-[11px] font-bold text-accent">★ {t.featuredBadge}</span>}
           </div>
           <QrThumb link={link} style={d.style} className="w-full rounded-2xl shadow-[0_10px_30px_-12px_rgba(0,0,0,0.45)] transition-transform duration-300 group-hover:scale-[1.03]" />
         </div>
@@ -122,20 +124,20 @@ function Countdown({ t }: { t: Dict }) {
 type Filter = "all" | "edition" | "open" | "collab";
 type Sort = "new" | "cheap" | "expensive";
 
-export function MarketPage() {
+export function MarketPage({ initial }: { initial?: MarketState }) {
   const { lang, t } = useLang((t) => `${t.marketTitle} — ${t.appName}`);
   const { base } = useMe();
-  const market = useMarket();
+  const market = useMarket(initial);
   const sold = market?.sold;
   const link = sampleLink(base);
-  const { drop, rest } = catalog(market?.designs ?? []);
+  const { drop, rest } = catalog(market?.designs ?? marketList([], {}));
   const lots = useLots()?.filter((l) => l.status === "open");
   const [filter, setFilter] = useState<Filter>("all");
   const [sort, setSort] = useState<Sort>("new");
   const shown = rest
     .filter((d) => (filter === "edition" ? d.edition !== null : filter === "open" ? d.edition === null : filter === "collab" ? !!d.collab : true))
     .sort((a, b) => (sort === "cheap" ? a.price - b.price : sort === "expensive" ? b.price - a.price : 0));
-  const dropSold = sold ? (sold[drop.id] ?? 0) : undefined;
+  const dropSold = sold && drop ? (sold[drop.id] ?? 0) : undefined;
   const chip = (on: boolean) => `min-h-10 shrink-0 rounded-full px-4 text-sm font-semibold transition-colors ${on ? "bg-stage text-on-stage" : "border border-line bg-card text-muted hover:text-ink"}`;
 
   return (
@@ -146,7 +148,8 @@ export function MarketPage() {
       {/* Верх — слайдер: «1 QR — $1» и дроп дня (владелец 09.10.2026). */}
       <HeroSlider>
         <OneQrBanner t={t} />
-        {/* Дроп дня — витрина: код на подсвеченном постаменте, тираж полоской, покупка крупно. */}
+        {/* Дроп дня — витрина: код на подсвеченном постаменте, тираж полоской, покупка крупно. Дропа может не быть (администратор скрыл). */}
+        {drop && (
         <section className="relative overflow-hidden bg-stage text-on-stage">
           <div aria-hidden className="pointer-events-none absolute inset-0">
             <div className="x-stage-grid" />
@@ -190,6 +193,7 @@ export function MarketPage() {
             </Link>
           </div>
         </section>
+        )}
       </HeroSlider>
 
       <CodePacks t={t} lang={lang} />

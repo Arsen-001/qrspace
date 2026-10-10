@@ -13,6 +13,8 @@ import { AppleIcon, GoogleIcon } from "./LoginPage";
 export function LoginModal({ t, lang, next, onClose, onDone, beforeLeave }: { t: Dict; lang: Lang; next: string; onClose: () => void; onDone: () => void; beforeLeave?: () => void }) {
   const { demo } = useMe();
   const [busy, setBusy] = useState(false);
+  // Демо-вход не прошёл — человек заблокирован администратором.
+  const [blocked, setBlocked] = useState(false);
   const panel = useRef<HTMLDivElement>(null);
   const q = `?next=${encodeURIComponent(next)}`;
 
@@ -30,9 +32,12 @@ export function LoginModal({ t, lang, next, onClose, onDone, beforeLeave }: { t:
 
   const pick = async (id: string) => {
     setBusy(true);
+    setBlocked(false);
     try {
       await signIn(id);
       onDone();
+    } catch {
+      setBlocked(true);
     } finally {
       setBusy(false);
     }
@@ -87,6 +92,11 @@ export function LoginModal({ t, lang, next, onClose, onDone, beforeLeave }: { t:
           {demo && (
             <div className="border-t border-line pt-4">
               <div className="mb-2 text-sm font-semibold">{t.demoLoginTitle}</div>
+              {blocked && (
+                <p role="alert" className="mb-2 rounded-xl bg-warn-soft p-3 text-sm text-warn">
+                  {t.accountBlocked}
+                </p>
+              )}
               <div className="grid grid-cols-2 gap-2">
                 {PEOPLE.slice(0, 6).map((p) => (
                   <button

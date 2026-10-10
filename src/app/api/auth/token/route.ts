@@ -9,7 +9,8 @@ export async function POST(req: Request) {
     const i = db.appTokens.findIndex((x) => x.token === token);
     if (i < 0) return null;
     const [t] = db.appTokens.splice(i, 1);
-    return Date.parse(t.until) > Date.now() && db.users.some((u) => u.id === t.person) ? t.person : null;
+    // Заблокированный администратором — сессии приложения не получает.
+    return Date.parse(t.until) > Date.now() && db.users.some((u) => u.id === t.person && !u.blocked) ? t.person : null;
   });
   if (!person) return Response.json({ error: "token" }, { status: 401 });
   await startSession(person);

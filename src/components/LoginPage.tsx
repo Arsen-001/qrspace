@@ -41,15 +41,20 @@ export function LoginPage({ next, error }: { next: string | null; error: string 
   const { ready, me, demo, review, providers } = useMe();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
+  // Демо-вход не прошёл: человек заблокирован администратором (403).
+  const [failed, setFailed] = useState<string | null>(null);
   const target = next && next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/login") ? next : "/";
   const q = `?next=${encodeURIComponent(target)}`;
 
   const pick = async (id: string | null) => {
     setBusy(true);
+    setFailed(null);
     try {
       await signIn(id);
       router.replace(id ? target : "/");
       router.refresh();
+    } catch {
+      setFailed("blocked");
     } finally {
       setBusy(false);
     }
@@ -82,7 +87,11 @@ export function LoginPage({ next, error }: { next: string | null; error: string 
         </div>
       </section>
       <section className="rounded-2xl border border-line bg-card p-6 sm:p-8">
-      {error && <p className="mb-4 rounded-xl bg-warn-soft p-3 text-sm text-warn">{error.endsWith("-off") ? t.providerOff : t.loginFailed}</p>}
+      {(failed ?? error) && (
+        <p role="alert" className="mb-4 rounded-xl bg-warn-soft p-3 text-sm text-warn">
+          {(failed ?? error) === "blocked" ? t.accountBlocked : error?.endsWith("-off") ? t.providerOff : t.loginFailed}
+        </p>
+      )}
       <div className="space-y-3">
         {/* Обычные ссылки: вход уходит на страницу Google/Apple и возвращается к нам. */}
         <a href={`/api/auth/google${q}`} className={`${btn} border border-[#dadce0] bg-white text-[#1f1f1f] hover:bg-[#f8f9fa]`}>
