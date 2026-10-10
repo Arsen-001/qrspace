@@ -86,7 +86,7 @@ const VARIANTS = [
   ["shape Клякса + Металл", "styled", async () => { await shape("Клякса"); await tab("Фон"); await radio("Металл"); }],
   ["shape Круг", "styled", async () => { await radio("Плоско"); await tab("Форма"); await shape("Круг"); }],
   // Украшения вокруг кода (10.10.2026) — с формой и с квадратом
-  ["shape Круг + Звёзды вокруг", "styled", () => orn("Звёзды")],
+  ["shape Круг + Звёзды вокруг", "styled", () => orn("Звёздочки")],
   ["square + Конфетти вокруг", "styled", async () => { await shape("Квадрат"); await orn("Конфетти"); }],
   ["photo", "styled", async () => { await shape("Квадрат"); await tab("Фон"); await radio("Плоско"); await tab("Фото и логотип"); await p.locator("input[type=file]").first().setInputFiles(new URL("./photo.jpg", import.meta.url).pathname); await p.waitForTimeout(1500); }],
 ];

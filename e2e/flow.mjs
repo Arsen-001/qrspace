@@ -11,7 +11,9 @@ const mk = async (w) => {
   return page;
 };
 const overflow = (p) => p.evaluate(() => document.documentElement.scrollWidth - innerWidth);
-const shot = async (p, name) => { await p.screenshot({ path: out + name + ".png", fullPage: true }); console.log(name, "overflow", await overflow(p)); };
+// caret: "initial" — Playwright по умолчанию прячет курсор, дописывая полям стиль; если снимок раньше, чем страница
+// ожила, React видит чужой стиль и ругается на расхождение с сервером (пользователей не касается).
+const shot = async (p, name) => { await p.screenshot({ path: out + name + ".png", fullPage: true, caret: "initial" }); console.log(name, "overflow", await overflow(p)); };
 
 for (const w of [1280, 390]) {
   const p = await mk(w);
