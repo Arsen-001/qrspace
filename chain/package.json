@@ -1,0 +1,10 @@
+{
+  "name": "qr-space-chain",
+  "private": true,
+  "type": "module",
+  "description": "NFT кодов QR Space: контракт, сборка и учебный блокчейн для проверок (только этот компьютер)",
+  "devDependencies": {
+    "@openzeppelin/contracts": "^5.6.1",
+    "hardhat": "^3.19.0"
+  }
+}

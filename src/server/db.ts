@@ -13,6 +13,7 @@ import type { Pack } from "@/lib/packs";
 import type { ShopOrder } from "@/lib/shop";
 import { after } from "next/server";
 import { DICTS, fill } from "@/lib/i18n";
+import { nftView } from "./nft";
 import { deliver, pushOn, type PushMessage } from "./push";
 import { active, demoUsers, publicPerson, usable, type User } from "./users";
 import { DEFAULT_STYLE, type SavedStyle } from "@/lib/qr/style";
@@ -417,6 +418,12 @@ function sendPush(messages: PushMessage[]) {
 export const designerIdsIn = (db: Db) => db.users.filter((u) => u.designer).map((u) => u.id);
 
 /** «Оригинал»: чья вещь (я / другой / никто) и не скопирован ли код — его сканируют подозрительно часто. */
+/** NFT кода на странице после скана: № токена и сеть (подробно — в сертификате). */
+const nftChip = (n: CodeRecord["nft"]) => {
+  const v = nftView(n);
+  return v ? { token: v.token, network: v.network, test: v.test, url: v.url } : null;
+};
+
 function authView(code: CodeRecord, me: string | null) {
   const a = code.auth!;
   const month = Date.now() - 30 * 86_400_000;
@@ -476,6 +483,7 @@ export function viewOf(code: CodeRecord, me: string | null): CodeView {
     compact: !!code.compact,
     blocked: !!code.blocked,
     edition: code.edition ?? null,
+    nft: nftChip(code.nft),
     auth: code.auth ? authView(code, me) : null,
     owners: code.edition ? (code.owners ?? []) : null,
     tasks: access === "closed" ? null : [...code.tasks].sort((a, b) => a.due.localeCompare(b.due)),

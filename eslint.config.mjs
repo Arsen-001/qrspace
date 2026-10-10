@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Контракт NFT и учебный блокчейн — отдельный проект со своими зависимостями (на Vercel их нет).
+    "chain/**",
   ]),
 ]);
 

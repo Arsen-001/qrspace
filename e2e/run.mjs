@@ -6,9 +6,10 @@ import { spawnSync } from "node:child_process";
 import { generateKeyPairSync } from "node:crypto";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { startChain } from "./chain.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
-const ALL = ["flow", "order", "video", "redirect", "tags", "look", "market", "designer", "tasks", "pay", "print", "resale", "cert", "live", "security", "a11y", "starters", "verify", "links", "moderation", "legal", "langs", "packs", "account", "room", "appapi", "scan", "create", "camera", "mobile"];
+const ALL = ["flow", "order", "video", "redirect", "tags", "look", "market", "designer", "tasks", "pay", "print", "resale", "cert", "live", "security", "a11y", "starters", "verify", "links", "moderation", "legal", "langs", "packs", "account", "room", "appapi", "scan", "create", "camera", "nft", "mobile"];
 // Вход через Google проверяем с подставным сервером Google (только на этом компьютере).
 const WITH_GOOGLE = ["google", "notify", "batch1", "push", "iap", "review"];
 const ENV = "GOOGLE_CLIENT_ID=test-client.apps.googleusercontent.com\nGOOGLE_CLIENT_SECRET=test-secret\nOAUTH_TEST_TOKEN_URL=http://127.0.0.1:3729/token\nDESIGNER_EMAILS=studio.designer@gmail.com\n";
@@ -36,8 +37,10 @@ const reset = () => {
 for (const s of suites) {
   reset();
   const google = WITH_GOOGLE.includes(s);
-  if (google) {
-    writeFileSync(path.join(root, ".env.local"), ENV + PUSH_ENV + REVIEW_ENV);
+  // NFT: учебный блокчейн и свежий контракт (e2e/chain.mjs).
+  const chain = s === "nft" ? await startChain() : null;
+  if (google || chain) {
+    writeFileSync(path.join(root, ".env.local"), (google ? ENV + PUSH_ENV + REVIEW_ENV : "") + (chain?.env ?? ""));
     await sleep(8000); // сервер перечитывает .env.local и перезапускается
   }
   const r = spawnSync("node", [path.join(import.meta.dirname, `${s}.mjs`)], { encoding: "utf8", timeout: 600_000 });
@@ -49,8 +52,9 @@ for (const s of suites) {
     console.log(outText.split("\n").filter((l) => /✗|OVERFLOW|errors|Error|waiting for/.test(l)).slice(0, 6).join("\n"));
   }
   // Удалённый .env.local сервер не замечает (тестовые ключи остались бы до перезапуска) — пустой файл сбрасывает их.
+  chain?.stop();
   const next = suites[suites.indexOf(s) + 1];
-  if (google && !WITH_GOOGLE.includes(next)) {
+  if ((google && !WITH_GOOGLE.includes(next)) || chain) {
     writeFileSync(path.join(root, ".env.local"), "");
     await sleep(8000);
     rmSync(path.join(root, ".env.local"), { force: true });

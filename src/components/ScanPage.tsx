@@ -322,6 +322,23 @@ export function ScanPage({ id, invite }: { id: string; invite: string | null }) 
               </Link>
             </div>
           )}
+          {/* NFT коллекционного кода — видно всем, как сертификат: № токена и сеть, подробно — в сертификате. */}
+          {code.nft && (
+            <Link href={`/cert/${id}`} aria-label={`NFT #${code.nft.token} — ${t.certTitle}`} className="mb-4 flex min-h-12 items-center justify-between gap-3 rounded-2xl bg-stage px-4 py-2.5 text-on-stage">
+              <span className="min-w-0">
+                <span className="block font-heading text-sm font-bold">
+                  <span className="text-accent">◆</span> NFT #{code.nft.token}
+                </span>
+                <span className="block text-xs text-on-stage/60">
+                  {code.nft.network}
+                  {code.nft.test && ` · ${t.nftTest}`}
+                </span>
+              </span>
+              <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent text-on-accent">
+                →
+              </span>
+            </Link>
+          )}
           {code.kind === "link" &&
             code.access !== "closed" &&
             (code.content ? <ContentCard t={t} lang={lang} content={code.content} title={code.title} /> : <Notice>{t.linkNotSet}</Notice>)}

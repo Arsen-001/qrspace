@@ -78,6 +78,9 @@ export type CodeRecord = {
   edition?: { design: string; no: number; of: number | null };
   /** История владельцев коллекционного кода (кто, когда, за сколько). */
   owners?: { person: string; at: string; price: number | null }[];
+  /** NFT коллекционного кода (10.10.2026): сеть, контракт, № токена, транзакция, чей кошелёк (QR Space хранит за владельца).
+   * Без tx — токен выпускается прямо сейчас. */
+  nft?: NftRecord;
   visibility: Visibility;
   people: Grant[];
   requests: { personId: string; at: string }[];
@@ -121,6 +124,8 @@ export type CodeView = {
   /** Заблокирован администратором (видят все: гостю — «заблокирован», хозяину — почему). */
   blocked: boolean;
   edition: { design: string; no: number; of: number | null } | null;
+  /** NFT кода — видят все (как сертификат): № токена, сеть, ссылка в обозреватель блоков. */
+  nft: { token: number; network: string; test: boolean; url: string | null } | null;
   access: AccessLevel;
   visibility: Visibility;
   blocks: Block[] | null;
@@ -208,6 +213,8 @@ export const buyStorage = (id: string, plan: string) => call<CodeView>(`/api/cod
 /** Пакеты кодов: мои (сколько осталось) и покупка. */
 export const myPacks = () => call<{ left: number; packs: Pack[] }>("/api/packs");
 export const buyPack = (plan: string) => call<{ left: number; packs: Pack[] }>("/api/packs", json("POST", { plan }));
+export type NftRecord = { chain: number; contract: string; token: number; tx?: string; holder?: string; at: string };
+
 /** Короткая ссылка образца в генераторе (рисунок до скачивания): настоящим кодам не выдаётся, скан — страница «это образец». */
 export const SAMPLE_SHORT = "XXXXXX";
 export const VIDEO_TYPES: Record<string, string> = { "video/mp4": "mp4", "video/quicktime": "mov", "video/webm": "webm" };

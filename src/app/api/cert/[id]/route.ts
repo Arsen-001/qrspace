@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { findCode, market } from "@/server/db";
+import { nftConfig, nftView } from "@/server/nft";
 import { DESIGNS } from "@/lib/market";
 
 /**
@@ -18,5 +19,8 @@ export async function GET(_req: NextRequest, ctx: RouteContext<"/api/cert/[id]">
     design: d ? { name: d.name, collab: d.collab ?? null, by: d.by ?? null } : null,
     owner: c.owner,
     owners: c.owners ?? [{ person: c.owner, at: c.createdAt, price: null }],
+    // NFT (10.10.2026): выпущен — сеть, № токена, ссылки в блокчейн; можно выпустить — хозяину кнопка.
+    nft: nftView(c.nft),
+    nftReady: !!nftConfig() && !c.nft,
   });
 }
