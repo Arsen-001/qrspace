@@ -97,13 +97,13 @@ export type Effect = (typeof EFFECTS)[number];
 /** stops — полосы (доля, цвет) вместо from → to: перелив металла. */
 export type Gradient = { kind: "linear"; from: string; to: string; x1: number; y1: number; x2: number; y2: number; stops?: [number, string][] };
 
-/** Металл (10.10.2026, по примеру владельца): цвет с бликами и тенями полосами по диагонали. Светлые полосы — не светлее
- * трети к белому: тёмное должно оставаться тёмным, иначе камера не прочитает. */
+/** Металл (10.10.2026, по примеру владельца): цвет с бликами и тенями полосами по диагонали. Блик — не дальше 24 % к белому:
+ * при 32 % код переставал читаться на отдельных размерах картинки (проверено на 300…1200 px). */
 function metal(color: string, x: number, y: number, w: number, bands: number): Gradient {
   const stops: [number, string][] = [];
   for (let i = 0; i <= bands * 2; i++) {
     const t = i / (bands * 2);
-    stops.push([t, i % 4 === 1 ? mix(color, "#ffffff", 0.32) : i % 4 === 3 ? mix(color, "#000000", 0.35) : color]);
+    stops.push([t, i % 4 === 1 ? mix(color, "#ffffff", 0.24) : i % 4 === 3 ? mix(color, "#000000", 0.35) : color]);
   }
   return { kind: "linear", from: color, to: color, x1: x, y1: y, x2: x + w, y2: y + w, stops };
 }
