@@ -1,7 +1,7 @@
 "use client";
 import { memo, useEffect, useId, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { Dict } from "@/lib/i18n";
-import { CODE_SHAPES, outlinePath, silhouette, type CodeShape } from "@/lib/qr/shapes";
+import { CODE_SHAPES, ORNAMENTS, ornamentPath, outlinePath, silhouette, type CodeShape, type Ornament } from "@/lib/qr/shapes";
 import { ballSample, DOT_STYLES, dotSample, EFFECTS, EYE_BALLS, EYE_STYLES, eyeSample, type EyeBall, type DotStyle, type Effect, type EyeStyle, type IconMask, type Rotation } from "@/lib/qr/render";
 import { buildDrawing, CAPTION_MAX, toSvg } from "@/lib/qr/render";
 import { isPreset, STYLE_PRESETS, type StylePreset } from "@/lib/qr/presets";
@@ -34,6 +34,8 @@ export type StyleState = {
   captionPhone?: string | null;
   /** Форма кода: квадрат или силуэт вокруг кода (10.10.2026). */
   shape?: CodeShape;
+  /** Украшения вокруг кода. */
+  ornament?: Ornament;
 };
 
 const PRESETS: [string, string][] = [
@@ -247,6 +249,19 @@ function CodeShapeIcon({ kind }: { kind: CodeShape }) {
   return (
     <svg viewBox="-0.06 -0.06 1.12 1.12" className="h-7 w-7" aria-hidden>
       <path d={sil ? outlinePath(sil.pts, 1, 0, 0) : "M0.06 0.06H0.94V0.94H0.06Z"} fill="currentColor" />
+    </svg>
+  );
+}
+
+/** Значок украшений: три штуки разного размера; «нет» — пустой кружок. */
+function OrnamentIcon({ kind }: { kind: Ornament }) {
+  return (
+    <svg viewBox="0 0 1 1" className="h-7 w-7" aria-hidden>
+      {kind === "none" ? (
+        <circle cx="0.5" cy="0.5" r="0.32" fill="none" stroke="currentColor" strokeWidth="0.06" strokeDasharray="0.08 0.08" />
+      ) : (
+        <path d={ornamentPath(kind, 0.3, 0.32, 0.46, 0.3) + ornamentPath(kind, 0.72, 0.5, 0.32, 1.1) + ornamentPath(kind, 0.36, 0.78, 0.24, 2)} fill="currentColor" />
+      )}
     </svg>
   );
 }
@@ -529,6 +544,18 @@ export const StylePanel = memo(function StylePanel({
             />
           </div>
 
+          {!s.picture && (
+            <div>
+              <Head hint={t.ornamentHint}>{t.ornament}</Head>
+              <ShapeTiles
+                label={t.ornament}
+                value={s.ornament ?? "none"}
+                onChange={(ornament) => set({ ornament })}
+                options={ORNAMENTS.map((id) => ({ id, name: t[`orn.${id}`], icon: <OrnamentIcon kind={id} /> }))}
+              />
+            </div>
+          )}
+
           <div>
             <Head>{t.dots}</Head>
             <ShapeTiles label={t.dots} value={s.dot} onChange={(dot) => set({ dot })} options={DOT_STYLES.map((id) => ({ id, name: t[`dot.${id}`], icon: <DotIcon kind={id} /> }))} />
@@ -566,7 +593,7 @@ export const StylePanel = memo(function StylePanel({
                     label={t.eyeIconStrength}
                     value={s.eyeIcon.strength}
                     min={0.1}
-                    max={0.24}
+                    max={0.5}
                     step={0.02}
                     onChange={(strength) => s.eyeIcon && set({ eyeIcon: { ...s.eyeIcon, strength } })}
                   />

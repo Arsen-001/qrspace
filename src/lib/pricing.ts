@@ -23,7 +23,8 @@ export function tierOf(s: StyleState | SavedStyle): Tier {
     s.effect !== "none" ||
     !!s.picture ||
     !!s.eyeIcon ||
-    (!!s.shape && s.shape !== "square");
+    (!!s.shape && s.shape !== "square") ||
+    (!!s.ornament && s.ornament !== "none");
   return styled ? "styled" : "simple";
 }
 

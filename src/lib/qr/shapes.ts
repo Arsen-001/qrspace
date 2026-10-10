@@ -5,6 +5,36 @@
 export const CODE_SHAPES = ["square", "circle", "hexagon", "heart", "drop", "blob"] as const;
 export type CodeShape = (typeof CODE_SHAPES)[number];
 
+/** Украшения вокруг кода (10.10.2026, по примеру владельца) — за пустой рамкой, на чтение не влияют. */
+export const ORNAMENTS = ["none", "sparkles", "stars", "hearts", "confetti"] as const;
+export type Ornament = (typeof ORNAMENTS)[number];
+
+/** Одно украшение: центр (cx, cy), размер s, поворот a (радианы). */
+export function ornamentPath(kind: Exclude<Ornament, "none">, cx: number, cy: number, s: number, a: number): string {
+  const pt = (x: number, y: number) => {
+    const [c, n] = [Math.cos(a), Math.sin(a)];
+    return `${r3(cx + (x * c - y * n) * s)} ${r3(cy + (x * n + y * c) * s)}`;
+  };
+  switch (kind) {
+    case "sparkles":
+      // Искра: четыре луча с вогнутыми краями.
+      return `M${pt(0, -0.5)}Q${pt(0.07, -0.07)} ${pt(0.5, 0)}Q${pt(0.07, 0.07)} ${pt(0, 0.5)}Q${pt(-0.07, 0.07)} ${pt(-0.5, 0)}Q${pt(-0.07, -0.07)} ${pt(0, -0.5)}Z`;
+    case "stars": {
+      const p: string[] = [];
+      for (let i = 0; i < 10; i++) {
+        const r = i % 2 ? 0.2 : 0.5;
+        const t = -Math.PI / 2 + (i * Math.PI) / 5;
+        p.push(pt(r * Math.cos(t), r * Math.sin(t)));
+      }
+      return `M${p.join("L")}Z`;
+    }
+    case "hearts":
+      return `M${pt(0, 0.42)}C${pt(-0.2, 0.25)} ${pt(-0.5, 0.05)} ${pt(-0.5, -0.15)}C${pt(-0.5, -0.4)} ${pt(-0.15, -0.5)} ${pt(0, -0.27)}C${pt(0.15, -0.5)} ${pt(0.5, -0.4)} ${pt(0.5, -0.15)}C${pt(0.5, 0.05)} ${pt(0.2, 0.25)} ${pt(0, 0.42)}Z`;
+    case "confetti":
+      return `M${pt(-0.5, -0.17)}L${pt(0.5, -0.17)}L${pt(0.5, 0.17)}L${pt(-0.5, 0.17)}Z`;
+  }
+}
+
 type Pt = [number, number];
 
 /** Силуэт в единичном квадрате (y вниз), по часовой; растянут по большей стороне и выровнен по центру. */

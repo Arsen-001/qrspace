@@ -1,7 +1,7 @@
 // Рисунок кода — список фигур (контуры SVG + картинки). Из одного списка собираем SVG-файл
 // и рисуем на canvas (PNG, проверка «сканируется ли»), поэтому файл и превью всегда совпадают.
 import QRCode from "qrcode";
-import { inside, outlinePath, silhouette, type CodeShape } from "./shapes";
+import { inside, ornamentPath, outlinePath, silhouette, type CodeShape, type Ornament } from "./shapes";
 
 export const DOT_STYLES = ["square", "rounded", "dots", "diamond", "star", "heart", "plus", "liquid", "blocks", "leaf", "circuit"] as const;
 export const EYE_STYLES = ["square", "rounded", "circle", "leaf", "drop", "dropOut", "octagon", "mixed", "dotted", "chip", "ornate"] as const;
@@ -40,6 +40,8 @@ export type QrStyle = {
   picture?: { src: string; dotSize: number; tones?: Tones } | null;
   /** Форма кода (10.10.2026): квадрат или силуэт вокруг кода — круг, сердце… (с фото — всегда квадрат). */
   shape?: CodeShape;
+  /** Украшения вокруг кода — в полосе за пустой рамкой (с фото — нет). */
+  ornament?: Ornament;
 };
 
 /** Уменьшенная копия фото (RGBA, w×w) — из неё берём цвет точек. */
@@ -126,6 +128,8 @@ const QUIET = 4; // пустая рамка вокруг кода в клетк�
 const GAP = 1;
 const RING = 0.9;
 const EDGE = 0.5;
+// Полоса украшений вокруг кода (в клетках) — за пустой рамкой, телефону не мешает.
+const BAND = 4.5;
 
 /** Повторяемый «случайный» узор украшений: один и тот же текст — тот же рисунок (превью = файл). */
 function seeded(text: string): () => number {
@@ -506,7 +510,9 @@ export function buildDrawing(text: string, style: QrStyle): Drawing {
   const count = m.size;
   const rotate = style.rotate ?? 0;
   // Форма кода: сам код — в самом большом ровном квадрате внутри силуэта, вокруг — зазор, украшения и рамка.
-  const sil = style.picture ? null : silhouette(style.shape);
+  const found = style.picture ? null : silhouette(style.shape);
+  // Код в силуэт не помещается (так не бывает у наших форм, но рисунок не должен зависнуть) — обычный квадрат.
+  const sil = found && found.half > 0.05 ? found : null;
   let side = 0;
   let ringIn: [number, number][] = [];
   if (sil) {
@@ -516,12 +522,15 @@ export function buildDrawing(text: string, style: QrStyle): Drawing {
       return [-1, 1].every((sx) => [-1, 1].every((sy) => inside(ringIn, sil.cx + sx * h, sil.cy + sy * h)));
     };
     side = Math.ceil((count / 2 + GAP + RING) / sil.half);
-    while (!fitsIn(side)) side++;
+    for (let i = 0; i < 200 && !fitsIn(side); i++) side++;
   }
-  const size = sil ? side + EDGE * 2 : count + QUIET * 2;
+  const orn: Exclude<Ornament, "none"> | null = style.ornament && style.ornament !== "none" && !style.picture ? style.ornament : null;
+  const band = orn ? BAND : 0;
+  const size = (sil ? side + EDGE * 2 : count + QUIET * 2) + band * 2;
   // Левый верхний угол самого кода (в клетках рисунка).
-  const ox = sil ? EDGE + sil.cx * side - count / 2 : QUIET;
-  const oy = sil ? EDGE + sil.cy * side - count / 2 : QUIET;
+  const ox = band + (sil ? EDGE + sil.cx * side - count / 2 : QUIET);
+  const oy = band + (sil ? EDGE + sil.cy * side - count / 2 : QUIET);
+  const sx = band + (sil ? EDGE : 0); // где начинается силуэт
   const shapes: Shape[] = [];
 
   // Где клетка (x, y) окажется после поворота кода — по этому месту берём цвет фото под ней.
@@ -545,9 +554,11 @@ export function buildDrawing(text: string, style: QrStyle): Drawing {
   // но не крупнее 3,6 клетки.
   const lines = [style.caption, style.captionPhone].map((x) => (x ?? "").trim().slice(0, CAPTION_MAX)).filter(Boolean);
   const fonts = lines.map((l) => Math.min(3.6, (count * 0.98) / (l.length * 0.66)));
-  const height = lines.length ? size + fonts.reduce((a, f) => a + f * 1.12, 0) + 1.4 : size;
+  // С украшениями подпись идёт сразу под кодом — нижняя полоса украшений уступает ей место.
+  const capCut = lines.length ? band : 0;
+  const height = lines.length ? size - capCut + fonts.reduce((a, f) => a + f * 1.12, 0) + 1.4 : size;
   // У силуэта фон — только внутри силуэта, снаружи прозрачно (наклейку можно вырезать по форме).
-  const outline = sil ? outlinePath(sil.pts, side, EDGE, EDGE) : null;
+  const outline = sil ? outlinePath(sil.pts, side, sx, sx) : null;
   shapes.push({ kind: "path", d: outline ?? rectPath(0, 0, size, height), fill: style.bg, fixed: true });
   if (style.texture && !style.picture)
     shapes.push({ kind: "image", src: style.texture, x: 0, y: 0, w: size, h: sil ? size : height, fixed: true, ...(outline && { clip: outline }) });
@@ -632,7 +643,7 @@ export function buildDrawing(text: string, style: QrStyle): Drawing {
     // GAP к коду; закрашена примерно половина — как узор самого кода. Не поворачиваются: силуэт стоит ровно.
     const bound = inset(sil.pts, (RING + 0.45) / side);
     const rnd = seeded(text);
-    const toUnit = (v: number) => (v - EDGE) / side;
+    const toUnit = (v: number) => (v - sx) / side;
     const on = new Set<string>();
     const lo = -Math.ceil(ox);
     const hi = Math.ceil(size - ox);
@@ -654,7 +665,28 @@ export function buildDrawing(text: string, style: QrStyle): Drawing {
     }
     if (deco) shapes.push({ kind: "path", d: deco, fill: dotFill, effect: fx, fixed: true });
     // Рамка по краю силуэта — цветом углов.
-    shapes.push({ kind: "path", d: outline! + outlinePath(ringIn, side, EDGE, EDGE, true), fill: isMetal ? metal(eyeColor, EDGE, EDGE, side, 4) : eyeColor, rule: "evenodd", effect: fx, fixed: true });
+    shapes.push({ kind: "path", d: outline! + outlinePath(ringIn, side, sx, sx, true), fill: isMetal ? metal(eyeColor, sx, sx, side, 4) : eyeColor, rule: "evenodd", effect: fx, fixed: true });
+  }
+
+  if (orn) {
+    // Украшения: в полосе вокруг (у квадрата — за пустой рамкой, у силуэта — снаружи него), не друг на друге.
+    const rnd = seeded(`${text}:${orn}`);
+    const keep = sil ? inset(sil.pts, -0.6 / side) : null;
+    const clear = (x: number, y: number, r: number) =>
+      sil && keep
+        ? [[0, 0], [r, 0], [-r, 0], [0, r], [0, -r]].every(([dx, dy]) => !inside(keep, (x + dx - sx) / side, (y + dy - sx) / side))
+        : x - r > size - band || x + r < band || y - r > size - band || y + r < band;
+    const placed: [number, number, number][] = [];
+    let d = "";
+    for (let tries = 0; tries < 900 && placed.length < 26; tries++) {
+      const r = 0.45 + rnd() * 0.75;
+      const x = r + rnd() * (size - 2 * r);
+      const y = r + rnd() * (size - 2 * r);
+      if (!clear(x, y, r) || (capCut && y + r > size - band) || placed.some(([px, py, pr]) => Math.hypot(px - x, py - y) < pr + r + 0.6)) continue;
+      placed.push([x, y, r]);
+      d += ornamentPath(orn, x, y, r * 2, orn === "hearts" || orn === "stars" ? (rnd() - 0.5) * 0.7 : rnd() * Math.PI);
+    }
+    if (d) shapes.push({ kind: "path", d, fill: isMetal ? metal(eyeColor, 0, 0, size, 5) : eyeColor, opacity: 0.9, effect: fx, fixed: true });
   }
 
   const eyes: [number, number, EyePos][] = [
@@ -697,7 +729,7 @@ export function buildDrawing(text: string, style: QrStyle): Drawing {
     shapes.push({ kind: "image", src: style.logo.src, x: ox + x + 0.3, y: oy + x + 0.3, w: w - 0.6, h: w - 0.6, fixed: true });
   }
 
-  let y = sil ? size : size - QUIET / 2;
+  let y = (sil ? size : size - QUIET / 2) - capCut;
   lines.forEach((text, i) => {
     y += fonts[i] * (i ? 1.12 : 0.82);
     shapes.push({ kind: "text", text, x: size / 2, y, size: fonts[i], fill: style.eyeColor || style.fg, fixed: true });
