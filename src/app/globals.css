@@ -129,6 +129,13 @@ body {
   position: absolute;
   inset: -8px;
 }
+/* Тёмная тема: «сцена» того же цвета, что и карточки, — выбранная вкладка или фильтр (чёрные в светлой теме)
+   сливались с соседними. Даём им лаймовую обводку. */
+@media (prefers-color-scheme: dark) {
+  :is([aria-selected="true"], [aria-pressed="true"], [aria-current="page"], [aria-checked="true"]).bg-stage {
+    box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--accent) 65%, transparent);
+  }
+}
 /* Круглая кнопка поверх страницы (добавить запись) — над нижними вкладками, если они есть. */
 .x-fab {
   bottom: calc(16px + env(safe-area-inset-bottom));

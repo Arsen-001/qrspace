@@ -58,7 +58,7 @@ export function ContentForm({
                     aria-checked={on}
                     onClick={() => onType(id)}
                     className={`flex min-w-0 flex-col items-center gap-1.5 rounded-xl border px-1 pb-2 pt-2.5 text-xs font-semibold leading-tight transition-all ${
-                      on ? "border-stage bg-stage text-on-stage shadow-[0_6px_18px_-8px_rgba(0,0,0,0.5)]" : "border-line bg-field hover:-translate-y-0.5 hover:border-muted"
+                      on ? "border-accent/70 bg-stage text-on-stage shadow-[0_6px_18px_-8px_rgba(0,0,0,0.5)]" : "border-line bg-field hover:-translate-y-0.5 hover:border-muted"
                     }`}
                   >
                     <TypeIcon type={id} className={`h-6 w-6 ${on ? "text-accent" : ""}`} />
