@@ -147,6 +147,10 @@ body {
   body:has(.x-tabbar) .x-fab {
     bottom: calc(96px + env(safe-area-inset-bottom));
   }
+  /* Подвинуть в видимую часть (окно оплаты, «Готово») — не под нижние вкладки. */
+  html:has(.x-tabbar) {
+    scroll-padding-bottom: calc(96px + env(safe-area-inset-bottom));
+  }
 }
 
 /* Печать листов наклеек: A4, без полей браузера, только сами наклейки. */

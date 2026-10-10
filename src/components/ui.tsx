@@ -146,6 +146,13 @@ export function TextField({
   placeholder,
   trailing,
   inputMode,
+  maxLength,
+  note,
+  invalid,
+  plain,
+  min,
+  onFocus,
+  onBlur,
 }: {
   label: string;
   value: string;
@@ -155,10 +162,31 @@ export function TextField({
   placeholder?: string;
   trailing?: ReactNode;
   inputMode?: "text" | "tel" | "email" | "url";
+  /** Сколько знаков можно; у многострочного поля под ним счётчик. */
+  maxLength?: number;
+  /** Подсказка или ошибка под полем. */
+  note?: ReactNode;
+  invalid?: boolean;
+  /** Адрес, почта, номер, имя пользователя: телефон не ставит заглавную букву и не исправляет «опечатки». */
+  plain?: boolean;
+  min?: string;
+  onFocus?: () => void;
+  onBlur?: () => void;
 }) {
   const id = useId();
-  const cls =
-    "w-full rounded-xl border border-line bg-field px-3.5 py-2.5 text-base outline-none transition-colors focus:border-accent";
+  const noteId = useId();
+  const cls = `w-full rounded-xl border bg-field px-3.5 py-2.5 text-base outline-none transition-colors focus:border-accent ${invalid ? "border-warn" : "border-line"}`;
+  const common = {
+    id,
+    value,
+    placeholder,
+    maxLength,
+    onFocus,
+    onBlur,
+    "aria-invalid": invalid || undefined,
+    "aria-describedby": note ? noteId : undefined,
+    ...(plain && { autoCapitalize: "none", autoCorrect: "off" }),
+  };
   return (
     <div>
       <label htmlFor={id} className="mb-1.5 block text-sm font-medium text-muted">
@@ -166,14 +194,13 @@ export function TextField({
       </label>
       <div className="relative">
         {multiline ? (
-          <textarea id={id} value={value} rows={4} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} className={`${cls} resize-y`} />
+          <textarea {...common} rows={4} onChange={(e) => onChange(e.target.value)} className={`${cls} resize-y`} />
         ) : (
           <input
-            id={id}
-            value={value}
+            {...common}
             type={type}
+            min={min}
             inputMode={inputMode}
-            placeholder={placeholder}
             onChange={(e) => onChange(e.target.value)}
             className={`${cls} ${trailing ? "pr-24" : ""}`}
             autoComplete="off"
@@ -182,6 +209,18 @@ export function TextField({
         )}
         {trailing && <div className="absolute inset-y-0 right-2 flex items-center">{trailing}</div>}
       </div>
+      {(note || (multiline && maxLength && value)) && (
+        <div className="mt-1.5 flex items-start gap-3">
+          <div id={noteId} className="min-w-0 flex-1">
+            {note}
+          </div>
+          {multiline && maxLength && value && (
+            <span className={`shrink-0 font-mono text-xs ${value.length >= maxLength ? "text-warn" : "text-muted"}`}>
+              {value.length}/{maxLength}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }

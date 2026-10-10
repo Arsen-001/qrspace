@@ -233,6 +233,8 @@ export const codeLink = (base: string, id: string) => `${base}/c/${id}`;
  */
 export const linkOf = (base: string, c: { id: string; short?: string; compact?: boolean }) =>
   c.compact && c.short ? `${base.toUpperCase()}/K/${c.short}` : codeLink(base, c.id);
+/** Ссылку кода показываем без «https://» и с адресом сайта строчными: «qrspace.co/K/AB12CD». */
+export const shownLink = (link: string) => link.replace(/^https?:\/\//i, "").replace(/^[^/]+/, (h) => h.toLowerCase());
 export const mediaUrl = (name: string) => `/api/media/${name}`;
 
 async function call<T>(url: string, init?: RequestInit): Promise<T> {

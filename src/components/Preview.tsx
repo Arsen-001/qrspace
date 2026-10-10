@@ -1,9 +1,9 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { api, fmtBytes } from "@/lib/codes";
-import type { Dict } from "@/lib/i18n";
+import { fill, type Dict } from "@/lib/i18n";
 import { useMe } from "@/lib/me";
 import { PRICES, type Quote, type Tier } from "@/lib/pricing";
 import { useInBrowser } from "./QrThumb";
@@ -51,11 +51,38 @@ export function Preview({
 }) {
   const [forced, setForced] = useState(false);
   const canDownload = !!drawing && !sample && !gate?.blocked && (scan === "ok" || (scan === "bad" && forced));
-  const [failed, setFailed] = useState(false);
+  // Что не вышло: код не сохранился (статус сервера — своё объяснение) или оплата / цена не дошли.
+  const [failed, setFailed] = useState<string | null>(null);
   const { me } = useMe();
   const path = usePathname();
-  const [pay, setPay] = useState<{ format: Format; quote: Quote | null; key: string } | null>(null);
+  const [opened, setPay] = useState<{ format: Format; quote: Quote | null; key: string } | null>(null);
+  // Окно оплаты — только за тот код, что сейчас на экране: поменяли вид или содержимое — цена была за другой.
+  const key = gate?.key();
+  const pay = opened && opened.key === key ? opened : null;
   const [busy, setBusy] = useState(false);
+  const svg = useMemo(() => (drawing ? toSvg(drawing, 420) : ""), [drawing]);
+
+  // Цена заранее (вошедшим): бесплатно, из пакета, уже оплачен или $1 — видно до нажатия.
+  const [known, setKnown] = useState<{ key: string; tier: Tier; q: Quote } | null>(null);
+  const tier = gate?.tier;
+  const ask = !!gate && !gate.made && !gate.blocked && !!me && !sample && !!drawing;
+  useEffect(() => {
+    if (!ask || !key || !tier) return;
+    let live = true;
+    const id = setTimeout(() => api.quote(key, tier).then((q) => live && setKnown({ key, tier, q }), () => {}), 500);
+    return () => {
+      live = false;
+      clearTimeout(id);
+    };
+  }, [ask, key, tier]);
+  const quote = ask && known && known.key === key && known.tier === tier ? known.q : null;
+
+  // Окно оплаты появляется под кнопками — на телефоне оно было бы под нижними вкладками: подвинуть в видимую часть.
+  const payRef = useRef<HTMLDivElement>(null);
+  const shown = !!pay;
+  useEffect(() => {
+    if (shown) payRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [shown]);
 
   const [live, setLive] = useState<number | "bad" | null>(null);
   // Запись видео есть не во всех браузерах; на сервере кнопку не рисуем — иначе страницы не совпадут.
@@ -65,9 +92,9 @@ export function Preview({
     let d = drawing;
     let text = payload ?? "";
     if (gate?.finalize) {
-      setFailed(false);
-      const f = await gate.finalize().catch(() => null);
-      if (!f) return setFailed(true);
+      setFailed(null);
+      const f = await gate.finalize().catch((e: Error) => e);
+      if (f instanceof Error) return setFailed(f.message);
       ({ drawing: d, payload: text } = f);
     }
     try {
@@ -92,12 +119,15 @@ export function Preview({
     const key = gate.key();
     if (!me && !signedIn) return setLogin(format);
     setBusy(true);
+    setFailed(null);
     try {
       const q = await api.quote(key, gate.tier);
       if (q.paid) {
         setPay(null);
         await save(format);
       } else setPay({ format, quote: q, key });
+    } catch {
+      setFailed("net");
     } finally {
       setBusy(false);
     }
@@ -105,14 +135,18 @@ export function Preview({
   const confirm = async () => {
     if (!pay || !gate) return;
     setBusy(true);
+    setFailed(null);
     try {
       await api.pay(pay.key, gate.tier);
       await save(pay.format);
       setPay(null);
+    } catch {
+      setFailed("net");
     } finally {
       setBusy(false);
     }
   };
+  const failText = failed === "429" ? t.errLimit : failed === "402" ? t.errPay : failed === "400" ? t.errBad : t.saveError;
 
   return (
     <section className="rounded-2xl border border-line bg-card p-5 sm:p-6">
@@ -126,7 +160,7 @@ export function Preview({
       <div className="relative mx-auto aspect-square w-full max-w-[420px] overflow-hidden rounded-xl border border-line bg-field">
         {drawing ? (
           <>
-            <div className={`h-full w-full transition-opacity [&>svg]:h-full [&>svg]:w-full ${sample ? "opacity-85" : ""}`} dangerouslySetInnerHTML={{ __html: toSvg(drawing, 420) }} />
+            <div className={`h-full w-full transition-opacity [&>svg]:h-full [&>svg]:w-full ${sample ? "opacity-85" : ""}`} dangerouslySetInnerHTML={{ __html: svg }} />
             {sample && <span className="absolute left-3 top-3 rounded-md bg-stage px-2.5 py-1 font-mono text-xs font-bold uppercase tracking-wider text-accent">{t.sampleBadge}</span>}
           </>
         ) : (
@@ -135,7 +169,7 @@ export function Preview({
       </div>
 
       <div className="mt-4 min-h-14" aria-live="polite">
-        {drawing && sample && <p className="rounded-xl border border-dashed border-line p-3 text-sm text-muted">{t.sampleHint}</p>}
+        {drawing && sample && <p className="rounded-xl border border-dashed border-line p-3 text-sm text-muted">{note ?? t.sampleHint}</p>}
         {drawing && !sample && scan === "checking" && <p className="text-sm text-muted">{t.checking}</p>}
         {drawing && !sample && scan === "ok" && (
           <div className="flex items-start gap-2.5 rounded-xl bg-ok-soft p-3">
@@ -163,7 +197,11 @@ export function Preview({
       </div>
 
       {note && drawing && !sample && <p className="mt-2 text-xs leading-relaxed text-muted">{note}</p>}
-      {gate?.blocked && <p className="mt-3 rounded-xl bg-warn-soft p-3 text-sm">{gate.blocked}</p>}
+      {gate?.blocked && !sample && (
+        <p role="alert" className="mt-3 rounded-xl bg-warn-soft p-3 text-sm font-medium">
+          {gate.blocked}
+        </p>
+      )}
       {/* Главное действие — одна крупная кнопка; SVG и видео-код — рядом поменьше. */}
       <button
         type="button"
@@ -175,9 +213,7 @@ export function Preview({
           <path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14" />
         </svg>
         <span className="text-left">
-          <span className="block font-heading text-sm font-bold">
-            {t.download} {t.png}
-          </span>
+          <span className="block font-heading text-sm font-bold">{fill(t.dlFormat, { f: t.png })}</span>
           <span className="block text-xs opacity-75">{t.pngHint}</span>
         </span>
       </button>
@@ -188,9 +224,7 @@ export function Preview({
           onClick={() => download("svg")}
           className="min-h-14 min-w-0 rounded-xl border border-line bg-field px-3 py-2 text-left transition-colors hover:border-muted disabled:opacity-40"
         >
-          <span className="block text-sm font-semibold">
-            {t.download} {t.svg}
-          </span>
+          <span className="block text-sm font-semibold">{fill(t.dlFormat, { f: t.svg })}</span>
           <span className="block text-xs leading-snug text-muted">{t.svgHint}</span>
         </button>
         {payload && canRecord && (
@@ -212,7 +246,7 @@ export function Preview({
       {live === "bad" && <p className="mt-2 text-xs text-warn">{t.liveBad}</p>}
       {failed && (
         <p role="alert" className="mt-2 rounded-xl bg-warn-soft p-3 text-sm font-medium">
-          {t.saveError}
+          {failText}
         </p>
       )}
       {gate && !gate.blocked && (
@@ -222,13 +256,25 @@ export function Preview({
               <span className={`h-2 w-2 rounded-full ${gate.tier === "simple" ? "bg-muted" : "bg-accent"}`} aria-hidden />
               {gate.tier === "simple" ? t.tierSimple : t.tierStyled}
             </span>
-            <span className="font-heading text-lg font-bold">${PRICES[gate.tier]}</span>
+            <span className="font-heading text-lg font-bold">
+              {gate.made || quote?.paid ? <span className="text-ok">✓</span> : quote?.free || quote?.pack ? "$0" : `$${quote ? quote.price : PRICES[gate.tier]}`}
+            </span>
           </div>
-          <p className="mt-2 text-center text-xs text-muted">{t.firstFree}</p>
+          <p className={`mt-2 text-center text-xs text-muted ${pay ? "hidden" : ""}`}>
+            {gate.made || quote?.paid
+              ? t.pricePaid
+              : quote?.free
+                ? t.priceFree
+                : quote?.pack
+                  ? fill(t.pricePack, { n: quote.pack.left })
+                  : quote
+                    ? t.priceForever
+                    : t.firstFree}
+          </p>
         </div>
       )}
       {pay && (
-        <div className="mt-3 rounded-xl bg-stage p-4 text-on-stage" role="dialog" aria-label={t.payTitle}>
+        <div ref={payRef} className="mt-3 scroll-mb-28 rounded-xl bg-stage p-4 text-on-stage" role="dialog" aria-label={t.payTitle}>
           {!pay.quote ? (
             <>
               <p className="text-sm font-semibold">{t.loginToDownload}</p>

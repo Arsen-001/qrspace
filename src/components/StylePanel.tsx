@@ -1,5 +1,5 @@
 "use client";
-import { useId, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
+import { memo, useEffect, useId, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { Dict } from "@/lib/i18n";
 import { ballSample, DOT_STYLES, dotSample, EFFECTS, EYE_BALLS, EYE_STYLES, eyeSample, type EyeBall, type DotStyle, type Effect, type EyeStyle, type IconMask, type Rotation } from "@/lib/qr/render";
 import { buildDrawing, CAPTION_MAX, toSvg } from "@/lib/qr/render";
@@ -161,6 +161,50 @@ function Toggle({ label, on, onChange }: { label: string; on: boolean; onChange:
   );
 }
 
+/**
+ * Поле, которое меняет рисунок (подпись, номер под кодом): печатаем в своё состояние, в код — после паузы или при выходе
+ * из поля. Иначе на телефоне каждая буква перерисовывала бы код, проверку и всю панель — ввод отставал.
+ */
+function LazyInput({
+  value,
+  onCommit,
+  filter,
+  counter,
+  ...rest
+}: { value: string; onCommit: (v: string) => void; filter?: (v: string) => string; counter?: number } & Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange">) {
+  const [draft, setDraft] = useState(value);
+  // Что пришло снаружи и что отправили сами: снаружи поменяли (черновик, другой код) — показываем новое,
+  // вернулось наше — не трогаем (человек мог допечатать).
+  const [seen, setSeen] = useState(value);
+  const [sent, setSent] = useState(value);
+  if (value !== seen) {
+    setSeen(value);
+    if (value !== sent) setDraft(value);
+  }
+  const commit = (v: string) => {
+    setSent(v);
+    onCommit(v);
+  };
+  useEffect(() => {
+    if (draft === value) return;
+    const id = setTimeout(() => {
+      setSent(draft);
+      onCommit(draft);
+    }, 300);
+    return () => clearTimeout(id);
+  }, [draft, value, onCommit]);
+  return (
+    <>
+      <input {...rest} value={draft} onChange={(e) => setDraft(filter ? filter(e.target.value) : e.target.value)} onBlur={() => draft !== value && commit(draft)} />
+      {counter && (
+        <span className="font-mono text-xs text-muted">
+          {draft.length}/{counter}
+        </span>
+      )}
+    </>
+  );
+}
+
 /** Иконки вкладок тонкой настройки. */
 const TAB_ICON: Record<Tab, ReactNode> = {
   colors: <path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.6-.9 1.2-1.8-.5-1-.1-2.2 1.1-2.2H17a4 4 0 0 0 4-4c0-5.5-4-10-9-10ZM7.5 11.5h.01M10 7.5h.01M15 7.5h.01" />,
@@ -243,7 +287,8 @@ function PresetGrid({ t, s, set }: { t: Dict; s: StyleState; set: (patch: Partia
   );
 }
 
-export function StylePanel({
+/** Панель вида. memo: пока человек печатает в шаге 1, вид не меняется — панель (сотни плиток и значков) не перерисовываем. */
+export const StylePanel = memo(function StylePanel({
   t,
   s,
   set,
@@ -313,27 +358,26 @@ export function StylePanel({
       <div className="mt-5">
         <Label hint={t.captionHint} info={t.infoCaption}>{t.captionLabel}</Label>
         <div className="flex min-h-11 max-w-md items-center rounded-xl border border-line bg-field pr-3 focus-within:border-accent">
-          <input
+          <LazyInput
             value={s.caption ?? ""}
             maxLength={CAPTION_MAX}
-            onChange={(e) => set({ caption: e.target.value || null })}
+            counter={CAPTION_MAX}
+            onCommit={(v) => set({ caption: v || null })}
             placeholder="Scan me"
             aria-label={t.captionLabel}
             className="min-w-0 flex-1 bg-transparent px-3.5 font-heading font-bold outline-none"
           />
-          <span className="font-mono text-xs text-muted">
-            {(s.caption ?? "").length}/{CAPTION_MAX}
-          </span>
         </div>
         <div className="mt-2 flex min-h-11 max-w-md items-center rounded-xl border border-line bg-field focus-within:border-accent">
           <span aria-hidden className="pl-3.5 text-muted">
             ☎
           </span>
-          <input
+          <LazyInput
             value={s.captionPhone ?? ""}
             maxLength={24}
             inputMode="tel"
-            onChange={(e) => set({ captionPhone: e.target.value.replace(/[^\d+()\s-]/g, "") || null })}
+            filter={(v) => v.replace(/[^\d+()\s-]/g, "")}
+            onCommit={(v) => set({ captionPhone: v || null })}
             placeholder="+374 91 123456"
             aria-label={t.captionPhone}
             className="min-w-0 flex-1 bg-transparent px-3 font-heading font-bold outline-none"
@@ -549,4 +593,4 @@ export function StylePanel({
       </div>
     </Card>
   );
-}
+});

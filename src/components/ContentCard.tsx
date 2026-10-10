@@ -3,7 +3,7 @@
 // Любой наш код открывается здесь, а не сразу у цели (решение владельца 08.10.2026).
 import { useState } from "react";
 import type { Dict } from "@/lib/i18n";
-import { actionHref, icsOf, safeUrl, vcardOf, type Content } from "@/lib/qr/payload";
+import { actionHref, handleOf, icsOf, safeUrl, vcardOf, type Content } from "@/lib/qr/payload";
 import { TypeIcon } from "./TypeIcon";
 
 const APP: Partial<Record<Content["type"], string>> = {
@@ -60,7 +60,8 @@ function Row({ t, label, value, href }: { t: Dict; label: string; value: string;
       <div className="min-w-0 flex-1">
         <div className="text-xs text-muted">{label}</div>
         {href ? (
-          <a href={href} className="block break-words font-semibold underline-offset-2 hover:underline">
+          // Ссылка во всю строку высотой с палец (номер, почта, сайт визитки).
+          <a href={href} className="flex min-h-10 items-center break-words font-semibold underline underline-offset-2 [overflow-wrap:anywhere]">
             {value}
           </a>
         ) : (
@@ -94,7 +95,8 @@ const when = (s: string, lang: string) => {
 export function ContentCard({ t, lang, content, title }: { t: Dict; lang: string; content: Content; title?: string | null }) {
   const { type, fields: f } = content;
   const href = actionHref(content);
-  const label = (k: string) => t[`field.${k}` as keyof Dict] as string;
+  // Подписи формы без «(необязательно)» — тому, кто отсканировал, это ни к чему; место — коротко.
+  const label = (k: string) => (k === "place" ? t.placeShort : (t[`field.${k}` as keyof Dict] as string).replace(/\s*\([^)]*\)\s*$/, ""));
   const app = APP[type];
 
   // Что показать крупно и какие кнопки.
@@ -148,10 +150,10 @@ export function ContentCard({ t, lang, content, title }: { t: Dict; lang: string
       actions.push(<CopyButton key="n" t={t} value={main} label={t.actCopyNetwork} />);
       break;
     case "contact": {
-      main = [f.firstName, f.lastName].filter(Boolean).join(" ") || (f.phone ?? "");
+      main = [f.firstName, f.lastName].filter(Boolean).join(" ") || f.company || f.phone || f.email || "";
       if (f.phone) rows.push({ k: label("phone"), v: f.phone, href: `tel:${f.phone.replace(/[^\d+]/g, "")}` });
       if (f.email) rows.push({ k: label("email"), v: f.email, href: `mailto:${f.email}` });
-      if (f.company) rows.push({ k: label("company"), v: f.company });
+      if (f.company && f.company !== main) rows.push({ k: label("company"), v: f.company });
       if (f.website) rows.push({ k: label("website"), v: f.website, href: safeUrl(f.website) });
       actions.push(
         <button key="s" type="button" className={primary} onClick={() => download(`${main || "contact"}.vcf`, "text/vcard", vcardOf(f))}>
@@ -180,8 +182,7 @@ export function ContentCard({ t, lang, content, title }: { t: Dict; lang: string
       break;
     default:
       // Соцсети и Telegram — профиль: откроется приложение, если оно есть, иначе браузер.
-      main = (f.username ?? "").replace(/^https?:\/\/(www\.)?/i, "");
-      if (main && !main.includes("/") && !main.startsWith("@")) main = `@${main}`;
+      main = handleOf(f.username ?? "");
       actions.push(open(`${t.actOpenIn} ${app}`), <CopyButton key="c" t={t} value={href ?? main} label={t.actCopyLink} />);
   }
 

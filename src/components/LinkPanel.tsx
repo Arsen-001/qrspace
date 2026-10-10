@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { CodePatch, CodeView } from "@/lib/codes";
 import type { Dict } from "@/lib/i18n";
-import { buildPayload, cleanContent, CONTENT_TYPES, type ContentType, type Fields } from "@/lib/qr/payload";
+import { buildPayload, cleanContent, CONTENT_TYPES, problemsOf, type ContentType, type Fields } from "@/lib/qr/payload";
 import { ContentForm } from "./ContentForm";
 
 export function LinkPanel({ t, code, save }: { t: Dict; code: CodeView; save: (p: CodePatch) => Promise<void> }) {
@@ -18,6 +18,8 @@ export function LinkPanel({ t, code, save }: { t: Dict; code: CodeView; save: (p
   const [state, setState] = useState<"idle" | "bad" | "saved">("idle");
   const current = { type, fields: fields[type] };
   const changed = JSON.stringify(cleanContent(current)) !== JSON.stringify(code.content);
+  // Ошибка, с которой скан вёл бы в никуда (номер без цифр, WhatsApp без кода страны…), — не сохраняем; что не так — под полем.
+  const stop = problemsOf(type, fields[type]).some((p) => p.block);
   const commit = async () => {
     const ct = cleanContent(current);
     if (!ct) return setState("bad");
@@ -41,7 +43,7 @@ export function LinkPanel({ t, code, save }: { t: Dict; code: CodeView; save: (p
         <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-line pt-4">
           <button
             type="button"
-            disabled={!buildPayload(type, fields[type]) || !changed}
+            disabled={!buildPayload(type, fields[type]) || !changed || stop}
             onClick={commit}
             className="min-h-11 rounded-xl bg-accent px-5 font-heading text-sm font-bold text-on-accent disabled:opacity-40"
           >

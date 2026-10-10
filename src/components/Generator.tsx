@@ -1,9 +1,9 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { api, SAMPLE_SHORT } from "@/lib/codes";
-import type { Dict } from "@/lib/i18n";
-import { buildPayload, CONTENT_TYPES, type ContentType, type Fields } from "@/lib/qr/payload";
+import { api, SAMPLE_SHORT, shownLink } from "@/lib/codes";
+import { fill, type Dict } from "@/lib/i18n";
+import { buildPayload, CONTENT_TYPES, FIELDS, missingOf, problemsOf, type ContentType, type Fields } from "@/lib/qr/payload";
 import { buildDrawing } from "@/lib/qr/render";
 import { LOGO_FOR } from "@/lib/qr/logo-art";
 import { codeKey, tierOf } from "@/lib/pricing";
@@ -63,7 +63,15 @@ export function Generator() {
   // контакт, событие — решение владельца 08.10.2026). В предпросмотре — образец той же длины, настоящая — при скачивании.
   const sample = `${(base || "https://qrspace.co").toUpperCase()}/K/${SAMPLE_SHORT}`;
   const tier = tierOf(style);
-  const key = useMemo(() => codeKey(raw, toSaved(style)), [raw, style]);
+  // Отпечаток вида считаем, только когда вид меняется (с фото это сотни килобайт), а не на каждую букву.
+  const look = useMemo(() => codeKey("", toSaved(style)), [style]);
+  const key = useMemo(() => codeKey(raw, look), [raw, look]);
+  // Ошибка в шаге 1, с которой код вёл бы в никуда, — скачать нельзя, объясняем; не хватает поля — какого.
+  const f = fields[type];
+  const stop = useMemo(() => problemsOf(type, f).find((p) => p.block), [type, f]);
+  const missing = missingOf(type, f);
+  const typed = FIELDS[type].some((k) => k !== "security" && (f[k] ?? "").trim());
+  const blocked = stop ? `${t.fixStep1}. ${t[stop.key]}` : undefined;
   // Каждое скачивание по новой оплате — новый код, даже с тем же содержимым: код — свой маленький домен (владелец
   // 10.10.2026). Код, созданный в этот заход, пока ничего не меняли, — он же (PNG, потом SVG), без новой оплаты;
   // в предпросмотре — уже он, с настоящей ссылкой.
@@ -95,13 +103,14 @@ export function Generator() {
           style={style}
           setStyle={setStyle}
           sample={!raw}
-          note={raw && !ready ? t.draftNote : null}
+          note={raw ? (ready ? null : t.draftNote) : (blocked ?? (missing && typed ? fill(t.fillField, { f: t[`field.${missing}` as keyof Dict] }) : null))}
           suggestLogo={LOGO_FOR[type]}
           steps
           gate={{
             tier,
             key: () => key,
             made: !!ready,
+            blocked,
             beforeLogin: saveDraft,
             onSaved: () => {
               rememberColors(style.fg, style.bg);
@@ -174,7 +183,7 @@ function MadeBox({ t, id, link }: { t: Dict; id: string; link: string }) {
         </span>
         {t.madeTitle}
       </h2>
-      <p className="mt-3 break-all rounded-xl bg-field px-3.5 py-2.5 font-mono text-base font-bold">{link.replace(/^https?:\/\//i, "")}</p>
+      <p className="mt-3 break-all rounded-xl bg-field px-3.5 py-2.5 font-mono text-base font-bold">{shownLink(link)}</p>
       <p className="mt-3 text-sm leading-relaxed text-muted">{t.madeText}</p>
       <Link href={`/codes/${id}`} className="mt-4 inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-stage px-4 text-sm font-semibold text-on-stage">
         {t.madeOpen} →

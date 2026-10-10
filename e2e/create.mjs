@@ -106,11 +106,48 @@ for (const num of ["+374 91 555 777", "+37491555777"]) {
   const svg = await download(/Скачать SVG/);
   ok(svg.file === "qr-code.svg" && svg.asked === null && (await mine()).length === now.length, `phone "${num}": SVG of the same code — no payment, no duplicate`);
 }
+// Видео-код того же кода в этот заход — тоже без оплаты и без нового кода
+{
+  const before = (await mine()).length;
+  const [v] = await Promise.all([p.waitForEvent("download", { timeout: 60000 }), p.getByRole("button", { name: /Видео-код/ }).click()]);
+  ok(/-live\.(mp4|webm)$/.test(v.suggestedFilename()) && (await mine()).length === before, `video of the same code — no payment, no new code (${v.suggestedFilename()})`);
+}
 // Поменял номер после скачивания — это уже другой код (снова «образец» до скачивания)
 await field("Номер телефона").fill("+374 91 555 999");
 await ready();
 ok(await p.getByText("Пока это образец").isVisible(), "changed number after download — a new code again (sample until download)");
 ok(!(await p.getByText("Готово — это ваш новый код").count()), "changed number — the «done» card is gone");
+
+// Гость на телефоне: «Скачать» → окно входа → после входа окно оплаты видно (раньше оно открывалось под нижними
+// вкладками — нажал «Скачать», и будто ничего не произошло); цена — заранее, до нажатия.
+{
+  const g = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: "ru-RU", isMobile: true, hasTouch: true, acceptDownloads: true });
+  const q = await g.newPage();
+  q.on("pageerror", (e) => errors.push(e.message));
+  await q.goto(B + "/create", { waitUntil: "networkidle" });
+  const r = q.getByRole("radio", { name: "Телефон", exact: true });
+  await r.evaluate((e) => e.scrollIntoView({ block: "center" }));
+  await r.click();
+  await q.getByRole("textbox", { name: "Номер телефона", exact: true }).fill("+374 91 000 001");
+  await q.waitForFunction(() => /Код читается/.test(document.body.innerText), null, { timeout: 30000 });
+  await q.getByRole("button", { name: /Скачать PNG/ }).click();
+  await q.getByRole("dialog", { name: "Войдите, чтобы скачать" }).getByRole("button", { name: /Лилит/ }).click();
+  const pay = q.getByRole("button", { name: "Скачать бесплатно" });
+  await pay.waitFor({ timeout: 10000 });
+  await q.waitForTimeout(1000);
+  const box = await pay.boundingBox();
+  const bar = await q.locator(".x-tabbar").boundingBox();
+  ok(box && bar && box.y >= 0 && box.y + box.height <= bar.y, `after sign-in the pay window is on screen, above the tab bar (${Math.round(box?.y)}–${Math.round(box?.y + box?.height)}, bar at ${Math.round(bar?.y)})`);
+  await q.screenshot({ path: out + "create-pay-visible.png" });
+  await Promise.all([q.waitForEvent("download"), pay.click()]);
+  await q.getByText("Готово — это ваш новый код").waitFor({ timeout: 10000 });
+  ok(await q.getByText("Этот код уже ваш").isVisible(), "after download the price line says the code is already yours");
+  await q.getByRole("textbox", { name: "Номер телефона", exact: true }).fill("+374 91 000 002");
+  await q.waitForFunction(() => /Платите один раз/.test(document.body.innerText), null, { timeout: 15000 }).catch(() => {});
+  ok(await q.getByText("Платите один раз — код ваш навсегда").isVisible(), "the next code's price is shown before tapping ($1, once, forever)");
+  ok((await q.locator("text=$1").count()) > 0, "price $1 is on screen");
+  await g.close();
+}
 
 await browser.close();
 if (errors.length) { console.log("errors:", errors); process.exit(1); }

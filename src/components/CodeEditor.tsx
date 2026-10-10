@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { api, linkOf, type CodePatch, type CodeView } from "@/lib/codes";
+import { api, linkOf, shownLink, type CodePatch, type CodeView } from "@/lib/codes";
 import type { Dict, Lang } from "@/lib/i18n";
 import { useLang } from "@/lib/lang";
 import { refreshPeople, useMe, rememberColors } from "@/lib/me";
@@ -260,7 +260,7 @@ function Editor({ t, lang, me, base, initial }: { t: Dict; lang: Lang; me: strin
               <div className="flex gap-4 lg:block">
                 <QrThumb link={link} style={code.style} className="h-28 w-28 shrink-0 border border-line lg:h-auto lg:w-full" />
                 <div className="min-w-0 lg:mt-3">
-                  <div className="break-all font-mono text-xs text-muted">{link}</div>
+                  <div className="break-all font-mono text-xs text-muted">{shownLink(link)}</div>
                   <a href={`/c/${code.id}`} target="_blank" rel="noreferrer" className="mt-2 inline-grid min-h-10 place-items-center rounded-xl border border-line bg-field px-3 text-sm font-medium hover:border-muted">
                     {t.openAsScan} ↗
                   </a>
