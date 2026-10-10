@@ -4,7 +4,7 @@ import { randomBytes } from "node:crypto";
 import { networkInterfaces } from "node:os";
 import { media as mediaStore } from "./media";
 import { store } from "./store";
-import { inSchedule, ymd, type Report, type AccessLevel, type CodeRecord, type CodeView, type Kind, type Notice, storageOf } from "@/lib/codes";
+import { inSchedule, SAMPLE_SHORT, ymd, type Report, type AccessLevel, type CodeRecord, type CodeView, type Kind, type Notice, storageOf } from "@/lib/codes";
 import { DESIGNS, SEED_SALES, type Design } from "@/lib/market";
 import type { Listing } from "@/lib/listings";
 import type { Order } from "@/lib/orders";
@@ -48,7 +48,7 @@ export const takenShorts = (db: Db) => new Set(db.codes.map((c) => c.short).filt
 export const newShort = (taken: Set<string>) => {
   for (;;) {
     const s = Array.from(randomBytes(6), (b) => SHORT[b % SHORT.length]).join("");
-    if (!taken.has(s)) return s;
+    if (!taken.has(s) && s !== SAMPLE_SHORT) return s;
   }
 };
 
@@ -335,6 +335,15 @@ export async function packsOf(person: string): Promise<Pack[]> {
 
 export async function purchasesOf(person: string): Promise<Purchase[]> {
   return (await read()).purchases.filter((p) => p.person === person);
+}
+
+/** Оплата уже создала код, и он ещё есть: одна оплата — один код (для quote). Код удалили — оплата снова свободна. */
+export const spentIn = (db: Pick<Db, "codes">) => (p: Purchase) => !!p.code && db.codes.some((c) => c.id === p.code);
+
+/** Цена для человека — как quote, но оплата, ушедшая на существующий код, уже не в счёт. */
+export async function quoteFor(person: string): Promise<{ mine: Purchase[]; spent: (p: Purchase) => boolean; packs: Pack[] }> {
+  const db = await read();
+  return { mine: db.purchases.filter((p) => p.person === person), spent: spentIn(db), packs: db.packs.filter((p) => p.person === person) };
 }
 
 export async function market(): Promise<{ sold: Record<string, number>; designs: Design[] }> {

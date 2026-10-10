@@ -208,6 +208,8 @@ export const buyStorage = (id: string, plan: string) => call<CodeView>(`/api/cod
 /** Пакеты кодов: мои (сколько осталось) и покупка. */
 export const myPacks = () => call<{ left: number; packs: Pack[] }>("/api/packs");
 export const buyPack = (plan: string) => call<{ left: number; packs: Pack[] }>("/api/packs", json("POST", { plan }));
+/** Короткая ссылка образца в генераторе (рисунок до скачивания): настоящим кодам не выдаётся, скан — страница «это образец». */
+export const SAMPLE_SHORT = "XXXXXX";
 export const VIDEO_TYPES: Record<string, string> = { "video/mp4": "mp4", "video/quicktime": "mov", "video/webm": "webm" };
 /** Имя видео, которое браузер кладёт прямо в хранилище: «<код>_<12 букв/цифр>.<mp4|mov|webm>». */
 export const uploadedName = (id: string, name: string) => name.startsWith(`${id}_`) && /^[A-Za-z0-9]+_[A-Za-z0-9]{12}\.(mp4|mov|webm)$/.test(name);

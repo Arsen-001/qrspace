@@ -100,7 +100,7 @@ final class API {
         try decode(try await send("/api/codes", method: "POST", json: ["title": title, "kind": kind, "style": style.jsonObject]))
     }
     /// A generator code (link, Wi‑Fi, contact…): our short link + the content. `key` — the one paid in
-    /// POST /api/purchases (one purchase = one code; 402 without it). The same content and look again → the same code.
+    /// POST /api/purchases (one purchase = one code; 402 without it). Every purchase makes a new code of its own, even with the same content (10.10.2026).
     func quick(content: Content, style: QRStyle, key: String, title: String?) async throws -> QuickResult {
         var body: [String: Any] = ["content": ["type": content.type, "fields": content.fields], "style": style.jsonObject, "key": key]
         if let title, !title.isEmpty { body["title"] = title }

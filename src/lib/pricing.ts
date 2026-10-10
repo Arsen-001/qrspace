@@ -26,9 +26,13 @@ export function tierOf(s: StyleState | SavedStyle): Tier {
   return styled ? "styled" : "simple";
 }
 
-/** Сколько стоит скачать этот код этому человеку. Апгрейд простого до красивого — доплата разницы. */
-export function quote(mine: Purchase[], key: string, tier: Tier): Quote {
-  const own = mine.filter((p) => p.key === key);
+/**
+ * Сколько стоит скачать этот код этому человеку. Апгрейд простого до красивого — доплата разницы.
+ * spent — оплата из генератора, уже ушедшая на код, который ещё есть: она за тот код, на новый не считается
+ * (каждый код — свой, как маленький домен; владелец 10.10.2026).
+ */
+export function quote(mine: Purchase[], key: string, tier: Tier, spent: (p: Purchase) => boolean = () => false): Quote {
+  const own = mine.filter((p) => p.key === key && !spent(p));
   if (own.some((p) => p.tier === "styled" || p.tier === tier)) return { paid: true, price: 0, free: false };
   if (tier === "simple" && !mine.some((p) => p.free)) return { paid: false, price: 0, free: true };
   const before = own.reduce((sum, p) => sum + p.price, 0);

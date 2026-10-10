@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { api } from "@/lib/codes";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { api, SAMPLE_SHORT } from "@/lib/codes";
+import type { Dict } from "@/lib/i18n";
 import { buildPayload, CONTENT_TYPES, type ContentType, type Fields } from "@/lib/qr/payload";
 import { buildDrawing } from "@/lib/qr/render";
 import { LOGO_FOR } from "@/lib/qr/logo-art";
@@ -60,9 +61,16 @@ export function Generator() {
   }
   // Любой наш код ведёт через нашу короткую ссылку, скан открывает нашу страницу с содержимым и кнопками (и Wi-Fi,
   // контакт, событие — решение владельца 08.10.2026). В предпросмотре — образец той же длины, настоящая — при скачивании.
-  const sample = `${(base || "https://qrspace.co").toUpperCase()}/K/XXXXXX`;
-  const payload = sample;
+  const sample = `${(base || "https://qrspace.co").toUpperCase()}/K/${SAMPLE_SHORT}`;
   const tier = tierOf(style);
+  const key = useMemo(() => codeKey(raw, toSaved(style)), [raw, style]);
+  // Каждое скачивание по новой оплате — новый код, даже с тем же содержимым: код — свой маленький домен (владелец
+  // 10.10.2026). Код, созданный в этот заход, пока ничего не меняли, — он же (PNG, потом SVG), без новой оплаты;
+  // в предпросмотре — уже он, с настоящей ссылкой.
+  const [made, setMade] = useState<{ key: string; id: string; link: string } | null>(null);
+  const fresh = useRef<typeof made>(null);
+  const ready = made?.key === key ? made : null;
+  const payload = ready ? ready.link : sample;
 
   return (
     <div>
@@ -87,15 +95,22 @@ export function Generator() {
           style={style}
           setStyle={setStyle}
           sample={!raw}
+          note={raw && !ready ? t.draftNote : null}
           suggestLogo={LOGO_FOR[type]}
           steps
           gate={{
             tier,
-            key: () => codeKey(raw, toSaved(style)),
+            key: () => key,
+            made: !!ready,
             beforeLogin: saveDraft,
-            onSaved: () => rememberColors(style.fg, style.bg),
+            onSaved: () => {
+              rememberColors(style.fg, style.bg);
+              if (fresh.current) setMade(fresh.current);
+            },
             finalize: async () => {
-              const { link } = await api.quick({ content: { type, fields: fields[type] }, style: toSaved(style), key: codeKey(raw, toSaved(style)) });
+              if (ready) return { drawing: buildDrawing(ready.link, toQrStyle(style)), payload: ready.link };
+              const { id, link } = await api.quick({ content: { type, fields: fields[type] }, style: toSaved(style), key });
+              fresh.current = { key, id, link };
               return { drawing: buildDrawing(link, toQrStyle(style)), payload: link };
             },
           }}
@@ -110,32 +125,60 @@ export function Generator() {
             />
           }
           side={
-            isDesigner(me) ? (
-              <PublishBox t={t} style={style} base={base} />
-            ) : (
-              <section className="flex gap-4 rounded-2xl bg-stage p-5 text-on-stage">
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-accent text-on-accent" aria-hidden>
-                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4" />
-                  </svg>
-                </span>
-                <div className="min-w-0">
-                  {/* Короткое «Под вашим контролем» — заголовком, длинное объяснение — обычным текстом (на телефоне иначе стена жирного). */}
-                  <h2 className="font-heading text-base font-bold">{t.viaText}</h2>
-                  <p className="mt-1 text-sm leading-relaxed text-on-stage/70">{t.viaTitle}</p>
-                  {me && (
-                    <Link href="/codes" className="mt-3 inline-flex min-h-10 items-center gap-1.5 text-sm font-semibold text-accent hover:underline">
-                      {t.viaCta} →
-                    </Link>
-                  )}
-                </div>
-              </section>
-            )
+            <>
+              {ready && <MadeBox t={t} id={ready.id} link={ready.link} />}
+              {isDesigner(me) ? (
+                <PublishBox t={t} style={style} base={base} />
+              ) : (
+                <section className="flex gap-4 rounded-2xl bg-stage p-5 text-on-stage">
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-accent text-on-accent" aria-hidden>
+                    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4" />
+                    </svg>
+                  </span>
+                  <div className="min-w-0">
+                    {/* Короткое «Под вашим контролем» — заголовком, длинное объяснение — обычным текстом (на телефоне иначе стена жирного). */}
+                    <h2 className="font-heading text-base font-bold">{t.viaText}</h2>
+                    <p className="mt-1 text-sm leading-relaxed text-on-stage/70">{t.viaTitle}</p>
+                    {me && (
+                      <Link href="/codes" className="mt-3 inline-flex min-h-10 items-center gap-1.5 text-sm font-semibold text-accent hover:underline">
+                        {t.viaCta} →
+                      </Link>
+                    )}
+                  </div>
+                </section>
+              )}
+            </>
           }
         />
 
         <SiteFooter t={t} lang={lang} />
       </div>
     </div>
+  );
+}
+
+/** Код создан: его своя ссылка (как маленький домен) и переход к нему — менять содержимое, память, кто видит. */
+function MadeBox({ t, id, link }: { t: Dict; id: string; link: string }) {
+  // Появляется под кнопками скачивания — на телефоне подвинуть в видимую часть.
+  const ref = useRef<HTMLElement>(null);
+  // Фигурные скобки: в новых браузерах scrollIntoView возвращает обещание, а React принял бы его за уборку эффекта.
+  useEffect(() => {
+    ref.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, []);
+  return (
+    <section ref={ref} className="rounded-2xl border-2 border-accent bg-card p-5" aria-label={t.madeTitle}>
+      <h2 className="flex items-center gap-2.5 font-heading text-lg font-bold">
+        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-accent text-sm text-on-accent" aria-hidden>
+          ✓
+        </span>
+        {t.madeTitle}
+      </h2>
+      <p className="mt-3 break-all rounded-xl bg-field px-3.5 py-2.5 font-mono text-base font-bold">{link.replace(/^https?:\/\//i, "")}</p>
+      <p className="mt-3 text-sm leading-relaxed text-muted">{t.madeText}</p>
+      <Link href={`/codes/${id}`} className="mt-4 inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-stage px-4 text-sm font-semibold text-on-stage">
+        {t.madeOpen} →
+      </Link>
+    </section>
   );
 }

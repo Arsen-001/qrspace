@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { mutate, packsOf, purchasesOf } from "@/server/db";
+import { mutate, quoteFor, spentIn } from "@/server/db";
 import { currentPerson } from "@/server/session";
 import { quote, type Purchase, type Quote, type Tier } from "@/lib/pricing";
 import { openPack, packsLeft, type Pack } from "@/lib/packs";
@@ -21,7 +21,8 @@ export async function GET(req: NextRequest) {
   const key = readKey(req.nextUrl.searchParams.get("key"));
   const tier = readTier(req.nextUrl.searchParams.get("tier"));
   if (!key || !tier) return Response.json({ error: "bad" }, { status: 400 });
-  return Response.json(withPack(quote(await purchasesOf(me), key, tier), await packsOf(me)));
+  const { mine, spent, packs } = await quoteFor(me);
+  return Response.json(withPack(quote(mine, key, tier, spent), packs));
 }
 
 /** Оплатить (демо — деньги не списываются) и получить право скачивать этот код. */
@@ -34,7 +35,7 @@ export async function POST(req: Request) {
   if (!key || !tier) return Response.json({ error: "bad" }, { status: 400 });
   const q = await mutate((db) => {
     const mine = db.packs.filter((p) => p.person === me);
-    const q = withPack(quote(db.purchases.filter((p) => p.person === me), key, tier), mine);
+    const q = withPack(quote(db.purchases.filter((p) => p.person === me), key, tier, spentIn(db)), mine);
     const pack = q.pack ? openPack(mine) : null;
     const buy: Purchase = { person: me, key, tier, price: q.price, free: q.free, at: new Date().toISOString() };
     if (pack) {

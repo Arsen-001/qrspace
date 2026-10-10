@@ -242,7 +242,7 @@ class Api(private val context: Context) {
 
     /**
      * A generator code (link, Wi‑Fi, contact…) — with the key paid in POST /api/purchases (one purchase = one code; no
-     * unused purchase → 402 "pay"). Same content and look → the same code, no new payment. [title] — the name in My codes.
+     * unused purchase → 402 "pay"). Every purchase makes a new code, even with the same content (10.10.2026). [title] — the name in My codes.
      */
     suspend fun quick(type: String, fields: Map<String, String>, look: Look, key: String, title: String?): QuickResult =
         post("/api/codes/quick", buildJsonObject {

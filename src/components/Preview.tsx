@@ -18,12 +18,14 @@ export type ScanState = "idle" | "checking" | "ok" | "bad";
 /**
  * Оплата при скачивании: tier — простой или красивый, key — какой это код (считается только по нажатию).
  * finalize — перед сохранением получить настоящий код (генератор: короткая ссылка вместо образца);
- * blocked — скачать нельзя, вместо кнопок — объяснение.
+ * made — этот код уже создан и оплачен (генератор, пока ничего не меняли): скачать снова без цены;
+ * blocked — скачать нельзя, вместо кнопок — объяснение; onSaved — после скачивания.
  */
-export type Gate = { tier: Tier; key: () => string; finalize?: () => Promise<{ drawing: Drawing; payload: string }>; blocked?: string; beforeLogin?: () => void; onSaved?: () => void };
+export type Gate = { tier: Tier; key: () => string; finalize?: () => Promise<{ drawing: Drawing; payload: string }>; made?: boolean; blocked?: string; beforeLogin?: () => void; onSaved?: () => void };
 type Format = "png" | "svg" | "live";
 
-/** sample — показываем пример (человек ещё ничего не ввёл): видно оформление, скачать нельзя. step — номер шага в генераторе. */
+/** sample — показываем пример (человек ещё ничего не ввёл): видно оформление, скачать нельзя. step — номер шага в генераторе.
+ * note — пояснение под проверкой (генератор: рисунок пока образец, своя ссылка — при скачивании). */
 export function Preview({
   t,
   drawing,
@@ -34,6 +36,7 @@ export function Preview({
   payload,
   sample,
   step,
+  note,
 }: {
   t: Dict;
   drawing: Drawing | null;
@@ -44,6 +47,7 @@ export function Preview({
   payload?: string;
   sample?: boolean;
   step?: number;
+  note?: string | null;
 }) {
   const [forced, setForced] = useState(false);
   const canDownload = !!drawing && !sample && !gate?.blocked && (scan === "ok" || (scan === "bad" && forced));
@@ -66,19 +70,25 @@ export function Preview({
       if (!f) return setFailed(true);
       ({ drawing: d, payload: text } = f);
     }
-    gate?.onSaved?.();
-    if (format === "png") return downloadPng(d, 2048, name);
-    if (format === "svg") return downloadSvg(d, name);
-    // Живой код пишется в реальном времени (4 с) — показываем, сколько осталось.
-    setLive(0);
-    const ok = await downloadLive(d, text, name, (p) => setLive(p)).catch(() => false);
-    setLive(ok ? null : "bad");
+    try {
+      if (format === "png") await downloadPng(d, 2048, name);
+      else if (format === "svg") await downloadSvg(d, name);
+      else {
+        // Живой код пишется в реальном времени (4 с) — показываем, сколько осталось.
+        setLive(0);
+        const ok = await downloadLive(d, text, name, (p) => setLive(p)).catch(() => false);
+        setLive(ok ? null : "bad");
+      }
+    } finally {
+      // Код уже создан на сервере — даже если файл не сохранился, генератор должен это знать.
+      gate?.onSaved?.();
+    }
   };
   const { lang } = useLang();
   // Без входа — окно входа поверх страницы; после демо-входа скачивание продолжается само.
   const [login, setLogin] = useState<Format | null>(null);
   const download = async (format: Format, signedIn = false) => {
-    if (!gate) return save(format);
+    if (!gate || gate.made) return save(format);
     const key = gate.key();
     if (!me && !signedIn) return setLogin(format);
     setBusy(true);
@@ -152,6 +162,7 @@ export function Preview({
         )}
       </div>
 
+      {note && drawing && !sample && <p className="mt-2 text-xs leading-relaxed text-muted">{note}</p>}
       {gate?.blocked && <p className="mt-3 rounded-xl bg-warn-soft p-3 text-sm">{gate.blocked}</p>}
       {/* Главное действие — одна крупная кнопка; SVG и видео-код — рядом поменьше. */}
       <button
@@ -199,7 +210,11 @@ export function Preview({
         )}
       </div>
       {live === "bad" && <p className="mt-2 text-xs text-warn">{t.liveBad}</p>}
-      {failed && <p className="mt-2 text-xs text-warn">{t.saveError}</p>}
+      {failed && (
+        <p role="alert" className="mt-2 rounded-xl bg-warn-soft p-3 text-sm font-medium">
+          {t.saveError}
+        </p>
+      )}
       {gate && !gate.blocked && (
         <div className="mt-3">
           <div className="flex items-center justify-between gap-3 rounded-xl border border-line px-3 py-2.5">

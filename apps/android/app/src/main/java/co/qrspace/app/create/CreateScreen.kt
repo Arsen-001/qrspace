@@ -129,7 +129,7 @@ fun CreateScreen(onBack: () -> Unit, onCreated: (String) -> Unit, onSignIn: () -
     val key = Pricing.codeKey(Payload.build(type, clean), look.toJson().toString())
 
     // Content code: the server makes it only against the purchase with this key (one purchase = one code); the same
-    // content and look again → the same code. A name typed here goes along.
+    // content again → a new code after a new purchase (10.10.2026). A name typed here goes along.
     suspend fun makeQuick() {
         gate = GateState.Working
         runCatching { api.quick(type, clean, look, key, title.trim().ifEmpty { null }) }

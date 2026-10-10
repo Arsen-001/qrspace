@@ -38,7 +38,13 @@ ok((await arman.post("/api/codes/quick", { data: { title: "Меню кафе", c
 await arman.post("/api/purchases", { data: { key: "g:apptest1", tier: "simple" } });
 const quick = await (await arman.post("/api/codes/quick", { data: { title: "Меню кафе", content: menu, key: "g:apptest1" } })).json();
 ok((await arman.post("/api/codes/quick", { data: { content: { type: "url", fields: { url: "https://example.com/other" } }, key: "g:apptest1" } })).status() === 402, "one payment — one code");
-ok((await (await arman.post("/api/codes/quick", { data: { content: menu, key: "g:apptest1" } })).json()).id === quick.id, "same content again — same code, no new payment");
+// Каждая оплата — свой код, даже с тем же содержимым (код — свой маленький домен, 10.10.2026): тот же ключ без новой
+// оплаты — 402, и цена честная (оплата ушла на код, который есть); после оплаты — новый код.
+ok((await arman.post("/api/codes/quick", { data: { content: menu, key: "g:apptest1" } })).status() === 402, "same content again without a new payment — 402");
+ok((await (await arman.get("/api/purchases?key=g:apptest1&tier=simple")).json()).paid === false, "quote is honest: the payment went to the existing code");
+await arman.post("/api/purchases", { data: { key: "g:apptest1", tier: "simple" } });
+const twin = await (await arman.post("/api/codes/quick", { data: { content: menu, key: "g:apptest1" } })).json();
+ok(!!twin.id && twin.id !== quick.id, "same content, new payment — a new code of its own");
 // Неоплаченный код — только маленькая картинка; оплаченный — до 1024 px
 const width = async (id) => (await (await arman.get(`/api/codes/${id}/image?format=png&size=1024`)).body()).readUInt32BE(16);
 ok((await width(bublik.id)) === 256, "unpaid code: only a small picture");

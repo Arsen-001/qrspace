@@ -213,7 +213,7 @@ struct CreateView: View {
     }
 
     /// One purchase = one code: the server creates it only for an unused purchase of this key (402 otherwise);
-    /// the same content and look again bring back the same code without paying twice.
+    /// every purchase makes a new code, even with the same content — each code is its own (10.10.2026).
     private func finish(_ c: Content, key: String) async {
         do {
             let t = title.trimmingCharacters(in: .whitespaces)

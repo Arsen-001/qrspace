@@ -46,6 +46,7 @@ export function CodeDesigner({
   steps,
   suggestLogo,
   locked,
+  note,
 }: {
   t: Dict;
   payload: string;
@@ -64,6 +65,8 @@ export function CodeDesigner({
   suggestLogo?: string;
   /** Вид закреплён (код уже скачан) — вместо настроек объяснение; скачать снова можно. */
   locked?: boolean;
+  /** Пояснение под предпросмотром. */
+  note?: string | null;
 }) {
   const [imageError, setImageError] = useState(false);
   const patchStyle = (p: Partial<StyleState>) => setStyle((s) => ({ ...s, ...p }));
@@ -234,6 +237,7 @@ export function CodeDesigner({
           payload={payload}
           sample={sample}
           step={steps ? 3 : undefined}
+          note={note}
         />
         {side}
       </div>
