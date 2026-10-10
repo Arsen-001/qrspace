@@ -17,11 +17,40 @@ import { Shell } from "./Shell";
 import { StepBadge } from "./ui";
 
 type Result = { result: "ours"; id: string; kind: Kind; title: string | null } | { result: "foreign"; host: string } | { result: "missing" | "site" | "text" };
+/** Почему камера не включилась: браузер не даёт её сайтам (встроенный в Telegram, Instagram…), запрещена, нет, занята. */
+type CamError = "support" | "denied" | "none" | "busy";
+
+/** Камера для сайта: задняя на телефоне; если такой нет (ноутбук) — любая. */
+async function openCamera(): Promise<MediaStream> {
+  try {
+    return await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false });
+  } catch (e) {
+    if (!["OverconstrainedError", "NotFoundError"].includes((e as DOMException)?.name)) throw e;
+    return navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+  }
+}
+
+const camErrorOf = (e: unknown): CamError => {
+  const n = (e as DOMException)?.name;
+  return n === "NotFoundError" || n === "OverconstrainedError" ? "none" : n === "NotReadableError" || n === "AbortError" ? "busy" : "denied";
+};
 
 export function VerifyPage({ mode = "verify" }: { mode?: "scan" | "verify" }) {
   const { lang, t } = useLang((t) => `${mode === "scan" ? t.scanTitle : t.verifyTitle} — ${t.appName}`);
   const video = useRef<HTMLVideoElement>(null);
-  const [on, setOn] = useState(false);
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [starting, setStarting] = useState(false);
+  const [camError, setCamError] = useState<CamError | null>(null);
+  // Видео не пошло само (бывает в Safari) — кнопка поверх: нажатие запускает его.
+  const [stuck, setStuck] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const alive = useRef(true);
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
   const [text, setText] = useState<string | null>(null);
   const [res, setRes] = useState<Result | null>(null);
   const [scanned, setScanned] = useState<Scanned | null>(null);
@@ -29,7 +58,7 @@ export function VerifyPage({ mode = "verify" }: { mode?: "scan" | "verify" }) {
 
   const check = async (decoded: string, format: string) => {
     setText(decoded);
-    setOn(false);
+    setStream(null);
     const sc = parseScanned(decoded, format);
     setScanned(sc);
     // Ссылку проверяем: наш ли это код или подделка, ведущая на чужой сайт. Остальное проверять не нужно.
@@ -37,49 +66,66 @@ export function VerifyPage({ mode = "verify" }: { mode?: "scan" | "verify" }) {
     else setRes({ result: "text" });
   };
 
-  // Камера: кадр раз в 300 мс → читаем QR. Задняя камера на телефоне.
+  // Камеру просим прямо по нажатию: в Safari и во встроенных браузерах приложений так надёжнее, чем после перерисовки.
+  // Нет navigator.mediaDevices (Telegram, Instagram, WhatsApp внутри приложения, страница не по https) — раньше был
+  // чёрный квадрат без слов; теперь — объяснение и «Сфотографировать код» (камера телефона через выбор файла).
+  const start = async () => {
+    setError(null);
+    setCamError(null);
+    if (!navigator.mediaDevices?.getUserMedia) return setCamError("support");
+    setStarting(true);
+    try {
+      const s = await openCamera();
+      if (alive.current) setStream(s);
+      else s.getTracks().forEach((tr) => tr.stop());
+    } catch (e) {
+      setCamError(camErrorOf(e));
+    } finally {
+      setStarting(false);
+    }
+  };
+
+  // Камера включена: кадр раз в 300 мс → читаем код. Камера кончилась (её забрало другое приложение, телефон убрал
+  // страницу) — снова кнопка «Навести камеру».
   useEffect(() => {
-    if (!on) return;
-    let stream: MediaStream | null = null;
-    let timer = 0;
+    const v = video.current;
+    if (!stream || !v) return;
     let live = true;
-    navigator.mediaDevices
-      ?.getUserMedia({ video: { facingMode: "environment" }, audio: false })
-      .then((s) => {
-        stream = s;
-        if (!live || !video.current) return;
-        video.current.srcObject = s;
-        void video.current.play();
-        const c = document.createElement("canvas");
-        const tick = async () => {
-          const v = video.current;
-          if (!live || !v) return;
-          if (v.videoWidth) {
-            const k = Math.min(1, 720 / Math.max(v.videoWidth, v.videoHeight));
-            c.width = Math.round(v.videoWidth * k);
-            c.height = Math.round(v.videoHeight * k);
-            const ctx = c.getContext("2d", { willReadFrequently: true })!;
-            ctx.drawImage(v, 0, 0, c.width, c.height);
-            const found = await readAny(ctx.getImageData(0, 0, c.width, c.height)).catch(() => null);
-            if (found && live) {
-              navigator.vibrate?.(40);
-              return void check(found.text, found.format);
-            }
-          }
-          timer = window.setTimeout(tick, 300);
-        };
-        void tick();
-      })
-      .catch(() => {
-        setError(t.verifyNoCamera);
-        setOn(false);
-      });
+    let timer = 0;
+    v.srcObject = stream;
+    v.play().then(
+      () => live && setStuck(false),
+      () => live && setStuck(true),
+    );
+    const ended = () => live && setStream(null);
+    const tracks = stream.getVideoTracks();
+    tracks.forEach((tr) => tr.addEventListener("ended", ended));
+    const c = document.createElement("canvas");
+    const tick = async () => {
+      if (!live) return;
+      if (v.videoWidth) {
+        const k = Math.min(1, 720 / Math.max(v.videoWidth, v.videoHeight));
+        c.width = Math.round(v.videoWidth * k);
+        c.height = Math.round(v.videoHeight * k);
+        const ctx = c.getContext("2d", { willReadFrequently: true })!;
+        ctx.drawImage(v, 0, 0, c.width, c.height);
+        const found = await readAny(ctx.getImageData(0, 0, c.width, c.height)).catch(() => null);
+        if (found && live) {
+          navigator.vibrate?.(40);
+          return void check(found.text, found.format);
+        }
+      }
+      timer = window.setTimeout(tick, 300);
+    };
+    void tick();
     return () => {
       live = false;
       clearTimeout(timer);
-      stream?.getTracks().forEach((tr) => tr.stop());
+      tracks.forEach((tr) => tr.removeEventListener("ended", ended));
+      stream.getTracks().forEach((tr) => tr.stop());
+      v.srcObject = null;
     };
-  }, [on, t.verifyNoCamera]);
+  }, [stream]);
 
   const fromPhoto = async (f: File) => {
     setError(null);
@@ -108,6 +154,16 @@ export function VerifyPage({ mode = "verify" }: { mode?: "scan" | "verify" }) {
     setScanned(null);
     setText(null);
     setError(null);
+    setCamError(null);
+  };
+  const photoInput = (capture: boolean) => (
+    <input type="file" accept="image/*" {...(capture ? { capture: "environment" as const } : {})} className="hidden" onChange={(e) => e.target.files?.[0] && fromPhoto(e.target.files[0])} />
+  );
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(location.href);
+      setCopied(true);
+    } catch {}
   };
 
   return (
@@ -117,11 +173,25 @@ export function VerifyPage({ mode = "verify" }: { mode?: "scan" | "verify" }) {
 
       {!res && (
         <div className="mt-6 space-y-3">
-          {on ? (
-            <div className="overflow-hidden rounded-2xl bg-black">
-              <video ref={video} muted playsInline className="aspect-square w-full object-cover" />
+          {stream ? (
+            <div>
+              <div className="relative overflow-hidden rounded-2xl bg-black">
+                <video ref={video} muted playsInline autoPlay className="aspect-square w-full object-cover" />
+                {stuck && (
+                  <button
+                    type="button"
+                    onClick={() => video.current?.play().then(() => setStuck(false), () => {})}
+                    className="absolute inset-0 grid place-items-center bg-black/60 px-6 font-heading text-base font-bold text-white"
+                  >
+                    ▶ {t.camTapToStart}
+                  </button>
+                )}
+              </div>
+              <button type="button" onClick={() => setStream(null)} className="mt-2 min-h-11 w-full rounded-xl border border-line bg-card px-4 text-sm font-semibold hover:border-muted">
+                {t.camStop}
+              </button>
             </div>
-          ) : (
+          ) : camError ? null : (
             <div className="rounded-2xl bg-stage p-5 text-on-stage sm:p-6">
               {/* Рамка сканера с бегущим лучом — сразу понятно, что тут наводят камеру. */}
               <div aria-hidden className="relative mx-auto aspect-square w-full max-w-[220px] overflow-hidden rounded-xl">
@@ -130,14 +200,37 @@ export function VerifyPage({ mode = "verify" }: { mode?: "scan" | "verify" }) {
                 ))}
                 <div className="x-scan" />
               </div>
-              <button type="button" onClick={() => setOn(true)} className="mt-5 min-h-12 w-full rounded-xl bg-accent px-5 font-heading text-sm font-bold text-on-accent">
+              <button type="button" disabled={starting} onClick={start} className="mt-5 min-h-12 w-full rounded-xl bg-accent px-5 font-heading text-sm font-bold text-on-accent disabled:opacity-60">
                 📷 {t.verifyCamera}
               </button>
             </div>
           )}
+          {camError && (
+            <div role="alert" className="rounded-2xl bg-warn-soft p-4 sm:p-5">
+              <p className="font-heading text-base font-bold">
+                {camError === "support" ? t.camSupportTitle : camError === "denied" ? t.camDeniedTitle : camError === "none" ? t.camNoneTitle : t.camBusyTitle}
+              </p>
+              {(camError === "support" || camError === "denied") && <p className="mt-1.5 text-sm leading-relaxed">{camError === "support" ? t.camSupportText : t.camDeniedText}</p>}
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                <label className="flex min-h-12 cursor-pointer items-center justify-center rounded-xl bg-accent px-4 font-heading text-sm font-bold text-on-accent">
+                  📷 {t.camTakePhoto}
+                  {photoInput(true)}
+                </label>
+                {camError === "support" ? (
+                  <button type="button" onClick={copyLink} className="min-h-12 rounded-xl border border-line bg-card px-4 text-sm font-semibold hover:border-muted">
+                    {copied ? `✓ ${t.camCopied}` : t.camCopyLink}
+                  </button>
+                ) : (
+                  <button type="button" disabled={starting} onClick={start} className="min-h-12 rounded-xl border border-line bg-card px-4 text-sm font-semibold hover:border-muted">
+                    {t.camRetry}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
           <label className="flex min-h-12 w-full cursor-pointer items-center justify-center rounded-xl border border-line bg-card px-5 text-sm font-semibold hover:border-muted">
             {t.verifyPhoto}
-            <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && fromPhoto(e.target.files[0])} />
+            {photoInput(false)}
           </label>
           {error && <p className="text-sm text-warn">{error}</p>}
           <ol className="grid gap-2 pt-3 sm:grid-cols-3">
