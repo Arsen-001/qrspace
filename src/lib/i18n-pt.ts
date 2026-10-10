@@ -79,6 +79,7 @@ export const pt: Dict = {
   "effect.none": "Liso",
   "effect.raised": "Elevado",
   "effect.carved": "Entalhado",
+  "effect.metal": "Metal",
   rotateHint: "O código é lido em qualquer ângulo — assim o canto vazio muda de lugar",
   swap: "Trocar",
   dots: "Pontos",

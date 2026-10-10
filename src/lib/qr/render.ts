@@ -90,9 +90,21 @@ function iconPath(mask: IconMask, x0: number, y0: number, box: number): string {
   }
   return d;
 }
-export const EFFECTS = ["none", "raised", "carved"] as const;
+export const EFFECTS = ["none", "raised", "carved", "metal"] as const;
 export type Effect = (typeof EFFECTS)[number];
-export type Gradient = { kind: "linear"; from: string; to: string; x1: number; y1: number; x2: number; y2: number };
+/** stops — полосы (доля, цвет) вместо from → to: перелив металла. */
+export type Gradient = { kind: "linear"; from: string; to: string; x1: number; y1: number; x2: number; y2: number; stops?: [number, string][] };
+
+/** Металл (10.10.2026, по примеру владельца): цвет с бликами и тенями полосами по диагонали. Светлые полосы — не светлее
+ * трети к белому: тёмное должно оставаться тёмным, иначе камера не прочитает. */
+function metal(color: string, x: number, y: number, w: number, bands: number): Gradient {
+  const stops: [number, string][] = [];
+  for (let i = 0; i <= bands * 2; i++) {
+    const t = i / (bands * 2);
+    stops.push([t, i % 4 === 1 ? mix(color, "#ffffff", 0.32) : i % 4 === 3 ? mix(color, "#000000", 0.35) : color]);
+  }
+  return { kind: "linear", from: color, to: color, x1: x, y1: y, x2: x + w, y2: y + w, stops };
+}
 export type Fill = string | Gradient;
 
 /** fixed — не поворачивается вместе с кодом (фон, фото, логотип). */
@@ -526,6 +538,8 @@ export function buildDrawing(text: string, style: QrStyle): Drawing {
   }
   const eyeColor = style.eyeColor || style.fg;
   const ballColor = style.eyeBallColor || eyeColor;
+  // Металл: перелив вместо ровного цвета (свой градиент точек — остаётся), объём — как у выпуклых.
+  const isMetal = style.effect === "metal" && !style.picture;
 
   // Подпись под кодом: до двух строк (текст и номер телефона); шрифт каждой — чтобы строка заняла ширину кода,
   // но не крупнее 3,6 клетки.
@@ -537,7 +551,8 @@ export function buildDrawing(text: string, style: QrStyle): Drawing {
   shapes.push({ kind: "path", d: outline ?? rectPath(0, 0, size, height), fill: style.bg, fixed: true });
   if (style.texture && !style.picture)
     shapes.push({ kind: "image", src: style.texture, x: 0, y: 0, w: size, h: sil ? size : height, fixed: true, ...(outline && { clip: outline }) });
-  const fx: Effect | undefined = style.effect && style.effect !== "none" ? style.effect : undefined;
+  const fx: Effect | undefined = style.effect === "metal" ? "raised" : style.effect && style.effect !== "none" ? style.effect : undefined;
+  if (isMetal && !style.gradient) dotFill = metal(style.fg, ox, oy, count, 3);
 
   const inEye = (r: number, c: number) => (r < 7 && c < 7) || (r < 7 && c >= count - 7) || (r >= count - 7 && c < 7);
 
@@ -639,7 +654,7 @@ export function buildDrawing(text: string, style: QrStyle): Drawing {
     }
     if (deco) shapes.push({ kind: "path", d: deco, fill: dotFill, effect: fx, fixed: true });
     // Рамка по краю силуэта — цветом углов.
-    shapes.push({ kind: "path", d: outline! + outlinePath(ringIn, side, EDGE, EDGE, true), fill: eyeColor, rule: "evenodd", effect: fx, fixed: true });
+    shapes.push({ kind: "path", d: outline! + outlinePath(ringIn, side, EDGE, EDGE, true), fill: isMetal ? metal(eyeColor, EDGE, EDGE, side, 4) : eyeColor, rule: "evenodd", effect: fx, fixed: true });
   }
 
   const eyes: [number, number, EyePos][] = [
@@ -650,8 +665,8 @@ export function buildDrawing(text: string, style: QrStyle): Drawing {
   for (const [er, ec, pos] of eyes) {
     const x = ox + ec;
     const y = oy + er;
-    let ring: Fill = eyeColor;
-    let ball: Fill = ballColor;
+    let ring: Fill = isMetal ? metal(eyeColor, x, y, 7, 1) : eyeColor;
+    let ball: Fill = isMetal ? metal(ballColor, x + 2, y + 2, 3, 1) : ballColor;
     let back = style.bg;
     if (style.picture) {
       // На фото глаз берёт тёмный оттенок фото под собой, подложка — светлый: не чёрно-белая плашка.
@@ -693,14 +708,28 @@ export function buildDrawing(text: string, style: QrStyle): Drawing {
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 
+/** Короткий отпечаток рисунка и размера — для имён переливов и теней внутри SVG. */
+function svgKey(drawing: Drawing, px: number): string {
+  let h = 2166136261 ^ px;
+  for (const s of drawing.shapes) {
+    const part = s.kind === "path" ? `${s.d.length}${JSON.stringify(s.fill)}${s.effect ?? ""}` : s.kind === "image" ? `${s.src.length}${s.x}${s.clip?.length ?? 0}` : s.text;
+    for (let i = 0; i < part.length; i++) h = Math.imul(h ^ part.charCodeAt(i), 16777619);
+  }
+  return (h >>> 0).toString(36);
+}
+
 export function toSvg(drawing: Drawing, px = 1024): string {
   const defs: string[] = [];
+  // На странице несколько рисунков (маленький наверху, большой, миниатюры): одинаковые имена переливов ведут к первому,
+  // а он бывает скрыт — тогда точки не рисуются. Имена — свои у каждого рисунка и размера.
+  const uid = `q${svgKey(drawing, px)}`;
   const fill = (f: Fill) => {
     if (typeof f === "string") return esc(f);
-    const id = `g${defs.length}`;
+    const id = `${uid}g${defs.length}`;
     defs.push(
       `<linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="${n(f.x1)}" y1="${n(f.y1)}" x2="${n(f.x2)}" y2="${n(f.y2)}">` +
-        `<stop offset="0" stop-color="${esc(f.from)}"/><stop offset="1" stop-color="${esc(f.to)}"/></linearGradient>`,
+        (f.stops ?? [[0, f.from], [1, f.to]]).map(([o, c]) => `<stop offset="${n(o)}" stop-color="${esc(c)}"/>`).join("") +
+        `</linearGradient>`,
     );
     return `url(#${id})`;
   };
@@ -710,7 +739,7 @@ export function toSvg(drawing: Drawing, px = 1024): string {
   const clipId = (d: string) => {
     let id = clips.get(d);
     if (!id) {
-      id = `clip${clips.size}`;
+      id = `${uid}c${clips.size}`;
       clips.set(d, id);
       defs.push(`<clipPath id="${id}"><path d="${d}"/></clipPath>`);
     }
@@ -718,10 +747,10 @@ export function toSvg(drawing: Drawing, px = 1024): string {
   };
   // Свет сверху слева. Выпуклые: мягкая тень вправо-вниз. Вырезанные: тень внутри фигуры у верхнего левого края.
   if (used.has("raised"))
-    defs.push(`<filter id="fx-raised" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0.1" dy="0.12" stdDeviation="0.08" flood-color="#000" flood-opacity="0.38"/></filter>`);
+    defs.push(`<filter id="${uid}raised" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0.1" dy="0.12" stdDeviation="0.08" flood-color="#000" flood-opacity="0.38"/></filter>`);
   if (used.has("carved"))
     defs.push(
-      `<filter id="fx-carved" x="-10%" y="-10%" width="120%" height="120%"><feOffset in="SourceAlpha" dx="0.14" dy="0.16"/><feGaussianBlur stdDeviation="0.07" result="s"/>` +
+      `<filter id="${uid}carved" x="-10%" y="-10%" width="120%" height="120%"><feOffset in="SourceAlpha" dx="0.14" dy="0.16"/><feGaussianBlur stdDeviation="0.07" result="s"/>` +
         `<feComposite in="SourceAlpha" in2="s" operator="out" result="rim"/><feFlood flood-color="#000" flood-opacity="0.6"/><feComposite in2="rim" operator="in" result="shade"/>` +
         `<feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="shade"/></feMerge></filter>`,
     );
@@ -737,7 +766,7 @@ export function toSvg(drawing: Drawing, px = 1024): string {
             : `<image href="${esc(s.src)}" x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" preserveAspectRatio="xMidYMid slice"${s.clip ? ` clip-path="url(#${clipId(s.clip)})"` : ""}/>`;
       const placed = s.fixed || !turn ? el : `<g${turn}>${el}</g>`;
       // Тень — снаружи поворота, чтобы свет всегда падал сверху слева, как и в PNG.
-      return s.kind === "path" && s.effect ? `<g filter="url(#fx-${s.effect})">${placed}</g>` : placed;
+      return s.kind === "path" && s.effect ? `<g filter="url(#${uid}${s.effect})">${placed}</g>` : placed;
     })
     .join("");
   const h = drawing.height ?? drawing.size;

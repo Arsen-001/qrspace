@@ -79,6 +79,7 @@ export const fr: Dict = {
   "effect.none": "Plat",
   "effect.raised": "En relief",
   "effect.carved": "Gravé",
+  "effect.metal": "Métal",
   rotateHint: "Le code se lit sous tous les angles — cela déplace le coin vide",
   swap: "Inverser",
   dots: "Points",

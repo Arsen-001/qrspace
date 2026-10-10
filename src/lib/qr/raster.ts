@@ -47,8 +47,7 @@ export async function drawToCanvas(drawing: Drawing, px: number): Promise<HTMLCa
       if (typeof s.fill === "string") ctx.fillStyle = s.fill;
       else {
         const g = ctx.createLinearGradient(s.fill.x1, s.fill.y1, s.fill.x2, s.fill.y2);
-        g.addColorStop(0, s.fill.from);
-        g.addColorStop(1, s.fill.to);
+        for (const [o, c] of s.fill.stops ?? [[0, s.fill.from], [1, s.fill.to]]) g.addColorStop(o, c);
         ctx.fillStyle = g;
       }
       ctx.globalAlpha = s.opacity ?? 1;

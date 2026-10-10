@@ -79,6 +79,7 @@ export const de: Dict = {
   "effect.none": "Flach",
   "effect.raised": "Erhaben",
   "effect.carved": "Graviert",
+  "effect.metal": "Metall",
   rotateHint: "Der Code wird in jedem Winkel gelesen — so wandert die leere Ecke",
   swap: "Tauschen",
   dots: "Punkte",
