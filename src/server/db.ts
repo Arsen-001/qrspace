@@ -297,13 +297,26 @@ export async function allCodes(): Promise<CodeRecord[]> {
 }
 
 /** Код переходит новому владельцу чистым: память и настройки продавца не уходят вместе с кодом. */
+/**
+ * Можно ли выставить код на продажу (владелец 10.10.2026: «аукцион, где смогут продавать свои QR-коды»): любой свой
+ * оплаченный код — коллекционный, скачанный (вид закреплён) или оплаченный; не заблокированный и не вещь бренда.
+ * Бесплатные заготовки — нет, иначе маркет забьют пустышками.
+ */
+export const sellable = (db: Db, c: CodeRecord) =>
+  !c.blocked && c.kind !== "item" && (!!c.edition || !!c.styleLocked || db.purchases.some((p) => p.person === c.owner && (p.key === `code:${c.id}` || p.code === c.id)));
+
 export async function transferCode(db: Db, codeId: string, buyer: string, price: number) {
   const c = db.codes.find((x) => x.id === codeId);
   if (!c) return;
   const files = c.blocks.map((b) => b.media).filter((m): m is string => !!m);
   const at = new Date().toISOString();
   c.owners = [...(c.owners ?? [{ person: c.owner, at: c.createdAt, price: null }]), { person: buyer, at, price }];
-  Object.assign(c, { ...kindDefaults("memory"), owner: buyer, people: [], requests: [], blocks: [], visits: [], invite: newId(12) });
+  // Покупателю — чистый код того же вида: ссылка, вид и место под кодом остаются; что в коде, память, люди,
+  // сообщения, напоминания и телефон прежнего хозяина — нет. Название не коллекционного кода — по ссылке.
+  Object.assign(c, { ...kindDefaults(c.kind === "item" ? "memory" : c.kind), owner: buyer, people: [], requests: [], blocks: [], visits: [], invite: newId(12) });
+  delete c.content;
+  delete c.target;
+  if (!c.edition) c.title = c.short ? `QR ${c.short}` : "QR";
   db.purchases.push({ person: buyer, key: `code:${c.id}`, tier: "styled", price, free: false, at });
   await Promise.all(files.map((m) => mediaStore.remove(m)));
 }

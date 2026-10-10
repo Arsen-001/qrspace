@@ -519,7 +519,7 @@ export const fr: Dict = {
   "duration.168": "1 semaine",
   youGet: "Vous recevez",
   fee: "commission",
-  sellWarning: "L’acheteur reçoit le code vierge : votre mémoire, vos personnes et vos messages seront supprimés.",
+  sellWarning: "L’acheteur reçoit le code vierge : son contenu, vos souvenirs, personnes et messages sont supprimés. Le lien, l’apparence et l’espace sous le code restent.",
   putOnSale: "Mettre en vente",
   navShop: "Boutique",
   shopTitle: "Produits avec votre code",

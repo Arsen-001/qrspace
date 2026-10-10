@@ -170,7 +170,7 @@ export type Report = { id: string; code: string; reason: ReportReason; text: str
 export type CodeList = { base: string; mine: CodeView[]; shared: CodeView[]; items: CodeView[] };
 export type MarketState = { sold: Record<string, number>; designs: Design[] };
 /** Лот с тем, что нужно показать: код (вид, номер, название) и продавец. */
-export type Lot = Listing & { view: Pick<CodeView, "title" | "style" | "edition" | "owners"> };
+export type Lot = Listing & { view: Pick<CodeView, "title" | "short" | "style" | "edition" | "owners"> };
 
 export const MAX_PHOTO_PX = 1600;
 /** Один файл — не больше самого большого места под кодом (1 ГБ, владелец 09.10.2026); сверх оплаченного места — всё равно нельзя. */

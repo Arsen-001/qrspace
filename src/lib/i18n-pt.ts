@@ -519,7 +519,7 @@ export const pt: Dict = {
   "duration.168": "1 semana",
   youGet: "Você recebe",
   fee: "taxa",
-  sellWarning: "O comprador recebe o código limpo: sua memória, pessoas e mensagens serão apagadas.",
+  sellWarning: "O comprador recebe o código limpo: o conteúdo, suas memórias, pessoas e mensagens são apagados. O link, a aparência e o espaço sob o código ficam.",
   putOnSale: "Colocar à venda",
   navShop: "Loja",
   shopTitle: "Produtos com o seu código",

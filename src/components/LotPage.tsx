@@ -11,7 +11,7 @@ import { toSvg } from "@/lib/qr/render";
 import { DEFAULT_STYLE, fromSaved } from "@/lib/qr/style";
 import { Avatar, personName } from "./Avatar";
 import { useDrawing } from "./CodeDesigner";
-import { editionLabel, LotPrice } from "./Lots";
+import { editionLabel, lotName, LotPrice } from "./Lots";
 import { sampleLink } from "./MarketPage";
 import { useInBrowser } from "./QrThumb";
 import { Notice, Shell } from "./Shell";
@@ -75,7 +75,7 @@ export function LotPage({ id }: { id: string }) {
           <div>
             <span className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${lot.mode === "auction" ? "bg-accent text-on-accent" : "bg-ink text-bg"}`}>{lot.mode === "auction" ? t.auction : t.fixedPrice}</span>
             <h1 className="mt-2 font-heading text-3xl font-extrabold tracking-tight">
-              {lot.view.title} <span className="text-muted">{editionLabel(t, lot.view.edition)}</span>
+              {lotName(lot.view, base)} <span className="text-muted">{editionLabel(t, lot.view.edition)}</span>
             </h1>
             <p className="mt-1 flex items-center gap-1.5 text-sm text-muted">
               {t.seller}: <Avatar id={lot.seller} lang={lang} size={20} /> {mine ? t.you : personName(lot.seller, lang)}

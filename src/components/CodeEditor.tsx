@@ -268,7 +268,7 @@ function Editor({ t, lang, me, base, initial }: { t: Dict; lang: Lang; me: strin
                 </div>
               </div>
             </aside>
-            {code.edition && <SellBox t={t} code={code} />}
+            <SellBox t={t} code={code} />
             </div>
           </div>
         )}

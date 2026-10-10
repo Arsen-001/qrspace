@@ -519,7 +519,7 @@ export const de: Dict = {
   "duration.168": "1 Woche",
   youGet: "Du erhältst",
   fee: "Gebühr",
-  sellWarning: "Der Käufer erhält den Code leer: Deine Erinnerung, Personen und Nachrichten werden gelöscht.",
+  sellWarning: "Der Käufer bekommt den Code leer: Inhalt, deine Erinnerungen, Personen und Nachrichten werden gelöscht. Link, Aussehen und Platz unter dem Code bleiben.",
   putOnSale: "Anbieten",
   navShop: "Shop",
   shopTitle: "Produkte mit deinem Code",

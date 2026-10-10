@@ -1,4 +1,4 @@
-import { mutate, newId, settle } from "@/server/db";
+import { mutate, newId, sellable, settle } from "@/server/db";
 import { currentPerson } from "@/server/session";
 import { DURATIONS, type Listing } from "@/lib/listings";
 import { lotOf } from "./view";
@@ -13,7 +13,7 @@ export async function GET() {
   return Response.json(lots);
 }
 
-/** Выставить свой коллекционный код: фиксированная цена или аукцион (стартовая ставка и срок). */
+/** Выставить свой код (любой оплаченный, 10.10.2026): фиксированная цена или аукцион (стартовая ставка и срок). */
 export async function POST(req: Request) {
   const me = await currentPerson();
   if (!me) return Response.json({ error: "login" }, { status: 401 });
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
   if (mode === "auction" && !(DURATIONS as readonly number[]).includes(hours)) return Response.json({ error: "bad" }, { status: 400 });
   const result = await mutate((db) => {
     const c = db.codes.find((x) => x.id === b.code && x.owner === me);
-    if (!c?.edition) return 403;
+    if (!c || !sellable(db, c)) return 403;
     if (db.listings.some((l) => l.code === c.id && l.status === "open")) return 409;
     const at = new Date();
     const l: Listing = {

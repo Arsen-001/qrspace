@@ -2,7 +2,7 @@
 // Перепродажа: карточки лотов в маркете и форма «Продать» у коллекционного кода.
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { api, type CodeView, type Lot } from "@/lib/codes";
+import { api, shownLink, type CodeView, type Lot } from "@/lib/codes";
 import { fmtUntil } from "@/lib/format";
 import type { Dict, Lang } from "@/lib/i18n";
 import { DURATIONS, FEE, sellerGets, topBid } from "@/lib/listings";
@@ -10,6 +10,9 @@ import { QrThumb } from "./QrThumb";
 import { Segmented, Select } from "./ui";
 
 // У номерных кодов номер уже в названии («№ 777») — второй раз не пишем.
+/** Как назвать лот: коллекционный — по названию, любой другой — его ссылкой «qrspace.co/K/AB12CD» (продаётся как домен). */
+export const lotName = (v: Lot["view"], base: string) => v.title ?? (v.short ? shownLink(`${base || "https://qrspace.co"}/K/${v.short}`) : "QR");
+
 export const editionLabel = (t: Dict, e: { design?: string; no: number; of: number | null } | null) =>
   !e || e.design === "number" ? "" : `${t.editionNo} ${e.no}${e.of !== null ? ` / ${e.of}` : ""}`;
 
@@ -58,7 +61,7 @@ export function LotCards({ t, lang, lots, link }: { t: Dict; lang: Lang; lots: L
             </div>
             <div className="flex flex-1 flex-col gap-1 p-4">
               <div className="truncate font-heading font-bold">
-                {l.view.title} <span className="font-mono text-xs text-accent">{editionLabel(t, l.view.edition)}</span>
+                {lotName(l.view, link.replace(/\/K\/[^/]*$/i, ""))} <span className="font-mono text-xs text-accent">{editionLabel(t, l.view.edition)}</span>
               </div>
               <div className="mt-auto text-on-stage [&_*]:!text-inherit">
                 <LotPrice t={t} lang={lang} lot={l} />
@@ -81,13 +84,15 @@ export function SellBox({ t, code }: { t: Dict; code: CodeView }) {
   const [made, setMade] = useState<Lot | null>(null);
   const [busy, setBusy] = useState(false);
   const lot = made ?? open;
-  if (!code.edition || !lots) return null;
+  if (!code.paid || code.blocked || code.kind === "item" || !lots) return null;
   const n = Math.max(1, Math.round(Number(price) || 0));
   return (
     <section className="rounded-2xl border border-line bg-card p-4">
-      <Link href={`/cert/${code.id}`} className="mb-3 flex min-h-11 items-center justify-center rounded-xl bg-stage px-4 text-sm font-semibold text-on-stage">
-        {t.certTitle} →
-      </Link>
+      {code.edition && (
+        <Link href={`/cert/${code.id}`} className="mb-3 flex min-h-11 items-center justify-center rounded-xl bg-stage px-4 text-sm font-semibold text-on-stage">
+          {t.certTitle} →
+        </Link>
+      )}
       <h2 className="font-heading text-base font-bold">{t.sellTitle}</h2>
       {lot ? (
         <p className="mt-2 text-sm">
