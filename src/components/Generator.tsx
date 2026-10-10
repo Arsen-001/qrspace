@@ -135,7 +135,7 @@ export function Generator() {
           }
           side={
             <>
-              {ready && <MadeBox t={t} id={ready.id} link={ready.link} />}
+              {ready ? <MadeBox t={t} id={ready.id} link={ready.link} /> : made && <ChangedBox t={t} id={made.id} link={made.link} />}
               {isDesigner(me) ? (
                 <PublishBox t={t} style={style} base={base} />
               ) : (
@@ -187,6 +187,18 @@ function MadeBox({ t, id, link }: { t: Dict; id: string; link: string }) {
       <p className="mt-3 text-sm leading-relaxed text-muted">{t.madeText}</p>
       <Link href={`/codes/${id}`} className="mt-4 inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-stage px-4 text-sm font-semibold text-on-stage">
         {t.madeOpen} →
+      </Link>
+    </section>
+  );
+}
+
+/** После скачивания что-то поменяли: при скачивании это будет новый код (вид скачанного не меняется), прежний — ваш. */
+function ChangedBox({ t, id, link }: { t: Dict; id: string; link: string }) {
+  return (
+    <section className="rounded-2xl border border-dashed border-line bg-card p-4 text-sm leading-relaxed" aria-live="polite">
+      <p className="text-muted">{t.madeChanged}</p>
+      <Link href={`/codes/${id}`} className="mt-1 inline-flex min-h-10 items-center gap-1.5 font-semibold underline-offset-2 hover:underline">
+        {t.madePrev}: <span className="font-mono">{shownLink(link)}</span> →
       </Link>
     </section>
   );

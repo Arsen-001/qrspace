@@ -7,6 +7,12 @@ import { openPack, packsLeft, type Pack } from "@/lib/packs";
 const readKey = (v: unknown) => (typeof v === "string" && /^(g|code):[\w-]{1,40}$/.test(v) ? v : null);
 const readTier = (v: unknown): Tier | null => (v === "simple" || v === "styled" ? v : null);
 
+/**
+ * Оплата, ушедшая на код из генератора (ключ g:…, code = id), — это и есть оплата кода «code:id»: скачать его снова со
+ * своей страницы или напечатать наклейки — без новой оплаты (раньше там просили $1 ещё раз).
+ */
+const asCodeKey = (list: Purchase[], key: string) => (key.startsWith("code:") ? list.map((p) => (p.code === key.slice(5) ? { ...p, key, code: undefined } : p)) : list);
+
 /** Цена с учётом пакетов: первый простой — бесплатно, как и был; дальше, если есть пакет, — код из пакета. */
 function withPack(q: Quote, packs: Pack[]): Quote {
   if (q.paid || q.free) return q;
@@ -22,7 +28,7 @@ export async function GET(req: NextRequest) {
   const tier = readTier(req.nextUrl.searchParams.get("tier"));
   if (!key || !tier) return Response.json({ error: "bad" }, { status: 400 });
   const { mine, spent, packs } = await quoteFor(me);
-  return Response.json(withPack(quote(mine, key, tier, spent), packs));
+  return Response.json(withPack(quote(asCodeKey(mine, key), key, tier, spent), packs));
 }
 
 /** Оплатить (демо — деньги не списываются) и получить право скачивать этот код. */
@@ -35,7 +41,7 @@ export async function POST(req: Request) {
   if (!key || !tier) return Response.json({ error: "bad" }, { status: 400 });
   const q = await mutate((db) => {
     const mine = db.packs.filter((p) => p.person === me);
-    const q = withPack(quote(db.purchases.filter((p) => p.person === me), key, tier, spentIn(db)), mine);
+    const q = withPack(quote(asCodeKey(db.purchases.filter((p) => p.person === me), key), key, tier, spentIn(db)), mine);
     const pack = q.pack ? openPack(mine) : null;
     const buy: Purchase = { person: me, key, tier, price: q.price, free: q.free, at: new Date().toISOString() };
     if (pack) {

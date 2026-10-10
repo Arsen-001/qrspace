@@ -117,6 +117,7 @@ await field("Номер телефона").fill("+374 91 555 999");
 await ready();
 ok(await p.getByText("Пока это образец").isVisible(), "changed number after download — a new code again (sample until download)");
 ok(!(await p.getByText("Готово — это ваш новый код").count()), "changed number — the «done» card is gone");
+ok(await p.getByText("Вы поменяли код — при скачивании это будет новый код").isVisible() && (await p.getByRole("link", { name: /Скачанный код/ }).count()) === 1, "changed after download — says it will be a new code and links to the downloaded one");
 
 // Гость на телефоне: «Скачать» → окно входа → после входа окно оплаты видно (раньше оно открывалось под нижними
 // вкладками — нажал «Скачать», и будто ничего не произошло); цена — заранее, до нажатия.
@@ -142,6 +143,20 @@ ok(!(await p.getByText("Готово — это ваш новый код").count
   await Promise.all([q.waitForEvent("download"), pay.click()]);
   await q.getByText("Готово — это ваш новый код").waitFor({ timeout: 10000 });
   ok(await q.getByText("Этот код уже ваш").isVisible(), "after download the price line says the code is already yours");
+  // Скачать тот же код снова — с его страницы («Открыть код» → «Вид кода») и для наклеек: без новой оплаты
+  {
+    const href = await q.getByRole("link", { name: /Открыть код/ }).getAttribute("href");
+    const id = href.split("/").pop();
+    const quote = await (await g.request.get(`${B}/api/purchases?key=code:${id}&tier=simple`)).json();
+    ok(quote.paid === true, `the code's own page and stickers count the generator payment (was asking $1 again): ${JSON.stringify(quote)}`);
+    const e = await g.newPage();
+    await e.goto(B + href, { waitUntil: "networkidle" });
+    await e.getByRole("tab", { name: /Вид кода/ }).click();
+    await e.waitForFunction(() => /Код читается/.test(document.body.innerText), null, { timeout: 30000 });
+    const [again] = await Promise.all([e.waitForEvent("download", { timeout: 15000 }), e.getByRole("button", { name: /Скачать PNG/ }).click()]);
+    ok(again.suggestedFilename().endsWith(".png") && !(await e.getByRole("button", { name: /Оплатить и скачать|Скачать бесплатно/ }).count()), "download again from the code's page — no pay window");
+    await e.close();
+  }
   await q.getByRole("textbox", { name: "Номер телефона", exact: true }).fill("+374 91 000 002");
   await q.waitForFunction(() => /Платите один раз/.test(document.body.innerText), null, { timeout: 15000 }).catch(() => {});
   ok(await q.getByText("Платите один раз — код ваш навсегда").isVisible(), "the next code's price is shown before tapping ($1, once, forever)");

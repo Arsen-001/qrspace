@@ -27,7 +27,8 @@ const PLAIN = ["url", "website", "phone", "email", "username", "ssid", "password
 export function ProblemNote({ t, type, p, onFix }: { t: Dict; type: ContentType; p: Problem; onFix?: () => void }) {
   return (
     <p role={p.block ? "alert" : undefined} className={`flex flex-wrap items-center gap-x-2 gap-y-1 text-sm leading-snug ${p.block ? "font-medium text-warn" : "text-muted"}`}>
-      <span>
+      {/* Длинная почта в подсказке переносится где угодно — иначе на узком телефоне распирает карточку. */}
+      <span className="min-w-0 [overflow-wrap:anywhere]">
         <span aria-hidden>! </span>
         {fill(t[p.key], { fix: p.arg ?? "", site: p.arg ?? "", type: t[`type.${type}`], nopass: t["security.nopass"] })}
       </span>

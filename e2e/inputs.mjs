@@ -155,6 +155,32 @@ const mine = (await (await ctx.request.get(B + "/api/codes")).json()).mine;
 const titles = mine.map((c) => c.title);
 ok(titles.includes("Telegram @qrspace_news") && titles.includes("Instagram @qrspace") && titles.includes("SMS +374 91 555 778"), `titles say which app (${titles.slice(0, 6).join(" | ")})`);
 
+// Редактор кода («Что в коде»): та же проверка — с ошибкой не сохранить
+{
+  const wa = mine.find((c) => c.content?.type === "sms");
+  await p.goto(`${B}/codes/${wa.id}`, { waitUntil: "networkidle" });
+  await pick("WhatsApp");
+  await field("Номер телефона").fill("091 555 779");
+  await leave("Номер телефона");
+  ok((await text()).includes("Нужен номер с кодом страны") && (await p.getByRole("button", { name: "Сохранить", exact: true }).isDisabled()), "code editor: WhatsApp 091… — error and «Сохранить» is off");
+}
+
+// Узкий телефон (320): длинная почта в подсказке не распирает карточку
+{
+  const c = await browser.newContext({ viewport: { width: 320, height: 700 }, locale: "ru-RU", isMobile: true, hasTouch: true });
+  const q = await c.newPage();
+  await q.goto(B + "/create", { waitUntil: "networkidle" });
+  const r = q.getByRole("radio", { name: "Почта", exact: true });
+  await r.evaluate((e) => e.scrollIntoView({ block: "center" }));
+  await r.click();
+  await q.getByRole("textbox", { name: "Адрес почты", exact: true }).fill("ani.petrosyan.very.long.name@gmial.com");
+  await q.getByRole("textbox", { name: "Адрес почты", exact: true }).blur();
+  await q.waitForTimeout(300);
+  const wide = await q.evaluate(() => [...document.querySelectorAll("section")].filter((s) => s.scrollWidth > s.clientWidth + 1).length);
+  ok(wide === 0 && (await q.evaluate(() => document.documentElement.scrollWidth <= innerWidth)), `320px: the long email suggestion wraps inside the card (${wide} cards too wide)`);
+  await c.close();
+}
+
 console.log("errors:", errors.length ? errors : "none");
 await browser.close();
 process.exit(errors.length ? 1 : 0);

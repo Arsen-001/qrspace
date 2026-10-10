@@ -790,6 +790,8 @@ export const fr: Dict = {
   madeTitle: "C’est fait — voici votre nouveau code",
   madeText: "Le lien et l’espace sous le code sont à vous seul. Changez le contenu à tout moment et gardez photos, vidéos et notes sous le code.",
   madeOpen: "Ouvrir le code",
+  madeChanged: "Vous avez modifié le code : en téléchargeant, ce sera un nouveau code avec son propre lien. Celui téléchargé reste à vous ; son contenu se change sur sa page.",
+  madePrev: "Code téléchargé",
   priceFree: "Gratuit : c'est votre premier code simple",
   "bad.scheme": "Cette adresse ne s'ouvrira pas : saisissez un site, p. ex. example.com",
   "bad.spaces": "Une adresse de site ne contient pas d'espaces",
