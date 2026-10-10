@@ -15,15 +15,17 @@ await ctx.request.post(B + "/api/me", { data: { personId: "lilit" } });
 const p = await ctx.newPage();
 p.on("pageerror", (e) => errors.push(e.message));
 
-/** Прочитать код из файла: картинку (и SVG) рисуем в браузере на холст и отдаём точки читалке. */
-const decode = async (file) => {
+/** Прочитать код из файла: картинку (и SVG) рисуем в браузере на холст и отдаём точки читалке. Как камера, пробуем
+ * два размера (кадры телефона тоже разные): у сложных видов (форма + «Металл») бывает узкая полоса размеров, где
+ * пересчёт точек даёт рябь и одна читалка не берёт. */
+const decode = async (file) => (await decodeAt(file, 700)) ?? (await decodeAt(file, 1000));
+const decodeAt = async (file, w) => {
   const img = await p.evaluate(
-    async ({ b64, svg }) => {
+    async ({ b64, svg, w }) => {
       const blob = await (await fetch(`data:${svg ? "image/svg+xml" : "image/png"};base64,${b64}`)).blob();
       const url = URL.createObjectURL(blob);
       const im = new Image();
       await new Promise((r, j) => ((im.onload = r), (im.onerror = j), (im.src = url)));
-      const w = 700;
       const h = Math.round((w * im.naturalHeight) / im.naturalWidth);
       const c = document.createElement("canvas");
       c.width = w;
@@ -34,7 +36,7 @@ const decode = async (file) => {
       g.drawImage(im, 0, 0, w, h);
       return { w, h, data: Array.from(g.getImageData(0, 0, w, h).data) };
     },
-    { b64: fs.readFileSync(file).toString("base64"), svg: file.endsWith(".svg") },
+    { b64: fs.readFileSync(file).toString("base64"), svg: file.endsWith(".svg"), w },
   );
   const [r] = await readBarcodes({ data: Uint8ClampedArray.from(img.data), width: img.w, height: img.h, colorSpace: "srgb" }, { formats: ["QRCode"], tryHarder: true, tryInvert: true });
   return r?.text ?? null;
@@ -60,6 +62,8 @@ const save = async (name, i) => {
 };
 const tab = (n) => p.getByRole("tab", { name: n, exact: true }).click();
 const radio = (n) => p.getByRole("radio", { name: n, exact: true }).first().click();
+const orn = (n) => p.getByRole("radiogroup", { name: "Украшения вокруг", exact: true }).getByRole("radio", { name: n, exact: true }).click();
+const shape = (n) => p.getByRole("radiogroup", { name: "Форма кода", exact: true }).getByRole("radio", { name: n, exact: true }).click();
 
 await p.goto(B + "/create", { waitUntil: "networkidle" });
 const VARIANTS = [
@@ -76,7 +80,15 @@ const VARIANTS = [
   }],
   ["texture wood", "styled", async () => { await tab("Фон"); await radio("Дерево"); }],
   ["effect carved", "styled", async () => { await radio("Ровный"); await radio("Вырезанные"); }],
-  ["photo", "styled", async () => { await radio("Плоско"); await tab("Фото и логотип"); await p.locator("input[type=file]").first().setInputFiles(new URL("./photo.jpg", import.meta.url).pathname); await p.waitForTimeout(1500); }],
+  // Форма кода и «Металл» (10.10.2026): снаружи силуэта прозрачно — читаем на белом, как камера на бумаге
+  ["shape Сердце", "styled", async () => { await radio("Плоско"); await tab("Форма"); await shape("Сердце"); }],
+  ["shape Соты", "styled", () => shape("Соты")],
+  ["shape Клякса + Металл", "styled", async () => { await shape("Клякса"); await tab("Фон"); await radio("Металл"); }],
+  ["shape Круг", "styled", async () => { await radio("Плоско"); await tab("Форма"); await shape("Круг"); }],
+  // Украшения вокруг кода (10.10.2026) — с формой и с квадратом
+  ["shape Круг + Звёзды вокруг", "styled", () => orn("Звёзды")],
+  ["square + Конфетти вокруг", "styled", async () => { await shape("Квадрат"); await orn("Конфетти"); }],
+  ["photo", "styled", async () => { await shape("Квадрат"); await tab("Фон"); await radio("Плоско"); await tab("Фото и логотип"); await p.locator("input[type=file]").first().setInputFiles(new URL("./photo.jpg", import.meta.url).pathname); await p.waitForTimeout(1500); }],
 ];
 let i = 0;
 for (const [label, tier, act] of VARIANTS) {
