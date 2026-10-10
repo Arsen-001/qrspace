@@ -1,8 +1,9 @@
 // Рисунок кода — список фигур (контуры SVG + картинки). Из одного списка собираем SVG-файл
 // и рисуем на canvas (PNG, проверка «сканируется ли»), поэтому файл и превью всегда совпадают.
 import QRCode from "qrcode";
+import { inside, outlinePath, silhouette, type CodeShape } from "./shapes";
 
-export const DOT_STYLES = ["square", "rounded", "dots", "diamond", "star", "heart", "plus", "liquid", "leaf", "circuit"] as const;
+export const DOT_STYLES = ["square", "rounded", "dots", "diamond", "star", "heart", "plus", "liquid", "blocks", "leaf", "circuit"] as const;
 export const EYE_STYLES = ["square", "rounded", "circle", "leaf", "drop", "dropOut", "octagon", "mixed", "dotted", "chip", "ornate"] as const;
 export type DotStyle = (typeof DOT_STYLES)[number];
 /** Центр угла отдельно от рамки; auto — в пару к рамке. */
@@ -37,6 +38,8 @@ export type QrStyle = {
   captionPhone?: string | null;
   /** QR-картинка: фото под кодом, от каждой клетки остаётся точка в центре. */
   picture?: { src: string; dotSize: number; tones?: Tones } | null;
+  /** Форма кода (10.10.2026): квадрат или силуэт вокруг кода — круг, сердце… (с фото — всегда квадрат). */
+  shape?: CodeShape;
 };
 
 /** Уменьшенная копия фото (RGBA, w×w) — из неё берём цвет точек. */
@@ -95,17 +98,83 @@ export type Fill = string | Gradient;
 /** fixed — не поворачивается вместе с кодом (фон, фото, логотип). */
 export type Shape =
   | { kind: "path"; d: string; fill: Fill; rule?: "evenodd"; opacity?: number; fixed?: boolean; effect?: Effect }
-  | { kind: "image"; src: string; x: number; y: number; w: number; h: number; fixed?: boolean }
+  | { kind: "image"; src: string; x: number; y: number; w: number; h: number; fixed?: boolean; clip?: string }
   | { kind: "text"; text: string; x: number; y: number; size: number; fill: string; fixed: true };
 
 /** height — с подписью под кодом рисунок выше, чем шире (без подписи = size). */
-export type Drawing = { size: number; shapes: Shape[]; rotate: Rotation; height?: number };
+/** pivot — вокруг чего поворачивать код (у силуэта код не в центре рисунка); нет — центр. */
+export type Drawing = { size: number; shapes: Shape[]; rotate: Rotation; height?: number; pivot?: [number, number] };
 
 /** Шрифт подписи: жирный и есть везде — в PNG, SVG и на телефоне выглядит одинаково. */
 export const CAPTION_FONT = '"Arial Black", Arial, Helvetica, sans-serif';
 export const CAPTION_MAX = 40;
 
 const QUIET = 4; // пустая рамка вокруг кода в клетках — без неё телефоны читают хуже
+// Силуэт: пустая клетка между кодом и украшениями, рамка по краю силуэта и поле вокруг рамки (в клетках).
+const GAP = 1;
+const RING = 0.9;
+const EDGE = 0.5;
+
+/** Повторяемый «случайный» узор украшений: один и тот же текст — тот же рисунок (превью = файл). */
+function seeded(text: string): () => number {
+  let a = 2166136261;
+  for (let i = 0; i < text.length; i++) a = Math.imul(a ^ text.charCodeAt(i), 16777619);
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** Край силуэта, сдвинутый внутрь на d (в долях силуэта) по нормалям — внутренний край рамки. */
+function inset(pts: [number, number][], d: number): [number, number][] {
+  let area = 0;
+  for (let i = 0; i < pts.length; i++) {
+    const [x1, y1] = pts[i];
+    const [x2, y2] = pts[(i + 1) % pts.length];
+    area += x1 * y2 - x2 * y1;
+  }
+  const sign = area > 0 ? 1 : -1;
+  const moved = pts.map((p, i): [number, number] => {
+    const a = pts[(i + pts.length - 1) % pts.length];
+    const b = pts[(i + 1) % pts.length];
+    const tx = b[0] - a[0];
+    const ty = b[1] - a[1];
+    const len = Math.hypot(tx, ty) || 1;
+    // Нормаль внутрь: поворот касательной на 90° в сторону обхода.
+    return [p[0] - (sign * ty * d) / len, p[1] + (sign * tx * d) / len];
+  });
+  return untangle(moved);
+}
+
+/** У острого кончика (сердце, капля) сдвинутый край перехлёстывается петлёй — вырезаем петлю по точке пересечения. */
+function untangle(pts: [number, number][]): [number, number][] {
+  const cross = (a: [number, number], b: [number, number], c: [number, number], d: [number, number]): [number, number] | null => {
+    const den = (b[0] - a[0]) * (d[1] - c[1]) - (b[1] - a[1]) * (d[0] - c[0]);
+    if (!den) return null;
+    const t = ((c[0] - a[0]) * (d[1] - c[1]) - (c[1] - a[1]) * (d[0] - c[0])) / den;
+    const u = ((c[0] - a[0]) * (b[1] - a[1]) - (c[1] - a[1]) * (b[0] - a[0])) / den;
+    return t > 0 && t < 1 && u > 0 && u < 1 ? [a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1])] : null;
+  };
+  let p = pts;
+  for (let guard = 0; guard < 20; guard++) {
+    let cut = false;
+    const n = p.length;
+    // Петли у кончиков маленькие: ищем пересечения отрезков не дальше четверти контура друг от друга.
+    outer: for (let i = 0; i < n; i++)
+      for (let k = 2; k < n / 4; k++) {
+        const j = (i + k) % n;
+        const x = cross(p[i], p[(i + 1) % n], p[j], p[(j + 1) % n]);
+        if (!x) continue;
+        p = j > i ? [...p.slice(0, i + 1), x, ...p.slice(j + 1)] : [...p.slice(j + 1, i + 1), x];
+        cut = true;
+        break outer;
+      }
+    if (!cut) break;
+  }
+  return p;
+}
 
 const n = (v: number) => Math.round(v * 1000) / 1000;
 
@@ -200,6 +269,12 @@ function modulePath(kind: DotStyle, x: number, y: number, s: number, nb: Neighbo
       if (nb.r) d += rectPath(cx, cy - w / 2, 1, w);
       if (nb.b) d += rectPath(cx - w / 2, cy, w, 1);
       return d;
+    }
+    case "blocks": {
+      // Блоки (10.10.2026, как объёмные плитки): соседние клетки сливаются в цельную фигуру, у фигуры чуть скруглены
+      // только внешние углы.
+      const r = s * 0.22;
+      return roundRect(cx - h, cy - h, s, s, [!nb.t && !nb.l ? r : 0, !nb.t && !nb.r ? r : 0, !nb.b && !nb.r ? r : 0, !nb.b && !nb.l ? r : 0]);
     }
     case "liquid": {
       // Угол скругляем, только если с обеих его сторон соседей нет, — соседние клетки сливаются в линии.
@@ -417,8 +492,24 @@ export function buildDrawing(text: string, style: QrStyle): Drawing {
   const qr = QRCode.create(text, { errorCorrectionLevel: ecl });
   const m = qr.modules;
   const count = m.size;
-  const size = count + QUIET * 2;
   const rotate = style.rotate ?? 0;
+  // Форма кода: сам код — в самом большом ровном квадрате внутри силуэта, вокруг — зазор, украшения и рамка.
+  const sil = style.picture ? null : silhouette(style.shape);
+  let side = 0;
+  let ringIn: [number, number][] = [];
+  if (sil) {
+    const fitsIn = (L: number) => {
+      ringIn = inset(sil.pts, RING / L);
+      const h = (count / 2 + GAP) / L;
+      return [-1, 1].every((sx) => [-1, 1].every((sy) => inside(ringIn, sil.cx + sx * h, sil.cy + sy * h)));
+    };
+    side = Math.ceil((count / 2 + GAP + RING) / sil.half);
+    while (!fitsIn(side)) side++;
+  }
+  const size = sil ? side + EDGE * 2 : count + QUIET * 2;
+  // Левый верхний угол самого кода (в клетках рисунка).
+  const ox = sil ? EDGE + sil.cx * side - count / 2 : QUIET;
+  const oy = sil ? EDGE + sil.cy * side - count / 2 : QUIET;
   const shapes: Shape[] = [];
 
   // Где клетка (x, y) окажется после поворота кода — по этому месту берём цвет фото под ней.
@@ -441,8 +532,11 @@ export function buildDrawing(text: string, style: QrStyle): Drawing {
   const lines = [style.caption, style.captionPhone].map((x) => (x ?? "").trim().slice(0, CAPTION_MAX)).filter(Boolean);
   const fonts = lines.map((l) => Math.min(3.6, (count * 0.98) / (l.length * 0.66)));
   const height = lines.length ? size + fonts.reduce((a, f) => a + f * 1.12, 0) + 1.4 : size;
-  shapes.push({ kind: "path", d: rectPath(0, 0, size, height), fill: style.bg, fixed: true });
-  if (style.texture && !style.picture) shapes.push({ kind: "image", src: style.texture, x: 0, y: 0, w: size, h: height, fixed: true });
+  // У силуэта фон — только внутри силуэта, снаружи прозрачно (наклейку можно вырезать по форме).
+  const outline = sil ? outlinePath(sil.pts, side, EDGE, EDGE) : null;
+  shapes.push({ kind: "path", d: outline ?? rectPath(0, 0, size, height), fill: style.bg, fixed: true });
+  if (style.texture && !style.picture)
+    shapes.push({ kind: "image", src: style.texture, x: 0, y: 0, w: size, h: sil ? size : height, fixed: true, ...(outline && { clip: outline }) });
   const fx: Effect | undefined = style.effect && style.effect !== "none" ? style.effect : undefined;
 
   const inEye = (r: number, c: number) => (r < 7 && c < 7) || (r < 7 && c >= count - 7) || (r >= count - 7 && c < 7);
@@ -481,8 +575,8 @@ export function buildDrawing(text: string, style: QrStyle): Drawing {
     for (let c = 0; c < count; c++) {
       if (inEye(r, c) || underLogo(r, c)) continue;
       const on = !!m.get(r, c);
-      const x = QUIET + c;
-      const y = QUIET + r;
+      const x = ox + c;
+      const y = oy + r;
       if (style.picture) {
         const reserved = !!m.isReserved(r, c);
         const tone = sampleTone(style.picture.tones, size, ...turned(x, y));
@@ -518,14 +612,44 @@ export function buildDrawing(text: string, style: QrStyle): Drawing {
   if (light) shapes.push({ kind: "path", d: light, fill: style.bg });
   if (dark) shapes.push({ kind: "path", d: dark, fill: dotFill, effect: fx });
 
+  if (sil) {
+    // Украшения: клетки той же сетки, что и код, целиком внутри силуэта (не ближе 0,45 клетки к рамке) и не ближе
+    // GAP к коду; закрашена примерно половина — как узор самого кода. Не поворачиваются: силуэт стоит ровно.
+    const bound = inset(sil.pts, (RING + 0.45) / side);
+    const rnd = seeded(text);
+    const toUnit = (v: number) => (v - EDGE) / side;
+    const on = new Set<string>();
+    const lo = -Math.ceil(ox);
+    const hi = Math.ceil(size - ox);
+    const loY = -Math.ceil(oy);
+    const hiY = Math.ceil(size - oy);
+    for (let j = loY; j < hiY; j++)
+      for (let i = lo; i < hi; i++) {
+        if (i >= -GAP && i < count + GAP && j >= -GAP && j < count + GAP) continue;
+        const x = ox + i;
+        const y = oy + j;
+        const ok = [0.08, 0.92].every((a) => [0.08, 0.92].every((b) => inside(bound, toUnit(x + a), toUnit(y + b))));
+        if (ok && rnd() < 0.5) on.add(`${i},${j}`);
+      }
+    const has = (i: number, j: number) => on.has(`${i},${j}`);
+    let deco = "";
+    for (const key of on) {
+      const [i, j] = key.split(",").map(Number);
+      deco += modulePath(style.dot, ox + i, oy + j, 1, { t: has(i, j - 1), r: has(i + 1, j), b: has(i, j + 1), l: has(i - 1, j) });
+    }
+    if (deco) shapes.push({ kind: "path", d: deco, fill: dotFill, effect: fx, fixed: true });
+    // Рамка по краю силуэта — цветом углов.
+    shapes.push({ kind: "path", d: outline! + outlinePath(ringIn, side, EDGE, EDGE, true), fill: eyeColor, rule: "evenodd", effect: fx, fixed: true });
+  }
+
   const eyes: [number, number, EyePos][] = [
     [0, 0, "tl"],
     [0, count - 7, "tr"],
     [count - 7, 0, "bl"],
   ];
   for (const [er, ec, pos] of eyes) {
-    const x = QUIET + ec;
-    const y = QUIET + er;
+    const x = ox + ec;
+    const y = oy + er;
     let ring: Fill = eyeColor;
     let ball: Fill = ballColor;
     let back = style.bg;
@@ -554,17 +678,17 @@ export function buildDrawing(text: string, style: QrStyle): Drawing {
   if (logoBox && style.logo) {
     const { x, w } = logoBox;
     const pad = 0.4;
-    shapes.push({ kind: "path", d: rectPath(QUIET + x - pad, QUIET + x - pad, w + 2 * pad, w + 2 * pad, w * 0.18), fill: style.bg, fixed: true });
-    shapes.push({ kind: "image", src: style.logo.src, x: QUIET + x + 0.3, y: QUIET + x + 0.3, w: w - 0.6, h: w - 0.6, fixed: true });
+    shapes.push({ kind: "path", d: rectPath(ox + x - pad, oy + x - pad, w + 2 * pad, w + 2 * pad, w * 0.18), fill: style.bg, fixed: true });
+    shapes.push({ kind: "image", src: style.logo.src, x: ox + x + 0.3, y: oy + x + 0.3, w: w - 0.6, h: w - 0.6, fixed: true });
   }
 
-  let y = size - QUIET / 2;
+  let y = sil ? size : size - QUIET / 2;
   lines.forEach((text, i) => {
     y += fonts[i] * (i ? 1.12 : 0.82);
     shapes.push({ kind: "text", text, x: size / 2, y, size: fonts[i], fill: style.eyeColor || style.fg, fixed: true });
   });
 
-  return { size, shapes, rotate, ...(lines.length && { height }) };
+  return { size, shapes, rotate, ...(lines.length && { height }), ...(sil && { pivot: [ox + count / 2, oy + count / 2] as [number, number] }) };
 }
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
@@ -581,6 +705,17 @@ export function toSvg(drawing: Drawing, px = 1024): string {
     return `url(#${id})`;
   };
   const used = new Set(drawing.shapes.flatMap((s) => (s.kind === "path" && s.effect ? [s.effect] : [])));
+  // Картинка, обрезанная по силуэту (текстура фона у кода-формы).
+  const clips = new Map<string, string>();
+  const clipId = (d: string) => {
+    let id = clips.get(d);
+    if (!id) {
+      id = `clip${clips.size}`;
+      clips.set(d, id);
+      defs.push(`<clipPath id="${id}"><path d="${d}"/></clipPath>`);
+    }
+    return id;
+  };
   // Свет сверху слева. Выпуклые: мягкая тень вправо-вниз. Вырезанные: тень внутри фигуры у верхнего левого края.
   if (used.has("raised"))
     defs.push(`<filter id="fx-raised" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0.1" dy="0.12" stdDeviation="0.08" flood-color="#000" flood-opacity="0.38"/></filter>`);
@@ -590,8 +725,8 @@ export function toSvg(drawing: Drawing, px = 1024): string {
         `<feComposite in="SourceAlpha" in2="s" operator="out" result="rim"/><feFlood flood-color="#000" flood-opacity="0.6"/><feComposite in2="rim" operator="in" result="shade"/>` +
         `<feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="shade"/></feMerge></filter>`,
     );
-  const c = drawing.size / 2;
-  const turn = drawing.rotate ? ` transform="rotate(${drawing.rotate} ${c} ${c})"` : "";
+  const [px0, py0] = drawing.pivot ?? [drawing.size / 2, drawing.size / 2];
+  const turn = drawing.rotate ? ` transform="rotate(${drawing.rotate} ${n(px0)} ${n(py0)})"` : "";
   const body = drawing.shapes
     .map((s) => {
       const el =
@@ -599,7 +734,7 @@ export function toSvg(drawing: Drawing, px = 1024): string {
           ? `<path d="${s.d}" fill="${fill(s.fill)}"${s.rule ? ` fill-rule="${s.rule}"` : ""}${s.opacity !== undefined ? ` fill-opacity="${s.opacity}"` : ""}/>`
           : s.kind === "text"
             ? `<text x="${n(s.x)}" y="${n(s.y)}" font-size="${n(s.size)}" font-family='${CAPTION_FONT}' font-weight="900" text-anchor="middle" fill="${esc(s.fill)}">${esc(s.text)}</text>`
-            : `<image href="${esc(s.src)}" x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" preserveAspectRatio="xMidYMid slice"/>`;
+            : `<image href="${esc(s.src)}" x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" preserveAspectRatio="xMidYMid slice"${s.clip ? ` clip-path="url(#${clipId(s.clip)})"` : ""}/>`;
       const placed = s.fixed || !turn ? el : `<g${turn}>${el}</g>`;
       // Тень — снаружи поворота, чтобы свет всегда падал сверху слева, как и в PNG.
       return s.kind === "path" && s.effect ? `<g filter="url(#fx-${s.effect})">${placed}</g>` : placed;

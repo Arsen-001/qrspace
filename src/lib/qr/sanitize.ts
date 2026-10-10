@@ -1,6 +1,7 @@
 // Оформление кода приходит от браузера и потом рисуется у других людей (маркет, лоты, заказы) — поэтому сервер
 // пересобирает его заново только из известных полей и проверенных значений. Всё лишнее и странное — отбрасываем.
 import { DOT_STYLES, EFFECTS, EYE_BALLS, EYE_STYLES } from "./render";
+import { CODE_SHAPES } from "./shapes";
 import type { SavedStyle } from "./style";
 import { TEXTURES } from "./textures";
 
@@ -73,5 +74,7 @@ export function sanitizeStyle(v: unknown): SavedStyle | null {
   const caption = typeof v.caption === "string" ? v.caption.replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 40) : "";
   // Номер под кодом: цифры, пробелы, плюс, скобки, дефисы.
   const captionPhone = typeof v.captionPhone === "string" ? v.captionPhone.replace(/[^\d+()\s-]/g, "").trim().slice(0, 24) : "";
-  return { fg, bg, eyeColor, eyeBallColor, dot, eye, eyeBall, gradient, rotate, effect, texture, eyeIcon, logo, picture, ...(caption && { caption }), ...(captionPhone && { captionPhone }) };
+  // Форма кода (круг, сердце…); нет или неизвестная — квадрат.
+  const shape = oneOf(v.shape, CODE_SHAPES);
+  return { fg, bg, eyeColor, eyeBallColor, dot, eye, eyeBall, gradient, rotate, effect, texture, eyeIcon, logo, picture, ...(caption && { caption }), ...(captionPhone && { captionPhone }), ...(shape && shape !== "square" && { shape }) };
 }

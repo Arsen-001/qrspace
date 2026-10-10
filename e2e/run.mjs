@@ -9,7 +9,7 @@ import path from "node:path";
 import { startChain } from "./chain.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
-const ALL = ["flow", "order", "video", "redirect", "tags", "look", "market", "designer", "tasks", "pay", "print", "resale", "cert", "live", "security", "a11y", "starters", "verify", "links", "moderation", "admin", "legal", "langs", "packs", "account", "room", "appapi", "scan", "create", "inputs", "lookread", "typing", "camera", "nft", "mobile"];
+const ALL = ["flow", "order", "video", "redirect", "tags", "look", "market", "designer", "tasks", "pay", "print", "resale", "cert", "live", "security", "a11y", "starters", "verify", "links", "moderation", "admin", "legal", "langs", "packs", "account", "room", "appapi", "scan", "create", "inputs", "lookread", "typing", "camera", "nft", "shapes", "mobile"];
 // Вход через Google проверяем с подставным сервером Google (только на этом компьютере).
 const WITH_GOOGLE = ["google", "notify", "batch1", "push", "iap", "review"];
 const ENV = "GOOGLE_CLIENT_ID=test-client.apps.googleusercontent.com\nGOOGLE_CLIENT_SECRET=test-secret\nOAUTH_TEST_TOKEN_URL=http://127.0.0.1:3729/token\nDESIGNER_EMAILS=studio.designer@gmail.com\n";

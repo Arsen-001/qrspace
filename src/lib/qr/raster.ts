@@ -34,13 +34,14 @@ export async function drawToCanvas(drawing: Drawing, px: number): Promise<HTMLCa
   const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
   const k = px / drawing.size;
   ctx.scale(k, k);
-  const c = drawing.size / 2;
+  // Поворачиваем вокруг центра самого кода: у кода-формы (круг, сердце…) он не в центре рисунка.
+  const [px0, py0] = drawing.pivot ?? [drawing.size / 2, drawing.size / 2];
   for (const s of drawing.shapes) {
     ctx.save();
     if (drawing.rotate && !s.fixed) {
-      ctx.translate(c, c);
+      ctx.translate(px0, py0);
       ctx.rotate((drawing.rotate * Math.PI) / 180);
-      ctx.translate(-c, -c);
+      ctx.translate(-px0, -py0);
     }
     if (s.kind === "path") {
       if (typeof s.fill === "string") ctx.fillStyle = s.fill;
@@ -81,6 +82,7 @@ export async function drawToCanvas(drawing: Drawing, px: number): Promise<HTMLCa
       ctx.textAlign = "center";
       ctx.fillText(s.text, s.x, s.y);
     } else {
+      if (s.clip) ctx.clip(new Path2D(s.clip));
       drawCover(ctx, await loadImage(s.src), s.x, s.y, s.w, s.h);
     }
     ctx.restore();
@@ -104,7 +106,15 @@ function getReader() {
  */
 export async function checkScan(drawing: Drawing, expected: string): Promise<boolean> {
   const { readBarcodes } = await getReader();
-  const sharp = await drawToCanvas(drawing, 720);
+  // Вокруг кода-формы прозрачно — на бумаге там белое; без подложки читалка видела бы там чёрное.
+  const drawn = await drawToCanvas(drawing, 720);
+  const sharp = document.createElement("canvas");
+  sharp.width = drawn.width;
+  sharp.height = drawn.height;
+  const sctx = sharp.getContext("2d", { willReadFrequently: true })!;
+  sctx.fillStyle = "#ffffff";
+  sctx.fillRect(0, 0, sharp.width, sharp.height);
+  sctx.drawImage(drawn, 0, 0);
   // «Как с камеры»: код мельче и чуть размыт — так его видит телефон с полуметра.
   const camera = document.createElement("canvas");
   camera.width = 360;
@@ -276,6 +286,9 @@ function liveFrame(ctx: CanvasRenderingContext2D, base: HTMLCanvasElement, t: nu
   const s = 1 + 0.025 * (1 - Math.cos(2 * Math.PI * t)) * 0.5;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.globalCompositeOperation = "source-over";
+  // Вокруг кода-формы прозрачно, а у видео прозрачности нет: каждый кадр — на белом (иначе чёрное и следы прошлых кадров).
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, S, S);
   ctx.drawImage(base, (S - S * s) / 2, (S - S * s) / 2, S * s, S * s);
   // Блик: диагональная полоса проходит раз за цикл; светлее только поверх кода.
   const x = -0.6 * S + t * 2.2 * S;

@@ -25,6 +25,7 @@ export const DEFAULT_STYLE: StyleState = {
   eyeIcon: null,
   logo: null,
   picture: null,
+  shape: "square",
 };
 
 function toB64(bytes: Uint8Array | Uint8ClampedArray): string {
@@ -90,5 +91,6 @@ export function toQrStyle(s: StyleState): QrStyle {
     caption: s.caption,
     captionPhone: s.captionPhone,
     picture: s.picture && { src: s.picture.src, dotSize: s.picture.dotSize, tones: s.picture.tones },
+    shape: s.shape,
   };
 }

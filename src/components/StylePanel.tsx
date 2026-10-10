@@ -1,6 +1,7 @@
 "use client";
 import { memo, useEffect, useId, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { Dict } from "@/lib/i18n";
+import { CODE_SHAPES, outlinePath, silhouette, type CodeShape } from "@/lib/qr/shapes";
 import { ballSample, DOT_STYLES, dotSample, EFFECTS, EYE_BALLS, EYE_STYLES, eyeSample, type EyeBall, type DotStyle, type Effect, type EyeStyle, type IconMask, type Rotation } from "@/lib/qr/render";
 import { buildDrawing, CAPTION_MAX, toSvg } from "@/lib/qr/render";
 import { isPreset, STYLE_PRESETS, type StylePreset } from "@/lib/qr/presets";
@@ -31,6 +32,8 @@ export type StyleState = {
   /** Текст под кодом (по ширине кода) и номер телефона второй строкой. */
   caption?: string | null;
   captionPhone?: string | null;
+  /** Форма кода: квадрат или силуэт вокруг кода (10.10.2026). */
+  shape?: CodeShape;
 };
 
 const PRESETS: [string, string][] = [
@@ -234,6 +237,16 @@ function BallIcon({ kind, dot }: { kind: Exclude<EyeBall, "auto">; dot: DotStyle
     <svg viewBox="-0.3 -0.3 7.6 7.6" className="h-7 w-7" aria-hidden>
       <path d={ring} fill="currentColor" fillRule="evenodd" opacity={0.3} />
       <path d={ball} fill="currentColor" />
+    </svg>
+  );
+}
+
+/** Значок формы кода — её силуэт. */
+function CodeShapeIcon({ kind }: { kind: CodeShape }) {
+  const sil = silhouette(kind);
+  return (
+    <svg viewBox="-0.06 -0.06 1.12 1.12" className="h-7 w-7" aria-hidden>
+      <path d={sil ? outlinePath(sil.pts, 1, 0, 0) : "M0.06 0.06H0.94V0.94H0.06Z"} fill="currentColor" />
     </svg>
   );
 }
@@ -505,6 +518,17 @@ export const StylePanel = memo(function StylePanel({
         </div>
 
         <div {...panel("shape")}>
+          {/* Форма кода — первой: сильнее всего меняет вид. С фото код остаётся квадратом. */}
+          <div>
+            <Head hint={s.picture ? t.codeShapePhoto : t.codeShapeHint}>{t.codeShape}</Head>
+            <ShapeTiles
+              label={t.codeShape}
+              value={s.picture ? "square" : (s.shape ?? "square")}
+              onChange={(shape) => !s.picture && set({ shape })}
+              options={CODE_SHAPES.map((id) => ({ id, name: t[`shape.${id}`], icon: <CodeShapeIcon kind={id} /> }))}
+            />
+          </div>
+
           <div>
             <Head>{t.dots}</Head>
             <ShapeTiles label={t.dots} value={s.dot} onChange={(dot) => set({ dot })} options={DOT_STYLES.map((id) => ({ id, name: t[`dot.${id}`], icon: <DotIcon kind={id} /> }))} />
