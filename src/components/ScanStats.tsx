@@ -70,7 +70,7 @@ export function ScanStats({ t, lang, stats }: { t: Dict; lang: Lang; stats: Stat
         </div>
       </div>
       <details className="mt-3 text-sm">
-        <summary className="cursor-pointer text-muted">{t.statsTable}</summary>
+        <summary className="cursor-pointer py-3 text-muted">{t.statsTable}</summary>
         <table className="mt-2 w-full text-left text-xs">
           <tbody>
             {stats.days

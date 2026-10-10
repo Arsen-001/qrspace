@@ -105,7 +105,7 @@ export function ContentForm({
                 type={k === "password" && !showPass ? "password" : k === "start" || k === "end" ? "datetime-local" : "text"}
                 trailing={
                   k === "password" ? (
-                    <button type="button" onClick={() => setShowPass((s) => !s)} className="rounded-lg px-2 py-1 text-xs font-medium text-muted hover:text-ink">
+                    <button type="button" onClick={() => setShowPass((s) => !s)} className="x-hit rounded-lg px-2 py-1 text-xs font-medium text-muted hover:text-ink">
                       {t.showPassword}
                     </button>
                   ) : undefined

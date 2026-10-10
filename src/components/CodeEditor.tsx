@@ -164,7 +164,7 @@ function Editor({ t, lang, me, base, initial }: { t: Dict; lang: Lang; me: strin
   // У машины, ключей и питомца главное — связь: эта вкладка первая.
   const contactTab = { id: "contact" as const, label: t.tabContact, badge: unread };
   // У кода-ссылки первая вкладка — что в коде; память и «кто видит» есть у любого кода.
-  const tabs: { id: Tab; label: string; badge?: number }[] =
+  const tabs: { id: Tab; label: string; short?: string; badge?: number }[] =
     code.kind === "link"
       ? [
           { id: "link", label: t.tabLink },
@@ -178,7 +178,7 @@ function Editor({ t, lang, me, base, initial }: { t: Dict; lang: Lang; me: strin
           { id: "memory", label: t.tabMemory },
           ...(code.kind === "memory" ? [contactTab] : []),
           { id: "access", label: t.tabAccess, badge: requests },
-          { id: "stats", label: t.tabStats },
+          { id: "stats", label: t.tabStats, short: t.tabStatsShort },
           { id: "look", label: t.tabLook },
         ];
 
@@ -208,7 +208,11 @@ function Editor({ t, lang, me, base, initial }: { t: Dict; lang: Lang; me: strin
 
       {code.blocked && <p className="mt-3 rounded-2xl bg-warn-soft p-4 text-sm font-medium text-warn">⛔ {t.blockedOwner}</p>}
 
-      <div role="tablist" className="-mx-4 mt-4 flex gap-1.5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
+      {/* Телефон: все вкладки видны сразу (значок над подписью) и держатся сверху при прокрутке. */}
+      <div
+        role="tablist"
+        className="sticky top-0 z-20 -mx-4 mt-3 grid auto-cols-fr grid-flow-col gap-1 border-b border-line bg-[color-mix(in_oklab,var(--bg)_92%,transparent)] px-2 py-2 backdrop-blur sm:static sm:mx-0 sm:mt-4 sm:flex sm:gap-1.5 sm:overflow-x-auto sm:border-0 sm:bg-transparent sm:p-0 sm:pb-1 sm:backdrop-blur-none"
+      >
         {tabs.map((x) => (
           <button
             key={x.id}
@@ -216,13 +220,16 @@ function Editor({ t, lang, me, base, initial }: { t: Dict; lang: Lang; me: strin
             role="tab"
             aria-selected={tab === x.id}
             onClick={() => setTab(x.id)}
-            className={`flex min-h-11 shrink-0 items-center gap-2 rounded-xl border px-3.5 text-sm font-semibold transition-colors ${
+            className={`relative flex min-h-14 min-w-0 flex-col items-center justify-center gap-1 rounded-xl border px-1 text-[11px] font-semibold leading-tight transition-colors sm:min-h-11 sm:shrink-0 sm:flex-row sm:gap-2 sm:px-3.5 sm:text-sm ${
               tab === x.id ? "border-stage bg-stage text-on-stage" : "border-line bg-card text-muted hover:border-muted hover:text-ink"
             }`}
           >
             <TabIcon id={x.id} active={tab === x.id} />
-            {x.label}
-            {!!x.badge && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-warn px-1 text-[11px] text-on-warn">{x.badge}</span>}
+            <span className="line-clamp-2 max-w-full text-center sm:hidden">{x.short ?? x.label}</span>
+            <span className="hidden sm:inline">{x.label}</span>
+            {!!x.badge && (
+              <span className="absolute right-1 top-1 grid h-5 min-w-5 place-items-center rounded-full bg-warn px-1 text-[11px] text-on-warn sm:static">{x.badge}</span>
+            )}
           </button>
         ))}
       </div>

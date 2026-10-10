@@ -89,7 +89,7 @@ const money = (n: number) => `$${Math.round(n * 100) / 100}`;
 function Stat({ label, value, sub }: { label: string; value: ReactNode; sub?: ReactNode }) {
   return (
     <div className="min-w-0 rounded-2xl border border-stage-line bg-white/[0.04] p-4">
-      <div className="min-h-[2.4em] font-mono text-[10px] uppercase leading-tight tracking-[0.12em] text-on-stage/60 sm:min-h-0">{label}</div>
+      <div className="min-h-[2.4em] font-mono text-[11px] uppercase leading-tight tracking-[0.12em] text-on-stage/60 sm:min-h-0">{label}</div>
       <div className="mt-1.5 truncate font-heading text-2xl font-extrabold sm:text-3xl">{value}</div>
       {sub && <div className="mt-2">{sub}</div>}
     </div>
@@ -275,7 +275,7 @@ function Overview({ t, lang, p, codes, go, onDone }: { t: Dict; lang: Lang; p: P
       <Section
         title={t.accRecentCodes}
         action={
-          <button type="button" onClick={() => go("codes")} className="text-sm font-semibold text-accent-ink">
+          <button type="button" onClick={() => go("codes")} className="inline-flex min-h-11 items-center text-sm font-semibold text-accent-ink">
             {t.accSeeAll} →
           </button>
         }
@@ -312,7 +312,7 @@ function Overview({ t, lang, p, codes, go, onDone }: { t: Dict; lang: Lang; p: P
         title={t.accRecentBuys}
         action={
           rows.length > 3 && (
-            <button type="button" onClick={() => go("purchases")} className="text-sm font-semibold text-accent-ink">
+            <button type="button" onClick={() => go("purchases")} className="inline-flex min-h-11 items-center text-sm font-semibold text-accent-ink">
               {t.accSeeAll} →
             </button>
           )
@@ -477,7 +477,7 @@ function Phones({ t, lang }: { t: Dict; lang: Lang }) {
               <span className="font-semibold">{d.platform === "ios" ? "iPhone" : "Android"}</span>
               <span className="ml-2 text-xs text-muted">{fmtDateTime(d.at, lang)}</span>
             </span>
-            <button type="button" onClick={() => remove(d.end)} className="min-h-9 rounded-lg px-3 text-xs font-semibold text-muted hover:bg-field hover:text-warn">
+            <button type="button" onClick={() => remove(d.end)} className="min-h-11 rounded-lg px-3 text-xs font-semibold sm:min-h-9 text-muted hover:bg-field hover:text-warn">
               {t.remove}
             </button>
           </li>
@@ -515,7 +515,7 @@ function Settings({ t, lang, p, onName }: { t: Dict; lang: Lang; p: Profile; onN
   };
   return (
     <Section title={t.settingsTitle}>
-      <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
         <section className="rounded-2xl border border-line bg-card p-5">
           <label htmlFor="pname" className="mb-1.5 block text-sm font-medium text-muted">
             {t.yourName}
@@ -648,7 +648,7 @@ export function AccountPage({ tab: first }: { tab: AccTab }) {
             <div className="relative flex flex-wrap items-center gap-4">
               <Avatar id={profile.id} lang={lang} size={64} />
               <div className="min-w-0 flex-1 basis-48">
-                <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-accent">
+                <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em] text-accent">
                   {t.accountTitle}
                   <Info text={t.infoAccount} label={t.accountTitle} dark />
                 </div>
@@ -699,7 +699,7 @@ export function AccountPage({ tab: first }: { tab: AccTab }) {
                 >
                   <TabIcon tab={x} className={`h-5 w-5 lg:h-4 lg:w-4 ${tab === x ? "text-accent" : ""}`} />
                   {tabLabel(t, x)}
-                  {x === "packs" && profile.stats.packsLeft > 0 && <span className="absolute right-1.5 top-1.5 rounded-full bg-accent px-1.5 font-mono text-[10px] text-on-accent lg:static lg:ml-auto">{profile.stats.packsLeft}</span>}
+                  {x === "packs" && profile.stats.packsLeft > 0 && <span className="absolute right-1.5 top-1.5 rounded-full bg-accent px-1.5 font-mono text-[11px] text-on-accent lg:static lg:ml-auto">{profile.stats.packsLeft}</span>}
                 </button>
               ))}
             </nav>
@@ -711,7 +711,7 @@ export function AccountPage({ tab: first }: { tab: AccTab }) {
                   title={t.navCodes}
                   info={t.infoMyCodes}
                   action={
-                    <Link href="/codes" className="text-sm font-semibold text-accent-ink">
+                    <Link href="/codes" className="inline-flex min-h-11 items-center text-sm font-semibold text-accent-ink">
                       {t.allCodes} →
                     </Link>
                   }

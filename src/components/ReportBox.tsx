@@ -12,7 +12,7 @@ export function ReportBox({ t, id }: { t: Dict; id: string }) {
   if (state === "sent") return <p className="text-xs font-medium text-ok">✓ {t.reportSent}</p>;
   if (!open)
     return (
-      <button type="button" onClick={() => setOpen(true)} className="min-h-9 text-xs text-muted underline underline-offset-2 hover:text-warn">
+      <button type="button" onClick={() => setOpen(true)} className="min-h-11 px-2 text-sm text-muted underline underline-offset-2 hover:text-warn sm:min-h-9 sm:text-xs">
         {t.reportCode}
       </button>
     );

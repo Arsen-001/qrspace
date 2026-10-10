@@ -25,6 +25,8 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export const viewport: Viewport = {
+  // Во весь экран iPhone (под вырез и полосу «домой»): отступы — env(safe-area-inset-*) в globals.css и TabBar.
+  viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#edebe4" },
     { media: "(prefers-color-scheme: dark)", color: "#0b0b0c" },

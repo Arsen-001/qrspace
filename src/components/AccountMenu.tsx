@@ -36,7 +36,7 @@ export function AccountMenu({ t, lang, me }: { t: Dict; lang: Lang; me: string }
             <Avatar id={me} lang={lang} size={40} />
             <span className="min-w-0">
               <span className="block truncate font-heading font-bold">{name}</span>
-              <span className="block font-mono text-[10px] uppercase tracking-[0.14em] text-accent">{t.accountTitle} →</span>
+              <span className="block font-mono text-[11px] uppercase tracking-[0.14em] text-accent">{t.accountTitle} →</span>
             </span>
           </Link>
           <div className="my-1.5 h-px bg-stage-line" />

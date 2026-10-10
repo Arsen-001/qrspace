@@ -1,7 +1,7 @@
 "use client";
 // Лист наклеек: выбрать коды (или создать набор пустых меток), размер, сколько каждой — и напечатать на A4.
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { api, linkOf, type CodeView } from "@/lib/codes";
 import type { Dict } from "@/lib/i18n";
 import { useLang } from "@/lib/lang";
@@ -17,6 +17,28 @@ import { Segmented, StepBadge, Select } from "./ui";
 const PAGE = { w: 210, h: 297, margin: 10, gap: 4 };
 const SIZES = ["30", "40", "50", "70"] as const;
 type Size = (typeof SIZES)[number];
+
+/** Лист A4 на экране — по ширине колонки (на телефоне он уже в 2,5 раза); на печати — настоящего размера. */
+function FitWidth({ mm, children }: { mm: number; children: ReactNode }) {
+  const box = useRef<HTMLDivElement>(null);
+  const [k, setK] = useState(1);
+  useLayoutEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const fit = () => setK(Math.min(1, el.clientWidth / ((mm * 96) / 25.4)));
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [mm]);
+  return (
+    <div ref={box} className="min-w-0">
+      <div className="print:[zoom:1]!" style={{ zoom: k }}>
+        {children}
+      </div>
+    </div>
+  );
+}
 
 function Sheets({ t, items, size, captions }: { t: Dict; items: { id: string; svg: string; title: string }[]; size: number; captions: boolean }) {
   const cellH = size + (captions ? 6 : 0);
@@ -224,8 +246,14 @@ export function PrintPage() {
               <p className="text-xs text-muted">{t.printTip}</p>
             </section>
           </div>
-          <div className="min-w-0 overflow-x-auto print:overflow-visible">
-            {items.length ? <Sheets t={t} items={items} size={Number(size)} captions={captions} /> : <Notice>{t.nothingToPrint}</Notice>}
+          <div className="min-w-0 print:overflow-visible">
+            {items.length ? (
+              <FitWidth mm={PAGE.w}>
+                <Sheets t={t} items={items} size={Number(size)} captions={captions} />
+              </FitWidth>
+            ) : (
+              <Notice>{t.nothingToPrint}</Notice>
+            )}
           </div>
         </div>
       )}

@@ -104,14 +104,15 @@ export function CodePacks({ t, lang }: { t: Dict; lang: Lang }) {
           </span>
         )}
       </div>
-      <ul className="mt-7 grid grid-cols-1 gap-x-3 gap-y-6 sm:grid-cols-2 sm:gap-x-4 lg:grid-cols-4">
+      {/* Телефон: пакеты листаются вбок (следующий выглядывает справа) — иначе четыре высокие карточки на 2400px. */}
+      <ul className="x-noscrollbar -mx-4 mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-4 px-4 pb-2 pt-4 sm:mx-0 sm:mt-7 sm:grid sm:grid-cols-2 sm:gap-x-4 sm:gap-y-6 sm:overflow-visible sm:p-0 lg:grid-cols-4">
         {CODE_PACKS.map((p) => {
           // Все карточки тёмные, как «Популярный» (владелец 09.10.2026); у популярной — значок и свечение.
           const hot = p.id === best;
           return (
             <li
               key={p.id}
-              className={`relative flex flex-col rounded-[1.5rem] border p-5 transition-transform hover:-translate-y-1 ${
+              className={`relative flex w-[80%] max-w-80 shrink-0 snap-start flex-col rounded-[1.5rem] border p-5 transition-transform hover:-translate-y-1 sm:w-auto sm:max-w-none ${
                 hot ? "border-accent/60 bg-stage text-on-stage shadow-[0_30px_60px_-30px_rgba(198,255,46,0.5)]" : "border-stage-line bg-stage text-on-stage"
               }`}
             >

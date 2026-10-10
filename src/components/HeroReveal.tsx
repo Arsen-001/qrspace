@@ -23,7 +23,7 @@ function PhoneUnder({ t }: { t: Dict }) {
         </span>
         <span className={`${btn} border border-stage-line bg-white/5`}>{t.actCopyNumber}</span>
       </div>
-      <span className="font-mono text-[10px] text-on-stage/60">🔒 {t.heroMemWho}</span>
+      <span className="font-mono text-[11px] text-on-stage/60">🔒 {t.heroMemWho}</span>
     </div>
   );
 }
@@ -73,7 +73,7 @@ export function useReveal() {
 export function HeroSwitch({ t, open, toggle }: { t: Dict; open: boolean; toggle: () => void }) {
   return (
     <div className="flex shrink-0 flex-col items-center gap-2">
-      <span className={`font-mono text-[10px] uppercase tracking-[0.14em] transition-colors ${open ? "text-accent" : "text-on-stage/50"}`}>{t.heroUnder}</span>
+      <span className={`font-mono text-[11px] uppercase tracking-[0.14em] transition-colors ${open ? "text-accent" : "text-on-stage/50"}`}>{t.heroUnder}</span>
       <button
         type="button"
         role="switch"
@@ -86,14 +86,14 @@ export function HeroSwitch({ t, open, toggle }: { t: Dict; open: boolean; toggle
         {/* На кружке — ON / OFF (владелец 09.10.2026). */}
         <span
           aria-hidden
-          className={`absolute left-1/2 top-1 grid h-10 w-10 -translate-x-1/2 place-items-center rounded-full font-mono text-[10px] font-bold shadow-lg transition-[transform,background-color] duration-700 ease-[cubic-bezier(.65,0,.35,1)] sm:h-12 sm:w-12 sm:text-[11px] ${
+          className={`absolute left-1/2 top-1 grid h-10 w-10 -translate-x-1/2 place-items-center rounded-full font-mono text-[11px] font-bold shadow-lg transition-[transform,background-color] duration-700 ease-[cubic-bezier(.65,0,.35,1)] sm:h-12 sm:w-12 sm:text-[11px] ${
             open ? "translate-y-0 bg-accent text-on-accent" : "translate-y-[6.75rem] bg-on-stage text-stage sm:translate-y-[8.25rem]"
           }`}
         >
           {open ? "ON" : "OFF"}
         </span>
       </button>
-      <span className={`font-mono text-[10px] uppercase tracking-[0.14em] transition-colors ${open ? "text-on-stage/50" : "text-on-stage"}`}>QR</span>
+      <span className={`font-mono text-[11px] uppercase tracking-[0.14em] transition-colors ${open ? "text-on-stage/50" : "text-on-stage"}`}>QR</span>
     </div>
   );
 }

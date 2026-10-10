@@ -41,11 +41,19 @@ for (const w of [1280, 390]) {
     ok(true, `${w}: tab ${tab}`);
   }
   await p.screenshot({ path: `${out}acc-${w}-codes.png` });
-  // Меню под аватаркой
-  await p.getByRole("button", { name: /Меню аккаунта/ }).click();
-  await p.getByRole("menuitem", { name: "Пакеты" }).click();
-  await p.waitForURL(/tab=packs/);
-  ok(true, `${w}: avatar menu opens a tab`);
+  if (w >= 640) {
+    // Меню под аватаркой
+    await p.getByRole("button", { name: /Меню аккаунта/ }).click();
+    await p.getByRole("menuitem", { name: "Пакеты" }).click();
+    await p.waitForURL(/tab=packs/);
+    ok(true, `${w}: avatar menu opens a tab`);
+  } else {
+    // Телефон: кабинет — в нижних вкладках (10.10.2026)
+    await p.goto(B + "/", { waitUntil: "networkidle" });
+    await p.getByRole("navigation", { name: "Разделы" }).getByRole("link", { name: "Кабинет" }).click();
+    await p.waitForURL(/\/account$/);
+    ok(true, `${w}: bottom tab opens the account`);
+  }
   await ctx.close();
 }
 

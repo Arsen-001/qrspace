@@ -26,12 +26,12 @@ function MiniSwitch({ t, title, open, toggle }: { t: Dict; title: string; open: 
       aria-checked={open}
       aria-label={`${t.heroSwitch}: ${title}`}
       onClick={toggle}
-      className={`relative h-32 w-10 shrink-0 rounded-full border transition-colors ${open ? "border-accent bg-accent/20" : "border-stage-line bg-white/5 hover:border-on-stage/40"}`}
+      className={`relative h-24 w-10 shrink-0 rounded-full border transition-colors sm:h-32 ${open ? "border-accent bg-accent/20" : "border-stage-line bg-white/5 hover:border-on-stage/40"}`}
     >
       <span
         aria-hidden
-        className={`absolute left-1/2 top-1 grid h-8 w-8 -translate-x-1/2 place-items-center rounded-full font-mono text-[9px] font-bold shadow-lg transition-[transform,background-color] duration-500 ease-[cubic-bezier(.65,0,.35,1)] ${
-          open ? "translate-y-0 bg-accent text-on-accent" : "translate-y-[5.5rem] bg-on-stage text-stage"
+        className={`absolute left-1/2 top-1 grid h-8 w-8 -translate-x-1/2 place-items-center rounded-full font-mono text-[11px] font-bold shadow-lg transition-[transform,background-color] duration-500 ease-[cubic-bezier(.65,0,.35,1)] ${
+          open ? "translate-y-0 bg-accent text-on-accent" : "translate-y-[3.5rem] bg-on-stage text-stage sm:translate-y-[5.5rem]"
         }`}
       >
         {open ? "ON" : "OFF"}
@@ -46,14 +46,14 @@ function Under({ t, code }: { t: Dict; code: CodeView }) {
     const f = code.content.fields;
     const main = FIELDS[code.content.type].map((k) => f[k]).find((v) => v?.trim()) ?? "";
     return (
-      <div className="flex h-full flex-col justify-center gap-3 p-4 text-left">
+      <div className="flex h-full flex-col justify-center gap-2 p-2.5 text-left sm:gap-3 sm:p-4">
         <span className="flex items-center gap-2">
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent text-on-accent">
-            <TypeIcon type={code.content.type} className="h-5 w-5" />
+          <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-accent text-on-accent sm:h-9 sm:w-9 sm:rounded-xl">
+            <TypeIcon type={code.content.type} className="h-4 w-4 sm:h-5 sm:w-5" />
           </span>
-          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-on-stage/60">{t[`type.${code.content.type}`]}</span>
+          <span className="hidden font-mono text-[11px] uppercase tracking-[0.14em] text-on-stage/60 sm:inline">{t[`type.${code.content.type}`]}</span>
         </span>
-        <span className="line-clamp-3 break-words font-heading text-lg font-extrabold leading-snug">{main || t.notSetUp}</span>
+        <span className="line-clamp-3 break-words font-heading text-sm font-extrabold leading-snug sm:text-lg">{main || t.notSetUp}</span>
       </div>
     );
   }
@@ -62,16 +62,16 @@ function Under({ t, code }: { t: Dict; code: CodeView }) {
   const text = blocks.find((b) => b.kind === "text" && b.text.trim())?.text;
   if (!blocks.length)
     return (
-      <div className="grid h-full place-items-center p-4 text-center">
+      <div className="grid h-full place-items-center p-2.5 text-center sm:p-4">
         <span>
-          <span className="block font-heading text-base font-bold">{code.kind === "link" ? t.notSetUp : t.dashEmptyMemory}</span>
-          <span className="mt-1 block text-xs text-on-stage/60">{t.dashEmptyMemoryHint}</span>
+          <span className="block font-heading text-sm font-bold sm:text-base">{code.kind === "link" ? t.notSetUp : t.dashEmptyMemory}</span>
+          <span className="mt-1 hidden text-xs text-on-stage/60 sm:block">{t.dashEmptyMemoryHint}</span>
         </span>
       </div>
     );
   return (
-    <div className="flex h-full flex-col gap-3 p-4 text-left">
-      <span className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-on-stage/60">
+    <div className="flex h-full flex-col gap-2 p-2.5 text-left sm:gap-3 sm:p-4">
+      <span className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em] text-on-stage/60">
         <KindIcon kind={code.kind} className="h-4 w-4 text-accent" />
         {t.records}: {blocks.length}
       </span>
@@ -83,7 +83,7 @@ function Under({ t, code }: { t: Dict; code: CodeView }) {
           ))}
         </span>
       )}
-      {text && <span className="line-clamp-4 text-sm leading-relaxed text-on-stage/85">{text}</span>}
+      {text && <span className="line-clamp-3 text-xs leading-relaxed text-on-stage/85 sm:line-clamp-4 sm:text-sm">{text}</span>}
     </div>
   );
 }
@@ -92,28 +92,44 @@ function Under({ t, code }: { t: Dict; code: CodeView }) {
 function Spark({ days }: { days: number[] }) {
   const max = Math.max(1, ...days);
   return (
-    <span aria-hidden className="flex h-6 items-end gap-[2px]">
+    <span aria-hidden className="flex h-6 w-full max-w-[150px] items-end justify-between gap-px">
       {days.slice(-30).map((d, i) => (
-        <span key={i} className={`w-[3px] rounded-sm ${d ? "bg-accent" : "bg-white/15"}`} style={{ height: `${Math.max(12, (d / max) * 100)}%` }} />
+        <span key={i} className={`w-[3px] shrink rounded-sm ${d ? "bg-accent" : "bg-white/15"}`} style={{ height: `${Math.max(12, (d / max) * 100)}%` }} />
       ))}
     </span>
   );
 }
 
-function CodeCard({ t, base, code }: { t: Dict; base: string; code: CodeView }) {
-  const [open, setOpen] = useState(false);
+/** Сканы кода: всего, за неделю и столбики по дням. На телефоне — столбиком справа от кода, на компьютере — строкой. */
+function Scans({ t, code }: { t: Dict; code: CodeView }) {
   const scans = code.stats?.total ?? 0;
   const week = code.stats?.week ?? 0;
+  return (
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-3">
+      <div>
+        <div className="flex flex-wrap items-baseline gap-x-1.5">
+          <span className="font-heading text-3xl font-extrabold leading-none">{scans}</span>
+          <span className="text-sm text-on-stage/70">{t.scansCount.toLowerCase()}</span>
+        </div>
+        <div className={`mt-1 text-xs ${week ? "font-semibold text-accent" : "text-on-stage/50"}`}>{fill(t.dashWeek, { n: week })}</div>
+      </div>
+      {code.stats && <Spark days={code.stats.days} />}
+    </div>
+  );
+}
+
+function CodeCard({ t, base, code }: { t: Dict; base: string; code: CodeView }) {
+  const [open, setOpen] = useState(false);
   const unread = (code.messages?.filter((m) => !m.read).length ?? 0) + (code.requests?.length ?? 0);
   return (
-    <li className="flex flex-col rounded-3xl bg-stage p-4 text-on-stage shadow-[0_18px_40px_-24px_rgba(0,0,0,0.6)] sm:p-5">
+    <li className="flex flex-col rounded-3xl bg-stage p-3.5 text-on-stage shadow-[0_18px_40px_-24px_rgba(0,0,0,0.6)] sm:p-5">
       <div className="flex items-start gap-3">
-        <Link href={`/codes/${code.id}`} className="min-w-0 flex-1 hover:text-accent">
+        <Link href={`/codes/${code.id}`} className="flex min-h-10 min-w-0 flex-1 items-center hover:text-accent">
           <span className="block truncate font-heading text-lg font-extrabold">{code.title}</span>
         </Link>
         {unread > 0 && <span className="grid h-6 min-w-6 place-items-center rounded-full bg-warn px-1.5 text-xs font-bold text-on-warn">{unread}</span>}
       </div>
-      <div className="mt-1.5 flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-1.5">
         <VisBadge t={t} v={code.visibility} />
         {code.edition && (
           <span className="rounded-full bg-on-stage/10 px-2.5 py-1 text-xs font-semibold">
@@ -124,37 +140,34 @@ function CodeCard({ t, base, code }: { t: Dict; base: string; code: CodeView }) 
         {code.lost && <span className="rounded-full bg-warn px-2.5 py-1 text-xs font-semibold text-on-warn">{t.lostMode}</span>}
       </div>
 
-      <div className="mt-4 flex items-center gap-3">
-        <div className="flex flex-col items-center gap-1.5">
-          <span className={`w-12 text-center font-mono text-[9px] uppercase leading-tight tracking-[0.08em] ${open ? "text-accent" : "text-on-stage/50"}`}>{t.dashUnderShort}</span>
+      {/* Телефон: выключатель, код и сканы — одним рядом (карточка вдвое ниже); компьютер: код крупно, сканы под ним. */}
+      <div className="mt-3 flex items-center gap-2.5 sm:mt-4 sm:gap-3">
+        <div className="flex flex-col items-center gap-1">
+          <span className={`w-12 text-center font-mono text-[11px] uppercase leading-tight tracking-[0.04em] ${open ? "text-accent" : "text-on-stage/50"}`}>{t.dashUnderShort}</span>
           <MiniSwitch t={t} title={code.title ?? ""} open={open} toggle={() => setOpen((v) => !v)} />
-          <span className={`font-mono text-[9px] uppercase tracking-[0.12em] ${open ? "text-on-stage/50" : "text-on-stage"}`}>QR</span>
+          <span className={`font-mono text-[11px] uppercase tracking-[0.12em] ${open ? "text-on-stage/50" : "text-on-stage"}`}>QR</span>
         </div>
-        <div className="relative aspect-square min-w-0 flex-1 overflow-hidden rounded-2xl border border-stage-line bg-white/[0.03]">
+        <div className="relative aspect-square w-[42%] max-w-40 shrink-0 overflow-hidden rounded-2xl border border-stage-line bg-white/[0.03] sm:w-auto sm:max-w-none sm:min-w-0 sm:flex-1">
           <Under t={t} code={code} />
           {/* Код сверху; включили — уезжает срезом вверх и открывает, что под ним. */}
           <div
-            className="absolute inset-0 p-3 transition-[clip-path] duration-700 ease-[cubic-bezier(.65,0,.35,1)]"
+            className="absolute inset-0 p-2 transition-[clip-path] duration-700 ease-[cubic-bezier(.65,0,.35,1)] sm:p-3"
             style={{ background: code.style?.bg ?? "#ffffff", clipPath: open ? "inset(0 0 100% 0)" : "inset(0 0 0 0)" }}
             aria-hidden={open}
           >
             <QrThumb link={linkOf(base, code)} style={code.style} className={`h-full w-full ${code.blocked ? "opacity-40" : ""}`} />
           </div>
         </div>
-      </div>
-
-      <div className="mt-4 flex items-end justify-between gap-3">
-        <div>
-          <div className="flex items-baseline gap-1.5">
-            <span className="font-heading text-3xl font-extrabold leading-none">{scans}</span>
-            <span className="text-sm text-on-stage/70">{t.scansCount.toLowerCase()}</span>
-          </div>
-          <div className={`mt-1 text-xs ${week ? "font-semibold text-accent" : "text-on-stage/50"}`}>{fill(t.dashWeek, { n: week })}</div>
+        <div className="min-w-0 flex-1 sm:hidden">
+          <Scans t={t} code={code} />
         </div>
-        {code.stats && <Spark days={code.stats.days} />}
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-2">
+      <div className="mt-4 hidden sm:block">
+        <Scans t={t} code={code} />
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-2 sm:mt-4">
         <Link href={`/codes/${code.id}`} className="grid min-h-11 place-items-center rounded-xl bg-accent px-3 font-heading text-sm font-bold text-on-accent">
           {t.edit}
         </Link>
@@ -205,19 +218,22 @@ export function HomeDashboard() {
           <Notice>{t.loading}</Notice>
         </div>
       ) : (
-        <div className="mt-8 space-y-10">
-          <Upcoming t={t} lang={lang} codes={[...data.mine, ...data.shared]} onDone={() => setTick((n) => n + 1)} />
+        // На телефоне сначала сами коды («сразу видно, какие QR у тебя есть»), напоминания — под ними.
+        <div className="mt-6 flex flex-col gap-10 sm:mt-8">
+          <div className="order-2 empty:hidden sm:order-none">
+            <Upcoming t={t} lang={lang} codes={[...data.mine, ...data.shared]} onDone={() => setTick((n) => n + 1)} />
+          </div>
           {data.mine.length ? (
-            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {data.mine.map((c) => (
                 <CodeCard key={c.id} t={t} base={data.base} code={c} />
               ))}
               <li>
                 <Link
                   href="/create"
-                  className="flex h-full min-h-60 flex-col items-center justify-center gap-3 rounded-3xl border-2 border-dashed border-line p-6 text-center font-heading font-bold text-muted transition-all hover:-translate-y-1 hover:border-accent-ink hover:text-ink"
+                  className="flex h-full min-h-20 items-center justify-center gap-3 rounded-3xl border-2 border-dashed border-line p-4 text-center font-heading font-bold text-muted transition-all hover:-translate-y-1 hover:border-accent-ink hover:text-ink sm:min-h-60 sm:flex-col sm:p-6"
                 >
-                  <span aria-hidden className="grid h-14 w-14 place-items-center rounded-2xl bg-accent text-3xl text-on-accent">
+                  <span aria-hidden className="grid h-11 w-11 place-items-center rounded-xl bg-accent text-2xl text-on-accent sm:h-14 sm:w-14 sm:rounded-2xl sm:text-3xl">
                     +
                   </span>
                   {t.dashNew}

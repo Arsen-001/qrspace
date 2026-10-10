@@ -52,7 +52,7 @@ function Row({ t, lang, me, code, task, canEdit, onChange }: { t: Dict; lang: La
       </div>
       {canEdit && (
         <div className="flex gap-1">
-          <button type="button" disabled={busy} onClick={() => run(() => api.removeTask(code.id, task.id))} aria-label={`${t.delete}: ${task.text}`} className="min-h-10 rounded-xl px-2.5 text-sm text-muted hover:text-warn">
+          <button type="button" disabled={busy} onClick={() => run(() => api.removeTask(code.id, task.id))} aria-label={`${t.delete}: ${task.text}`} className="grid min-h-11 min-w-11 place-items-center rounded-xl px-2.5 text-sm text-muted hover:text-warn">
             ×
           </button>
         </div>

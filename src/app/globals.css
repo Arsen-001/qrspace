@@ -103,6 +103,45 @@ button:not(:disabled) {
   cursor: pointer;
 }
 
+/* Телефон (10.10.2026): без серой вспышки при нажатии; место под нижними вкладками (TabBar) и вырезы экрана iPhone
+   (viewport-fit=cover в layout.tsx). */
+html {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+/* Ряд, который листают пальцем вбок: без полосы прокрутки (она видна на Android и в браузерах на компьютере). */
+.x-noscrollbar {
+  scrollbar-width: none;
+}
+.x-noscrollbar::-webkit-scrollbar {
+  display: none;
+}
+/* Маленький значок с зоной нажатия 44px: сам значок не растёт, палец попадает. */
+.x-hit {
+  position: relative;
+}
+.x-hit::before {
+  content: "";
+  position: absolute;
+  inset: -8px;
+}
+/* Круглая кнопка поверх страницы (добавить запись) — над нижними вкладками, если они есть. */
+.x-fab {
+  bottom: calc(16px + env(safe-area-inset-bottom));
+}
+@media (max-width: 639px) {
+  body:has(.x-tabbar) {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  }
+  body:has(.x-tabbar) .x-fab {
+    bottom: calc(96px + env(safe-area-inset-bottom));
+  }
+}
+
 /* Печать листов наклеек: A4, без полей браузера, только сами наклейки. */
 @page {
   size: A4;

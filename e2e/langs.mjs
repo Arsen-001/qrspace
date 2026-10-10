@@ -6,11 +6,12 @@ const B = "http://localhost:3720";
 const browser = await chromium.launch();
 const errors = [];
 const ok = (c, m) => { console.log(c ? "  ✓" : "  ✗", m); if (!c) errors.push(m); };
+// На телефоне разделы — в нижних вкладках (10.10.2026): язык узнаём по вкладке «Создать».
 const CASES = [
-  ["es-ES", "es", "Generador", "Mercado de códigos"],
-  ["pt-BR", "pt", "Gerador", "Mercado de códigos"],
-  ["fr-FR", "fr", "Générateur", "Marché des codes"],
-  ["de-DE", "de", "Generator", "Code-Markt"],
+  ["es-ES", "es", "Crear", "Mercado de códigos"],
+  ["pt-BR", "pt", "Criar", "Mercado de códigos"],
+  ["fr-FR", "fr", "Créer", "Marché des codes"],
+  ["de-DE", "de", "Erstellen", "Code-Markt"],
 ];
 for (const [locale, lang, nav, market] of CASES) {
   const p = await (await browser.newContext({ viewport: { width: 390, height: 900 }, locale })).newPage();
@@ -37,14 +38,14 @@ const p = await (await browser.newContext({ viewport: { width: 390, height: 900 
 await p.goto(B + "/", { waitUntil: "networkidle" });
 await p.getByRole("button", { name: "Language" }).click();
 await p.getByRole("option", { name: "Français" }).click();
-await p.waitForSelector("text=Générateur");
+await p.getByRole("link", { name: "Créer", exact: true }).waitFor();
 await p.goto(B + "/market", { waitUntil: "networkidle" });
 ok((await p.locator('h1:text("Marché des codes")').count()) === 1, "switching language sticks across pages");
 await p.getByRole("button", { name: "Language" }).click();
 // с клавиатуры: первые буквы и Enter
 await p.keyboard.type("ru");
 await p.keyboard.press("Enter");
-await p.waitForSelector("text=Генератор");
+await p.getByRole("link", { name: "Создать", exact: true }).waitFor();
 ok(true, "switch back to Russian");
 console.log("errors:", errors.length ? errors : "none");
 await browser.close();

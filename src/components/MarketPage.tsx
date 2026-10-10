@@ -49,7 +49,7 @@ const rarity = (d: Design): "legend" | "rare" | "open" => (d.edition === null ? 
 function RarityBadge({ t, d }: { t: Dict; d: Design }) {
   const r = rarity(d);
   const cls = r === "legend" ? "bg-accent text-on-accent" : r === "rare" ? "bg-stage text-on-stage" : "bg-card/90 text-ink border border-line";
-  return <span className={`rounded-full px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.12em] ${cls}`}>{r === "legend" ? "★ " : ""}{t[r === "legend" ? "rarityLegend" : r === "rare" ? "rarityRare" : "rarityOpen"]}</span>;
+  return <span className={`rounded-full px-2.5 py-1 font-mono text-[11px] font-bold uppercase tracking-[0.12em] ${cls}`}>{r === "legend" ? "★ " : ""}{t[r === "legend" ? "rarityLegend" : r === "rare" ? "rarityRare" : "rarityOpen"]}</span>;
 }
 
 /** Полоска тиража: сколько разобрали. */
@@ -212,13 +212,13 @@ export function MarketPage() {
           <h2 className="font-heading text-2xl font-extrabold sm:text-3xl">{t.allDesigns}</h2>
           <div className="flex gap-1 rounded-full border border-line bg-card p-1 text-sm">
             {(["new", "cheap", "expensive"] as Sort[]).map((x) => (
-              <button key={x} type="button" aria-pressed={sort === x} onClick={() => setSort(x)} className={`min-h-9 rounded-full px-3 font-semibold ${sort === x ? "bg-stage text-on-stage" : "text-muted hover:text-ink"}`}>
+              <button key={x} type="button" aria-pressed={sort === x} onClick={() => setSort(x)} className={`min-h-10 rounded-full px-3 font-semibold ${sort === x ? "bg-stage text-on-stage" : "text-muted hover:text-ink"}`}>
                 {t[x === "new" ? "sortNew" : x === "cheap" ? "sortCheap" : "sortExpensive"]}
               </button>
             ))}
           </div>
         </div>
-        <div className="-mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
+        <div className="x-noscrollbar -mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
           {(["all", "edition", "open", "collab"] as Filter[]).map((x) => (
             <button key={x} type="button" aria-pressed={filter === x} onClick={() => setFilter(x)} className={chip(filter === x)}>
               {t[x === "all" ? "filterAll" : x === "edition" ? "filterEdition" : x === "open" ? "filterOpen" : "filterCollab"]}

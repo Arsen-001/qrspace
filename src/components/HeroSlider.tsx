@@ -37,7 +37,7 @@ export function HeroSlider({ children }: { children: ReactNode }) {
       {slides.length > 1 && (
         <div className="mt-4 flex justify-center gap-2">
           {slides.map((_, i) => (
-            <button key={i} type="button" aria-label={`${i + 1} / ${slides.length}`} aria-current={at === i} onClick={() => go(i)} className="group py-2">
+            <button key={i} type="button" aria-label={`${i + 1} / ${slides.length}`} aria-current={at === i} onClick={() => go(i)} className="group grid min-h-11 place-items-center px-1">
               <span className="block h-1.5 w-12 overflow-hidden rounded-full bg-line transition-colors group-hover:bg-muted/50">
                 <span
                   key={`${at}-${touched}`}

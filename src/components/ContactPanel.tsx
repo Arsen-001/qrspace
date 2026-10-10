@@ -60,7 +60,7 @@ function Inbox({ t, lang, messages, save }: { t: Dict; lang: Lang; messages: Mes
                     {t.inboxReply}: {m.reply ? <span className="select-all font-medium text-ink">{m.reply}</span> : t.inboxNoReply}
                   </div>
                 </div>
-                <button type="button" onClick={() => save({ removeMessage: m.id })} className="min-h-9 shrink-0 self-start rounded-lg px-2 text-xs font-medium text-muted hover:text-warn">
+                <button type="button" onClick={() => save({ removeMessage: m.id })} className="min-h-11 shrink-0 self-start rounded-lg px-2.5 text-sm font-medium text-muted hover:text-warn sm:min-h-9 sm:text-xs">
                   {t.delete}
                 </button>
               </li>

@@ -129,7 +129,7 @@ export function HomeHero({ t }: { t: Dict }) {
       {/* Порядок (владелец 09.10.2026: «свитчер непонятно для чего, QR внизу — не видно, что поменялось»): на телефоне
           заголовок → код с выключателем → текст и кнопки, чтобы код был на первом экране; на компьютере код справа.
           Выключатель — вплотную к коду, над ними — подсказка, что он делает. */}
-      <div className="relative grid items-center gap-x-10 gap-y-8 p-6 sm:p-10 lg:grid-cols-[1.25fr_1fr] lg:grid-rows-[auto_auto] lg:p-14">
+      <div className="relative grid grid-cols-1 items-center gap-x-10 gap-y-8 p-5 sm:p-10 lg:grid-cols-[1.25fr_1fr] lg:grid-rows-[auto_auto] lg:p-14">
         <div className="min-w-0 lg:self-end">
           <p className="inline-flex items-center gap-2 rounded-full border border-stage-line px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.14em] text-on-stage/70">
             <span className="x-blink h-2 w-2 rounded-full bg-accent" />
@@ -155,8 +155,8 @@ export function HomeHero({ t }: { t: Dict }) {
         </div>
         <div className="min-w-0 lg:self-start">
           <p className="max-w-xl text-base leading-relaxed text-on-stage/70 sm:text-lg">{t.homeLead}</p>
-          <div className="mt-8 flex flex-wrap gap-2 sm:gap-3">
-            <Link href="/create" className="group inline-flex min-h-13 items-center gap-3 rounded-xl bg-accent px-5 sm:px-6 font-heading text-sm font-bold text-on-accent">
+          <div className="mt-8 flex flex-col gap-2 sm:flex-row sm:gap-3">
+            <Link href="/create" className="group inline-flex min-h-13 flex-1 items-center justify-center gap-3 rounded-xl bg-accent px-5 font-heading text-sm font-bold text-on-accent sm:flex-none sm:px-6">
               {t.homeCta}
               <span aria-hidden className="transition-transform group-hover:translate-x-1">
                 →
@@ -164,7 +164,7 @@ export function HomeHero({ t }: { t: Dict }) {
             </Link>
             <Link
               href="/market"
-              className="inline-flex min-h-13 items-center rounded-xl border border-stage-line px-5 sm:px-6 font-heading text-sm font-bold hover:border-on-stage/60"
+              className="inline-flex min-h-13 shrink-0 items-center justify-center rounded-xl border border-stage-line px-5 font-heading text-sm font-bold hover:border-on-stage/60 sm:px-6"
             >
               {t.navMarket}
             </Link>
@@ -187,7 +187,8 @@ const FLOATERS = (() => {
 
 export function HomeBackdrop() {
   return (
-    <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+    // На телефоне их нет: на узком экране они налезают на шапку и текст.
+    <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 hidden overflow-hidden sm:block">
       {FLOATERS.map((f, i) => (
         <span
           key={i}

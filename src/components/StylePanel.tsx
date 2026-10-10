@@ -222,7 +222,7 @@ function PresetGrid({ t, s, set }: { t: Dict; s: StyleState; set: (patch: Partia
   );
   const apply = (pr: StylePreset) => set({ ...pr.style, texture: null });
   return (
-    <div role="radiogroup" aria-label={t.styleReady} className="-mx-1 flex snap-x gap-2 overflow-x-auto px-1 pb-1 sm:mx-0 sm:grid sm:grid-cols-5 sm:overflow-visible sm:px-0">
+    <div role="radiogroup" aria-label={t.styleReady} className="x-noscrollbar -mx-1 flex snap-x gap-2 overflow-x-auto px-1 pb-1 sm:mx-0 sm:grid sm:grid-cols-5 sm:overflow-visible sm:px-0">
       {thumbs.map(({ pr, svg }) => {
         const on = isPreset(s, pr);
         return (
@@ -347,7 +347,7 @@ export function StylePanel({
             {t.moreSettings}
             <Info text={t.infoFineTune} label={t.moreSettings} />
           </h3>
-          <span aria-hidden className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
+          <span aria-hidden className="shrink-0 whitespace-nowrap font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
             {tabs.findIndex((x) => x.id === tab) + 1} / {tabs.length}
           </span>
         </div>
@@ -405,7 +405,7 @@ export function StylePanel({
               <button
                 type="button"
                 onClick={() => set({ fg: s.bg, bg: s.fg, eyeColor: s.bg, eyeBallColor: s.bg })}
-                className="-mt-3 flex min-h-9 items-center gap-1.5 rounded-full border border-line bg-card px-3 text-xs font-bold hover:border-ink/25"
+                className="x-hit -mt-3 flex min-h-9 items-center gap-1.5 rounded-full border border-line bg-card px-3 text-xs font-bold hover:border-ink/25"
               >
                 <span aria-hidden>⇄</span> {t.swap}
               </button>

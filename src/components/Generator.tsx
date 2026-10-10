@@ -120,8 +120,9 @@ export function Generator() {
                   </svg>
                 </span>
                 <div className="min-w-0">
-                  <h2 className="font-heading text-base font-bold">{t.viaTitle}</h2>
-                  <p className="mt-1 text-sm leading-relaxed text-on-stage/70">{t.viaText}</p>
+                  {/* Короткое «Под вашим контролем» — заголовком, длинное объяснение — обычным текстом (на телефоне иначе стена жирного). */}
+                  <h2 className="font-heading text-base font-bold">{t.viaText}</h2>
+                  <p className="mt-1 text-sm leading-relaxed text-on-stage/70">{t.viaTitle}</p>
                   {me && (
                     <Link href="/codes" className="mt-3 inline-flex min-h-10 items-center gap-1.5 text-sm font-semibold text-accent hover:underline">
                       {t.viaCta} →

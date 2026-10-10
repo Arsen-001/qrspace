@@ -1,6 +1,6 @@
 "use client";
 // Память под кодом: записи (текст, фото, видео) и форма «дописать». Одна и та же в настройках и после скана.
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api, buyStorage, fmtBytes, MAX_PHOTO_PX, MAX_VIDEO_MB, FREE_STORAGE, mediaUrl, planFor, STORAGE_PLANS, VIDEO_TYPES, type Block, type CodeView } from "@/lib/codes";
 import { fmtDateTime } from "@/lib/format";
 import { fill, type Dict, type Lang } from "@/lib/i18n";
@@ -98,6 +98,17 @@ function Composer({ t, lang, code, onChange }: { t: Dict; lang: Lang; code: Code
   /** Сколько байт нужно этой записи, если она не влезает в место под кодом. */
   const [offer, setOffer] = useState<number | null>(null);
   const input = useRef<HTMLInputElement>(null);
+  // Телефон (10.10.2026): форма — в самом низу, после всех записей; пока её не видно — круглая «+» поверх страницы.
+  const box = useRef<HTMLFormElement>(null);
+  const area = useRef<HTMLTextAreaElement>(null);
+  const [seen, setSeen] = useState(true);
+  useEffect(() => {
+    const el = box.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(([e]) => setSeen(e.isIntersecting || e.boundingClientRect.top < 0));
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
   const fits = (c: CodeView, need: number) => !c.storage || c.storage.used + need <= c.storage.quota;
 
   const pickKind = (k: Kind) => {
@@ -158,7 +169,8 @@ function Composer({ t, lang, code, onChange }: { t: Dict; lang: Lang; code: Code
   const ready = kind === "text" ? !!text.trim() : !!file;
   return (
     <form
-      className="space-y-3 rounded-2xl border-2 border-dashed border-line bg-card p-4 sm:p-5"
+      ref={box}
+      className="scroll-mb-28 space-y-3 rounded-2xl border-2 border-dashed border-line bg-card p-4 sm:p-5"
       onSubmit={(e) => {
         e.preventDefault();
         if (ready) submit();
@@ -204,7 +216,24 @@ function Composer({ t, lang, code, onChange }: { t: Dict; lang: Lang; code: Code
           />
         </div>
       )}
+      {!seen && (
+        <button
+          type="button"
+          aria-label={t.composerTitle}
+          onClick={() => {
+            // Фокус — сразу в нажатии, иначе iPhone не откроет клавиатуру.
+            area.current?.focus({ preventScroll: true });
+            box.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+          }}
+          className="x-fab fixed right-4 z-30 grid h-14 w-14 place-items-center rounded-2xl bg-accent text-on-accent shadow-[0_14px_30px_-10px_rgba(0,0,0,0.55)] sm:hidden"
+        >
+          <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden>
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+        </button>
+      )}
       <textarea
+        ref={area}
         value={text}
         rows={kind === "text" ? 4 : 2}
         maxLength={5000}
@@ -269,7 +298,7 @@ function Entry({ t, lang, code, block, me, onChange }: { t: Dict; lang: Lang; co
                 <button type="button" disabled={busy} onClick={() => run(() => api.editBlock(code.id, block.id, editing))} className="min-h-9 rounded-lg px-2.5 font-semibold text-accent-ink">
                   {t.save}
                 </button>
-                <button type="button" onClick={() => setEditing(null)} className="min-h-9 rounded-lg px-2.5 font-medium hover:text-ink">
+                <button type="button" onClick={() => setEditing(null)} className="min-h-11 rounded-lg px-2.5 font-medium sm:min-h-9 hover:text-ink">
                   {t.cancel}
                 </button>
               </>
@@ -278,16 +307,16 @@ function Entry({ t, lang, code, block, me, onChange }: { t: Dict; lang: Lang; co
                 <button type="button" disabled={busy} onClick={() => run(() => api.removeBlock(code.id, block.id))} className="min-h-9 rounded-lg bg-warn px-2.5 font-semibold text-on-warn">
                   {t.delete}
                 </button>
-                <button type="button" onClick={() => setSure(false)} className="min-h-9 rounded-lg px-2.5 font-medium hover:text-ink">
+                <button type="button" onClick={() => setSure(false)} className="min-h-11 rounded-lg px-2.5 font-medium sm:min-h-9 hover:text-ink">
                   {t.cancel}
                 </button>
               </>
             ) : (
               <>
-                <button type="button" onClick={() => setEditing(block.text)} className="min-h-9 rounded-lg px-2.5 font-medium hover:text-ink">
+                <button type="button" onClick={() => setEditing(block.text)} className="min-h-11 rounded-lg px-2.5 font-medium sm:min-h-9 hover:text-ink">
                   {t.edit}
                 </button>
-                <button type="button" onClick={() => setSure(true)} className="min-h-9 rounded-lg px-2.5 font-medium hover:text-warn">
+                <button type="button" onClick={() => setSure(true)} className="min-h-11 rounded-lg px-2.5 font-medium sm:min-h-9 hover:text-warn">
                   {t.delete}
                 </button>
               </>
@@ -356,7 +385,7 @@ function StorageBar({ t, lang, code, onChange }: { t: Dict; lang: Lang; code: Co
                   now ? "border-accent bg-stage text-on-stage" : "border-line bg-field hover:border-muted disabled:opacity-45"
                 }`}
               >
-                {now && <span className="absolute right-2.5 top-2.5 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold uppercase text-on-accent">{t.storageNow}</span>}
+                {now && <span className="absolute right-2.5 top-2.5 rounded-full bg-accent px-2 py-0.5 text-[11px] font-bold uppercase text-on-accent">{t.storageNow}</span>}
                 <span className="font-heading text-lg font-extrabold">{fmtBytes(p.bytes, lang)}</span>
                 <span className={`font-mono text-xs ${now ? "text-accent" : "text-muted"}`}>{p.price ? `$${p.price} / ${t.storageMonth}` : t.storageFreeName}</span>
                 {now && p.id !== "free" && <span className="mt-1 text-xs font-semibold underline underline-offset-2">{t.storageRenew}</span>}

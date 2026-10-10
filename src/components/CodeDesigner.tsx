@@ -148,7 +148,7 @@ export function CodeDesigner({
       <div className="flex items-center gap-3">
         <span className="relative block h-24 w-24 shrink-0 overflow-hidden rounded-xl border border-line bg-field shadow-sm">
           <span aria-hidden className={`block h-full w-full [&>svg]:h-full [&>svg]:w-full ${sample ? "opacity-85" : ""}`} dangerouslySetInnerHTML={{ __html: toSvg(drawing, 96) }} />
-          {sample && <span className="absolute bottom-1 left-1 rounded bg-stage px-1 font-mono text-[9px] font-bold uppercase text-accent">{t.sampleBadge}</span>}
+          {sample && <span className="absolute bottom-1 left-1 rounded bg-stage px-1 font-mono text-[11px] font-bold uppercase text-accent">{t.sampleBadge}</span>}
         </span>
         <div className="min-w-0 flex-1">
           <div className="text-sm font-semibold" aria-live="polite">

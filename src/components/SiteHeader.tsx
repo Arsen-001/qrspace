@@ -1,5 +1,5 @@
 "use client";
-// Шапка всех страниц: знак, разделы, язык, кем вошли.
+// Шапка всех страниц: знак, разделы, язык, кем вошли. На телефоне разделы и вход — в нижних вкладках (TabBar).
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LANGS, type Dict, type Lang } from "@/lib/i18n";
@@ -7,6 +7,7 @@ import { saveLang } from "@/lib/lang";
 import { useMe } from "@/lib/me";
 import { AccountMenu } from "./AccountMenu";
 import { Bell } from "./Bell";
+import { TabBar } from "./TabBar";
 import { Select } from "./ui";
 
 export function Logo() {
@@ -55,17 +56,18 @@ export function SiteHeader({ t, lang }: { t: Dict; lang: Lang }) {
       {ready && demo && (
         // Пока сайт — демо (DEMO_LOGIN не выключен): честно говорим, что покупки ненастоящие.
         <p className="mx-[calc(50%-50vw)] bg-stage px-4 py-2 text-center text-xs font-medium text-on-stage print:hidden">
-          <span className="mr-2 rounded-sm bg-accent px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase text-on-accent">Demo</span>
+          <span className="mr-2 rounded-sm bg-accent px-1.5 py-0.5 font-mono text-[11px] font-bold uppercase text-on-accent">Demo</span>
           {t.demoBanner}
         </p>
       )}
       <header className="flex flex-wrap items-center gap-x-3 gap-y-2 py-4 print:hidden">
-        <Link href="/" className="flex items-center gap-2.5" aria-label={t.appName}>
+        <Link href="/" className="flex min-h-11 min-w-11 items-center gap-2.5" aria-label={t.appName}>
           <Logo />
-          <span className="hidden font-heading text-lg font-extrabold sm:inline">{t.appName}</span>
+          {/* Самые узкие экраны (меньше 360px) — только знак, иначе шапка не помещается в строку. */}
+          <span className="font-heading text-base font-extrabold max-[359px]:hidden sm:text-lg">{t.appName}</span>
         </Link>
-        {/* На телефоне разделы — отдельной строкой с прокруткой, чтобы шапка не вылезала за экран. */}
-        <nav className="order-last -mx-1 flex w-full gap-1 overflow-x-auto px-1 sm:order-none sm:mx-0 sm:w-auto sm:px-0">
+        {/* На телефоне разделы — в нижних вкладках. */}
+        <nav className="hidden gap-1 sm:flex">
           {nav.map((n) => (
             <Link
               key={n.href}
@@ -78,23 +80,36 @@ export function SiteHeader({ t, lang }: { t: Dict; lang: Lang }) {
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-2">
-          {/* Языков семь — выпадающий список, чтобы шапка помещалась на телефоне. */}
-          <Select compact className="w-32" label="Language" value={lang} onChange={(v) => saveLang(v)} options={LANGS.map((l) => ({ id: l.id, label: l.name }))} />
+          {ready && admin && (
+            // На телефоне — значок щита: слово «Админ» не помещается в шапку рядом с языком и колокольчиком.
+            <Link href="/admin" aria-label={t.navAdmin} className="grid h-11 w-11 place-items-center rounded-xl text-muted hover:text-ink sm:hidden">
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="M12 3 5 6v5c0 4.4 3 8.3 7 10 4-1.7 7-5.6 7-10V6z" />
+                <path d="m9 12 2 2 4-4" />
+              </svg>
+            </Link>
+          )}
+          {/* Языков семь — выпадающий список; на телефоне кнопка короче: «RU». */}
+          <Select compact className="w-[4.5rem] sm:hidden" label="Language" value={lang} shown={lang.toUpperCase()} onChange={(v) => saveLang(v)} options={LANGS.map((l) => ({ id: l.id, label: l.name }))} />
+          <Select compact className="hidden w-32 sm:block" label="Language" value={lang} onChange={(v) => saveLang(v)} options={LANGS.map((l) => ({ id: l.id, label: l.name }))} />
           {ready && me && <Bell t={t} lang={lang} />}
           {ready &&
             (me ? (
-              <AccountMenu t={t} lang={lang} me={me} />
+              <div className="hidden sm:block">
+                <AccountMenu t={t} lang={lang} me={me} />
+              </div>
             ) : (
               <Link
                 // После входа — туда же; главная после входа — своя страница с моими кодами.
                 href={`/login?next=${encodeURIComponent(path)}`}
-                className="grid min-h-10 place-items-center rounded-xl bg-accent px-3 text-sm font-semibold text-on-accent"
+                className="hidden min-h-10 place-items-center rounded-xl bg-accent px-3 text-sm font-semibold text-on-accent sm:grid"
               >
                 {t.login}
               </Link>
             ))}
         </div>
       </header>
+      <TabBar t={t} lang={lang} />
     </>
   );
 }

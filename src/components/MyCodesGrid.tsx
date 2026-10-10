@@ -99,7 +99,7 @@ function Name({ t, code, onRename }: { t: Dict; code: CodeView; onRename: (title
         onClick={() => setEdit(true)}
         aria-label={`${t.rename}: ${code.title}`}
         title={t.rename}
-        className="-mr-1 -mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg text-on-stage/50 hover:bg-on-stage/10 hover:text-on-stage"
+        className="x-hit -mr-1 -mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg text-on-stage/50 hover:bg-on-stage/10 hover:text-on-stage"
       >
         <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
           <path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4" />
@@ -182,10 +182,10 @@ function SortableCard({ t, base, code, index, count, move, onRename, guard }: { 
       <CardBody t={t} base={base} code={code} onRename={onRename} />
       {/* Для клавиатуры и тех, кому неудобно тащить: «выше / ниже». */}
       <div className="flex justify-end gap-1 px-3 pb-3 opacity-60 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 sm:px-4">
-        <button type="button" {...stop} disabled={index === 0} onClick={() => move(index, index - 1)} aria-label={`${t.moveUp}: ${code.title}`} title={t.moveUp} className="grid h-8 w-8 place-items-center rounded-lg border border-stage-line text-sm hover:border-on-stage/60 disabled:opacity-30">
+        <button type="button" {...stop} disabled={index === 0} onClick={() => move(index, index - 1)} aria-label={`${t.moveUp}: ${code.title}`} title={t.moveUp} className="grid h-10 w-10 place-items-center rounded-lg border border-stage-line text-sm hover:border-on-stage/60 disabled:opacity-30 sm:h-8 sm:w-8">
           ←
         </button>
-        <button type="button" {...stop} disabled={index === count - 1} onClick={() => move(index, index + 1)} aria-label={`${t.moveDown}: ${code.title}`} title={t.moveDown} className="grid h-8 w-8 place-items-center rounded-lg border border-stage-line text-sm hover:border-on-stage/60 disabled:opacity-30">
+        <button type="button" {...stop} disabled={index === count - 1} onClick={() => move(index, index + 1)} aria-label={`${t.moveDown}: ${code.title}`} title={t.moveDown} className="grid h-10 w-10 place-items-center rounded-lg border border-stage-line text-sm hover:border-on-stage/60 disabled:opacity-30 sm:h-8 sm:w-8">
           →
         </button>
       </div>

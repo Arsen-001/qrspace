@@ -80,7 +80,7 @@ export function LogoPicker({
     const ids = [...new Set([suggest, picked, ...QUICK_LOGOS].filter((x): x is string => !!x))];
     const shown = ids.map((id) => list.find((l) => l.id === id)).filter((l): l is BrandLogo => !!l).slice(0, 9);
     return (
-      <div className="-mx-1 flex items-center gap-1 overflow-x-auto px-1 pb-1">
+      <div className="x-noscrollbar -mx-1 flex items-center gap-1 overflow-x-auto px-1 pb-1">
         {none}
         {shown.map((l) => (
           <Tile key={l.id} l={l} title={title(l)} on={picked === l.id} onPick={() => onPick(l)} />

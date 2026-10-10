@@ -318,6 +318,7 @@ export function Select<T extends string>({
   compact,
   className = "",
   disabled,
+  shown,
 }: {
   value: T;
   onChange: (v: T) => void;
@@ -327,6 +328,8 @@ export function Select<T extends string>({
   compact?: boolean;
   className?: string;
   disabled?: boolean;
+  /** Что показать на кнопке вместо названия выбранного (например, короткое «RU» на телефоне). */
+  shown?: ReactNode;
 }) {
   const id = useId();
   const [open, setOpen] = useState(false);
@@ -418,7 +421,7 @@ export function Select<T extends string>({
           open ? "border-ink" : "border-line"
         } ${compact ? "min-h-10 px-3 text-sm font-medium" : "min-h-11 px-3.5 text-base"}`}
       >
-        <span className="min-w-0 truncate">{current?.label}</span>
+        <span className="min-w-0 truncate">{shown ?? current?.label}</span>
         <svg viewBox="0 0 24 24" className={`h-4 w-4 shrink-0 text-muted transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
           <path d="m6 9 6 6 6-6" />
         </svg>

@@ -51,7 +51,7 @@ export function LotCards({ t, lang, lots, link }: { t: Dict; lang: Lang; lots: L
             className="group flex h-full flex-col overflow-hidden rounded-3xl bg-stage text-on-stage shadow-[0_18px_40px_-24px_rgba(0,0,0,0.6)] transition-all duration-300 hover:-translate-y-1.5"
           >
             <div className="relative p-4 sm:p-5" style={{ background: l.view.style?.bg ?? "#fff" }}>
-              <span className={`absolute left-3 top-3 z-10 rounded-full px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.12em] ${l.mode === "auction" ? "bg-accent text-on-accent" : "bg-stage text-on-stage"}`}>
+              <span className={`absolute left-3 top-3 z-10 rounded-full px-2.5 py-1 font-mono text-[11px] font-bold uppercase tracking-[0.12em] ${l.mode === "auction" ? "bg-accent text-on-accent" : "bg-stage text-on-stage"}`}>
                 {l.mode === "auction" ? t.auction : t.fixedPrice}
               </span>
               <QrThumb link={link} style={l.view.style} className="w-full rounded-2xl shadow-[0_10px_30px_-12px_rgba(0,0,0,0.45)] transition-transform duration-300 group-hover:scale-[1.03]" />

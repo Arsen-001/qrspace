@@ -11,7 +11,8 @@ import { Card, Switch, Select } from "./ui";
 import { VisIcon } from "./VisBadge";
 
 const today = () => new Date().toISOString().slice(0, 10);
-const small = "min-h-10 rounded-xl border border-line bg-field px-3 text-sm";
+// На телефоне шрифт полей 16px — иначе iPhone увеличивает страницу при вводе.
+const small = "min-h-11 rounded-xl border border-line bg-field px-3 text-base sm:min-h-10 sm:text-sm";
 
 function Row({ id, lang, children, sub }: { id: string | null; lang: Lang; children?: ReactNode; sub?: ReactNode }) {
   return (
@@ -165,7 +166,7 @@ export function AccessPanel({ t, lang, code, base, save }: { t: Dict; lang: Lang
               placeholder={t.addByEmail}
               aria-label={t.addByEmail}
               onChange={(e) => setEmail(e.target.value)}
-              className={`${small} min-w-0 flex-1 text-base`}
+              className={`${small} min-w-0 flex-1`}
               autoComplete="off"
             />
             <button type="submit" disabled={!email.trim()} className="min-h-10 rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent disabled:opacity-40">
@@ -180,7 +181,7 @@ export function AccessPanel({ t, lang, code, base, save }: { t: Dict; lang: Lang
       <Card title={t.inviteTitle} info={t.infoInvite}>
         <p className="mb-3 text-sm text-muted">{t.inviteHint}</p>
         <div className="flex flex-wrap gap-2">
-          <input readOnly value={invite} onFocus={(e) => e.target.select()} className={`${small} min-w-0 flex-1 font-mono text-xs`} aria-label={t.inviteTitle} />
+          <input readOnly value={invite} onFocus={(e) => e.target.select()} className={`${small.replace("sm:text-sm", "sm:text-xs")} min-w-0 flex-1 font-mono`} aria-label={t.inviteTitle} />
           <button
             type="button"
             onClick={() => {
